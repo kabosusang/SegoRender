@@ -1,0 +1,10 @@
+.vscode
+.cache
+cmake-build
+*.json
+*.spv
+compile_flags.txt
+
+# Ignore those directories
+build/
+bin/
