@@ -1,20 +1,26 @@
 #pragma once
 
 #include "vulkan/vulkan.hpp"
+#include <fstream>
 
 namespace toy2d {
 
-class RenderProcess final {
+class RenderProcess {
 public:
-    vk::Pipeline pipeline;
-    vk::PipelineLayout layout;
-    vk::RenderPass renderPass;
+    vk::Pipeline graphicsPipeline = nullptr;
+    vk::RenderPass renderPass = nullptr;
+    vk::PipelineLayout layout = nullptr;
 
+    RenderProcess();
     ~RenderProcess();
 
-    void InitLayout();
-    void InitRenderPass();
-    void InitPipeline(int width, int height);
+    void RecreateGraphicsPipeline(const std::vector<char>& vertexSource, const std::vector<char>& fragSource);
+    void RecreateRenderPass();
+
+private:
+    vk::PipelineLayout createLayout();
+    vk::Pipeline createGraphicsPipeline(const std::vector<char>& vertexSource, const std::vector<char>& fragSource);
+    vk::RenderPass createRenderPass();
 };
 
 }

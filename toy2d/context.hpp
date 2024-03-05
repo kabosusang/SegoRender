@@ -1,76 +1,62 @@
 #pragma once
 
-#include "vulkan/vulkan.hpp"
 #include <memory>
-#include <cassert>
 #include <iostream>
 #include <optional>
-#include "tool.hpp"
+#include <functional>
+#include <vector>
+#include <array>
+
+#include "vulkan/vulkan.hpp"
 #include "swapchain.hpp"
 #include "render_process.hpp"
-#include "renderer.hpp"
+#include "tool.hpp"
+#include "command_manager.hpp"
 
 namespace toy2d {
 
-class Context final {
+class Context {
 public:
-    static void Init(const std::vector<const char*>& extensions, CreateSurfaceFunc func);
+    using GetSurfaceCallback = std::function<VkSurfaceKHR(VkInstance)>;
+    friend void Init(std::vector<const char*>&, GetSurfaceCallback, int, int);
+
+    static void Init(std::vector<const char*>& extensions, GetSurfaceCallback);
     static void Quit();
+    static Context& Instance();
 
-    static Context& GetInstance() {
-        assert(instance_);
-        return *instance_;
-    }
-
-    ~Context();
-
-    struct QueueFamliyIndices final {
-        std::optional<uint32_t> graphicsQueue;
-        std::optional<uint32_t> presentQueue;
-
-        operator bool() const {
-            return graphicsQueue.has_value() && presentQueue.has_value();
-        }
-    };
+    struct QueueInfo {
+        std::optional<std::uint32_t> graphicsIndex;
+        std::optional<std::uint32_t> presentIndex;
+    } queueInfo;
 
     vk::Instance instance;
-    VkDebugUtilsMessengerEXT debugMessenger;
     vk::PhysicalDevice phyDevice;
-    
     vk::Device device;
-    vk::Queue graphcisQueue;
+    vk::Queue graphicsQueue;
     vk::Queue presentQueue;
-    vk::SurfaceKHR surface;
     std::unique_ptr<Swapchain> swapchain;
     std::unique_ptr<RenderProcess> renderProcess;
-    std::unique_ptr<Renderer> renderer;
-    QueueFamliyIndices queueFamilyIndices;
-
-    void InitSwapchain(int w, int h) {
-        swapchain.reset(new Swapchain(w, h));
-    }
-
-    void DestroySwapchain() {
-        swapchain.reset();
-    }
-
-    void InitRenderer() {
-        renderer.reset(new Renderer);
-    }
+    std::unique_ptr<CommandManager> commandManager;
 
 private:
-    static std::unique_ptr<Context> instance_;
+    static Context* instance_;
+    vk::SurfaceKHR surface_;
 
-    Context(const std::vector<const char*>& extensions, CreateSurfaceFunc func);
+    GetSurfaceCallback getSurfaceCb_ = nullptr;
 
-    void createInstance(const std::vector<const char*>& extensions);
-    void setdebug();
+    Context(std::vector<const char*>& extensions, GetSurfaceCallback);
+    ~Context();
 
-    void pickupPhyiscalDevice();
-    void createDevice();
-    void getQueues();
+    void initRenderProcess();
+    void initSwapchain(int windowWidth, int windowHeight);
+    void initGraphicsPipeline();
+    void initCommandPool();
 
-    void queryQueueFamilyIndices();
+    vk::Instance createInstance(std::vector<const char*>& extensions);
+    vk::PhysicalDevice pickupPhysicalDevice();
+    vk::Device createDevice(vk::SurfaceKHR);
+
+    void queryQueueInfo(vk::SurfaceKHR);
 };
 
 }

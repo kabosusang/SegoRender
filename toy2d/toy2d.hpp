@@ -1,16 +1,14 @@
 #pragma once
 
-#include "vulkan/vulkan.hpp"
 #include "context.hpp"
-#include "shader.hpp"
+#include "render_process.hpp"
+#include "renderer.hpp"
+#include <memory>
 
 namespace toy2d {
 
-void Init(const std::vector<const char*>& extensions, CreateSurfaceFunc func, int w, int h);
+void Init(std::vector<const char*>& extensions, Context::GetSurfaceCallback, int windowWidth, int windowHeight);
 void Quit();
-
-inline Renderer& GetRenderer() {
-    return *Context::GetInstance().renderer;
-}
+Renderer* GetRenderer();
 
 }

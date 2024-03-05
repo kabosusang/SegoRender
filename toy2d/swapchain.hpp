@@ -6,28 +6,39 @@ namespace toy2d {
 
 class Swapchain final {
 public:
-    vk::SwapchainKHR swapchain;
-
-    Swapchain(int w, int h);
-    ~Swapchain();
-
-    struct SwapchainInfo {
-        vk::Extent2D imageExtent;
-        uint32_t imageCount;
-        vk::SurfaceFormatKHR format;
-        vk::SurfaceTransformFlagBitsKHR transform;
-        vk::PresentModeKHR present;
+    struct Image {
+        vk::Image image;
+        vk::ImageView view;
     };
 
-    SwapchainInfo info;
-    std::vector<vk::Image> images;
-    std::vector<vk::ImageView> imageViews;
+    vk::SurfaceKHR surface = nullptr;
+    vk::SwapchainKHR swapchain = nullptr;
+    std::vector<Image> images;
     std::vector<vk::Framebuffer> framebuffers;
 
-    void queryInfo(int w, int h);
-    void getImages();
-    void createImageViews();
-    void CreateFramebuffers(int w, int h);
+    const auto& GetExtent() const { return surfaceInfo_.extent; }
+    const auto& GetFormat() const { return surfaceInfo_.format; }
+
+    Swapchain(vk::SurfaceKHR, int windowWidth, int windowHeight);
+    ~Swapchain();
+
+    void InitFramebuffers();
+
+private:
+    struct SurfaceInfo {
+        vk::SurfaceFormatKHR format;
+        vk::Extent2D extent;
+        std::uint32_t count;
+        vk::SurfaceTransformFlagBitsKHR transform;
+    } surfaceInfo_;
+
+    vk::SwapchainKHR createSwapchain();
+
+    void querySurfaceInfo(int windowWidth, int windowHeight);
+    vk::SurfaceFormatKHR querySurfaceeFormat();
+    vk::Extent2D querySurfaceExtent(const vk::SurfaceCapabilitiesKHR& capability, int windowWidth, int windowHeight);
+    void createImageAndViews();
+    void createFramebuffers();
 };
 
 }
