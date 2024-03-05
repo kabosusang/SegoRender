@@ -1,71 +1,76 @@
-#pragma once 
+#pragma once
 
 #include "vulkan/vulkan.hpp"
-#include "toy2d/swapchain.hpp"
 #include <memory>
-#include <optional>
 #include <cassert>
-#include <functional>
+#include <iostream>
+#include <optional>
+#include "tool.hpp"
+#include "swapchain.hpp"
+#include "render_process.hpp"
+#include "renderer.hpp"
 
-namespace toy2d{
-using CreateSurfaceFunc = std::function<vk::SurfaceKHR(vk::Instance)>;
+namespace toy2d {
 
-class Context final{
+class Context final {
 public:
-    static void Init(const std::vector<const char*>& extensions,CreateSurfaceFunc func);
+    static void Init(const std::vector<const char*>& extensions, CreateSurfaceFunc func);
     static void Quit();
-    static Context& GetInstance(){
+
+    static Context& GetInstance() {
         assert(instance_);
         return *instance_;
     }
 
     ~Context();
 
-    struct QueueFamliyIndices final{
+    struct QueueFamliyIndices final {
         std::optional<uint32_t> graphicsQueue;
         std::optional<uint32_t> presentQueue;
 
-        operator bool() const{
+        operator bool() const {
             return graphicsQueue.has_value() && presentQueue.has_value();
         }
     };
 
     vk::Instance instance;
     VkDebugUtilsMessengerEXT debugMessenger;
-
-    vk::PhysicalDevice physicalDevice;
+    vk::PhysicalDevice phyDevice;
+    
     vk::Device device;
-    vk::Queue graphicsQueue; //graphics queue
-    vk::Queue presentQueue; //present queue
-
+    vk::Queue graphcisQueue;
+    vk::Queue presentQueue;
     vk::SurfaceKHR surface;
-    std::unique_ptr<SwapChain> swapChain;
-
+    std::unique_ptr<Swapchain> swapchain;
+    std::unique_ptr<RenderProcess> renderProcess;
+    std::unique_ptr<Renderer> renderer;
     QueueFamliyIndices queueFamilyIndices;
 
-    void InitSwapChain(int w,int h){
-        swapChain.reset(new SwapChain(w,h));
+    void InitSwapchain(int w, int h) {
+        swapchain.reset(new Swapchain(w, h));
     }
-    void DestroySwapChain(){
-        swapChain.reset();
+
+    void DestroySwapchain() {
+        swapchain.reset();
+    }
+
+    void InitRenderer() {
+        renderer.reset(new Renderer);
     }
 
 private:
-    Context(const std::vector<const char*>& extensions,CreateSurfaceFunc func);
-
     static std::unique_ptr<Context> instance_;
 
+    Context(const std::vector<const char*>& extensions, CreateSurfaceFunc func);
+
     void createInstance(const std::vector<const char*>& extensions);
-    void setupDebugMessenger();
-    void pickupPhysicalDevice();
-    void createdevice();
+    void setdebug();
+
+    void pickupPhyiscalDevice();
+    void createDevice();
     void getQueues();
 
     void queryQueueFamilyIndices();
-    
-
-    
-
 };
 
 }

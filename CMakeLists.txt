@@ -9,6 +9,10 @@ include(cmake/FindVulkan.cmake)
 include(cmake/sdl2-config.cmake)
 include(cmake/CopyFiles.cmake)
 
+find_program(GLSLC_PROGAM glslc REQUIRED)
+execute_process(COMMAND ${GLSLC_PROGAM}  ${CMAKE_CURRENT_SOURCE_DIR}/shader/shader.vert -o ${CMAKE_CURRENT_SOURCE_DIR}/shader/vert.spv )
+execute_process(COMMAND ${GLSLC_PROGAM}  ${CMAKE_CURRENT_SOURCE_DIR}/shader/shader.frag -o ${CMAKE_CURRENT_SOURCE_DIR}/shader/frag.spv )
+
 
 # 输出目录
 set(output_bin ${CMAKE_CURRENT_SOURCE_DIR}/bin)

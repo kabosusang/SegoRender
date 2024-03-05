@@ -2,30 +2,32 @@
 
 #include "vulkan/vulkan.hpp"
 
-namespace toy2d{
+namespace toy2d {
 
-class SwapChain final{
+class Swapchain final {
 public:
-    vk::SwapchainKHR swapChain;
+    vk::SwapchainKHR swapchain;
 
-    SwapChain(int w,int h);
-    ~SwapChain();
+    Swapchain(int w, int h);
+    ~Swapchain();
 
-    struct SwapchainInfo{
+    struct SwapchainInfo {
         vk::Extent2D imageExtent;
         uint32_t imageCount;
         vk::SurfaceFormatKHR format;
-        vk::SurfaceTransformFlagsKHR transform; //image transform
+        vk::SurfaceTransformFlagBitsKHR transform;
         vk::PresentModeKHR present;
-
     };
-    SwapchainInfo info{};
+
+    SwapchainInfo info;
     std::vector<vk::Image> images;
     std::vector<vk::ImageView> imageViews;
+    std::vector<vk::Framebuffer> framebuffers;
 
-    void queryInfo(int w,int h);
+    void queryInfo(int w, int h);
     void getImages();
     void createImageViews();
-
+    void CreateFramebuffers(int w, int h);
 };
+
 }

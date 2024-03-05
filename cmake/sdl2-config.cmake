@@ -1,6 +1,6 @@
 # sdl2 cmake project-config input for ./configure scripts
 
-set(SDL2_ROOT "" CACHE PATH "SDL2 root directory") 
+set(SDL2_ROOT "D:/Vendor/SDL2-2.0.22/x86_64-w64-mingw32" CACHE PATH "SDL2 root directory") 
 set(exec_prefix "${SDL2_ROOT}")
 set(libdir "${exec_prefix}/lib")
 set(includedir "${SDL2_ROOT}/include")
@@ -8,7 +8,7 @@ set(SDL2_PREFIX "${SDL2_ROOT}")
 set(SDL2_EXEC_PREFIX "${exec_prefix}")
 set(SDL2_LIBDIR "${libdir}")
 set(SDL2_INCLUDE_DIRS "${includedir}/SDL2")
-set(SDL2_LIBRARIES "-L${SDL2_LIBDIR}  -lmingw32 -lSDL2main -lSDL2 -mwindows")
+set(SDL2_LIBRARIES "-L${SDL2_LIBDIR}  -lmingw32 -lSDL2main -lSDL2 --mconsole")
 string(STRIP "${SDL2_LIBRARIES}" SDL2_LIBRARIES)
 
 if(NOT TARGET SDL2::SDL2)
