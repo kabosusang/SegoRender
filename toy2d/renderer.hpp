@@ -25,8 +25,8 @@ private:
     std::vector<vk::Semaphore> renderFinishSems_;
     std::vector<vk::CommandBuffer> cmdBufs_;
 
-    std::unique_ptr<Buffer> hostVertexBuffer_;
-    std::unique_ptr<Buffer> deviceVertexBuffer_;
+    std::unique_ptr<Buffer> hostVertexBuffer_; //共享内存(本地CPUbuffer) 不是最优解
+    std::unique_ptr<Buffer> deviceVertexBuffer_; //
 
     void createFences();
     void createSemaphores();

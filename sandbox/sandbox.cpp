@@ -19,6 +19,7 @@ int main(int argc, char** argv) {
     SDL_Vulkan_GetInstanceExtensions(window, &count, nullptr);
     std::vector<const char*> extensions(count);
     SDL_Vulkan_GetInstanceExtensions(window, &count, extensions.data());
+    extensions.push_back("VK_EXT_debug_utils");
 
     toy2d::Init(extensions,
         [&](VkInstance instance){
@@ -26,6 +27,8 @@ int main(int argc, char** argv) {
             SDL_Vulkan_CreateSurface(window, instance, &surface);
             return surface;
         }, 1024, 720);
+
+        
     auto renderer = toy2d::GetRenderer();
 
     bool shouldClose = false;

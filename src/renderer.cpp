@@ -122,8 +122,11 @@ void Renderer::createCmdBuffers() {
 
 void Renderer::createVertexBuffer() {
     hostVertexBuffer_.reset(new Buffer(sizeof(vertices),
-                                       vk::BufferUsageFlagBits::eTransferSrc,
-                                       vk::MemoryPropertyFlagBits::eHostVisible|vk::MemoryPropertyFlagBits::eHostCoherent));
+                                       vk::BufferUsageFlagBits::eTransferSrc, //传输源
+                                       vk::MemoryPropertyFlagBits::eHostVisible|vk::MemoryPropertyFlagBits::eHostCoherent));//HostCoherent 共享内存
+    //如果不使用eHostCoherent(代表内存GPU和CPU不同步) 需要加上下面的代码
+    //Context::Instance().device.flushMappedMemoryRanges ; //映射内存 每次修改后需要刷新 从CPU传入GPU
+    //Context::Instance().device.invalidateMappedMemoryRanges //读取内存 每次读取前需要刷新
     deviceVertexBuffer_.reset(new Buffer(sizeof(vertices),
                                          vk::BufferUsageFlagBits::eVertexBuffer|vk::BufferUsageFlagBits::eTransferDst,
                                          vk::MemoryPropertyFlagBits::eDeviceLocal));
@@ -151,6 +154,7 @@ void Renderer::bufferVertexData() {
     Context::Instance().graphicsQueue.submit(submit);
 
     Context::Instance().device.waitIdle();
+    //删除hostVertexBuffer_的内存
 
     Context::Instance().commandManager->FreeCmd(cmdBuf);
 }

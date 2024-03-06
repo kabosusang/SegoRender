@@ -49,6 +49,7 @@ Buffer::MemoryInfo Buffer::queryMemoryInfo(vk::MemoryPropertyFlags property) {
 }
 
 void Buffer::bindingMem2Buf() {
+    //offset is 0
     Context::Instance().device.bindBufferMemory(buffer, memory, 0);
 }
 

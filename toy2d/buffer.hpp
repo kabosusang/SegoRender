@@ -21,7 +21,7 @@ private:
 
     void createBuffer(size_t size, vk::BufferUsageFlags usage);
     void allocateMemory(MemoryInfo info);
-    void bindingMem2Buf();
+    void bindingMem2Buf(); // bind memory to buffer
     MemoryInfo queryMemoryInfo(vk::MemoryPropertyFlags property);
 };
 
