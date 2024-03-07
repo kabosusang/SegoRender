@@ -1,5 +1,5 @@
 add_executable(sandbox)
 aux_source_directory(./ SANDBOX_SRC)
 target_sources(sandbox PRIVATE ${SANDBOX_SRC})
-target_link_libraries(sandbox PUBLIC SegoRender SDL2::SDL2main SDL2::SDL2)
+target_link_libraries(sandbox PUBLIC SGengine SDL2::SDL2main SDL2::SDL2)
 CopyDLL(sandbox)
