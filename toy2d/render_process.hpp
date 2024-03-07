@@ -10,6 +10,8 @@ public:
     vk::Pipeline graphicsPipeline = nullptr;
     vk::RenderPass renderPass = nullptr;
     vk::PipelineLayout layout = nullptr;
+    vk::DescriptorSetLayout setlayout = nullptr;
+
 
     RenderProcess();
     ~RenderProcess();
@@ -18,6 +20,7 @@ public:
     void RecreateRenderPass();
 
 private:
+    vk::DescriptorSetLayout createSetLayout();
     vk::PipelineLayout createLayout();
     vk::Pipeline createGraphicsPipeline(const std::vector<char>& vertexSource, const std::vector<char>& fragSource);
     vk::RenderPass createRenderPass();

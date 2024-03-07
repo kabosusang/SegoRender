@@ -2,10 +2,12 @@
 #include "toy2d/context.hpp"
 #include "toy2d/swapchain.hpp"
 #include "toy2d/vertex.hpp"
+#include "toy2d/uniform.hpp"
 
 namespace toy2d {
 
 RenderProcess::RenderProcess() {
+    setlayout = createSetLayout();
     layout = createLayout();
     renderPass = createRenderPass();
     graphicsPipeline = nullptr;
@@ -32,17 +34,37 @@ void RenderProcess::RecreateRenderPass() {
     renderPass = createRenderPass();
 }
 
+/*     binding inpput -->
+        
+    vk::DescriptorSetLayoutBinding  - binding
+    binging 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+                ↓
+    vk::DescriptorSetLayout - [binging1, binding2,inding3 ]
+                ↓
+    vk::PipelineLayout - [vk::DescriptorSetLayout, vk::DescriptorSetLayout, vk::DescriptorSetLayout]
+                ↓               0                       1                       2
+                                对应的descriptorSet 也就是shader中的set = 0, 1, 2
+
+*/
+
+vk::DescriptorSetLayout RenderProcess::createSetLayout() {
+    vk::DescriptorSetLayoutCreateInfo createInfo;
+    auto binding = Uniform::GetBinding();
+    createInfo.setBindings(binding);
+
+    return Context::Instance().device.createDescriptorSetLayout(createInfo);
+}
+
 vk::PipelineLayout RenderProcess::createLayout() {
     vk::PipelineLayoutCreateInfo createInfo;
-    createInfo.setPushConstantRangeCount(0)
-              .setSetLayoutCount(0);
+    createInfo.setSetLayouts(setlayout);
 
     return Context::Instance().device.createPipelineLayout(createInfo);
 }
 
+
 vk::Pipeline RenderProcess::createGraphicsPipeline(const std::vector<char>& vertexSource, const std::vector<char>& fragSource) {
     auto& ctx = Context::Instance();
-
     vk::GraphicsPipelineCreateInfo createInfo;
 
     // 0. shader prepare

@@ -8,6 +8,7 @@ Buffer::Buffer(size_t size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags 
     auto info = queryMemoryInfo(property);
     allocateMemory(info);
     bindingMem2Buf();
+    
 }
 
 Buffer::~Buffer() {
