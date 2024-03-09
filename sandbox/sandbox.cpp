@@ -1,20 +1,16 @@
-#include "toy2d.hpp"
-#include "SDL.h"
-#include "SDL_vulkan.h"
-#include <SDL_video.h>
+#include "SegEngine.h"
+#include <imgui.h>
+#include <imgui_impl_vulkan.h>
+#include <imgui_impl_sdl2.h>
+#include "../editor/Base/base.hpp"
+
+const int WIDTH = 1024;
+const int HEIGHT = 720;
 
 int main(int argc, char** argv) {
-    SDL_Init(SDL_INIT_EVERYTHING);
-
-    SDL_Window* window = SDL_CreateWindow("sandbox",
-                                          SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                          1024, 720,
-                                          SDL_WINDOW_SHOWN|SDL_WINDOW_VULKAN);
-    if (!window) {
-        SDL_Log("create window failed");
-        exit(2);
-    }
-
+    Sego::SGwindow::Init(WIDTH,HEIGHT);
+    auto window = Sego::SGwindow::Instance()->getWindow();
+ 
     unsigned int count;
     SDL_Vulkan_GetInstanceExtensions(window, &count, nullptr);
     std::vector<const char*> extensions(count);
@@ -26,13 +22,15 @@ int main(int argc, char** argv) {
             VkSurfaceKHR surface;
             SDL_Vulkan_CreateSurface(window, instance, &surface);
             return surface;
-        }, 1024, 720);
+        }, WIDTH, HEIGHT);
+        
     auto renderer = Sego::GetRenderer();
 
     bool shouldClose = false;
     SDL_Event event;
 
     float x = 100, y = 100;
+    bool stop_rendering = false;
 
     Sego::Texture* texture1 = Sego::LoadTexture("resources/role.png");
     Sego::Texture* texture2 = Sego::LoadTexture("resources/texture.jpg");
@@ -43,35 +41,46 @@ int main(int argc, char** argv) {
             if (event.type == SDL_QUIT) {
                 shouldClose = true;
             }
+            if(event.type == SDL_WINDOW_RESIZABLE){
+                renderer->framebufferResized = true;
+            }
+
             if (event.type == SDL_KEYDOWN) {
-                if (event.key.keysym.sym == SDLK_a) {
-                    x -= 10;
+                if (event.window.event == SDL_WINDOWEVENT_MINIMIZED) {
+                    stop_rendering = true;
                 }
-                if (event.key.keysym.sym == SDLK_d) {
-                    x += 10;
-                }
-                if (event.key.keysym.sym == SDLK_w) {
-                    y -= 10;
-                }
-                if (event.key.keysym.sym == SDLK_s) {
-                    y += 10;
+                if (event.window.event == SDL_WINDOWEVENT_RESTORED) {
+                    stop_rendering = false;
                 }
             }
+            //send SDL event to imgui for handling
+            ImGui_ImplSDL2_ProcessEvent(&event);
         }
 
+        //start imgui new frame
+        Sego::ImGuiBase::ImGuiRenderBase();
+        Sego::ImGuiBase::Render();
+        Sego::ImGuiBase::ImGuiRenderEndBase();
+
+        //render the scene
         renderer->StartRender();
         renderer->DrawTexture(Sego::Rect{Sego::Vec{x, y}, Sego::Size{200, 300}}, *texture1);
         renderer->DrawTexture(Sego::Rect{Sego::Vec{500, 100}, Sego::Size{200, 300}}, *texture2);
         renderer->EndRender();
-    
+
+        //render imgui UI
+        if (stop_rendering) {
+            //throttle the speed to avoid the endless spinning
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
+        }		
+
     }
 
     Sego::DestroyTexture(texture1);
     Sego::DestroyTexture(texture2);
-
     Sego::Quit();
 
-    SDL_DestroyWindow(window);
-    SDL_Quit();
     return 0;
 }
+

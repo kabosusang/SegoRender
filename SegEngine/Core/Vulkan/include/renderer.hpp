@@ -8,6 +8,7 @@
 #include "buffer.hpp"
 #include "texture.hpp"
 #include <limits>
+#include "framework/Render/UI/imgui_init.hpp"
 
 namespace Sego {
 
@@ -23,7 +24,13 @@ public:
     void StartRender();
     void EndRender();
 
+    bool framebufferResized = false;
+    bool g_SwapChainRebuild = false;
+
 private:
+    //ImGui
+    ImguiInit ui;
+
     int maxFlightCount_;
     int curFrame_;
     uint32_t imageIndex_;

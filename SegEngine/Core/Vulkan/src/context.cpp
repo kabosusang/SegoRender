@@ -1,45 +1,7 @@
 #include "../include/context.hpp"
+#include "SDL.h"
 
 namespace Sego {
-//创建CreateDebugUtilsMessengerEXT
-VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger);
-
-static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
-    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-    if (func != nullptr) {
-        func(instance, debugMessenger, pAllocator);
-    }
-}
-
-static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-    void* pUserData) {
-        if(messageSeverity >=VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT){
-            //SDL_Log("validation layer: %s",pCallbackData->pMessage);
-        }
-    return VK_FALSE;
-}
-
-VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
-    auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-    if (func != nullptr) {
-        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-    } else {
-        return VK_ERROR_EXTENSION_NOT_PRESENT;
-    }
-}
-
-void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
-{
-    createInfo = {};
-    createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-    createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-    createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-    createInfo.pfnUserCallback = debugCallback;
-}
-
 Context* Context::instance_ = nullptr;
 
 void Context::Init(std::vector<const char*>& extensions, GetSurfaceCallback cb) {
@@ -88,19 +50,14 @@ Context::Context(std::vector<const char*>& extensions, GetSurfaceCallback cb) {
 vk::Instance Context::createInstance(std::vector<const char*>& extensions) {
     vk::InstanceCreateInfo info; 
 
-VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
- populateDebugMessengerCreateInfo(debugCreateInfo);//为了让验证层涵盖到创建instance
-
-
     vk::ApplicationInfo appInfo;
     appInfo.setApiVersion(VK_API_VERSION_1_3);
     info.setPApplicationInfo(&appInfo)
         .setPEnabledExtensionNames(extensions);
 
     std::vector<const char*> layers = {"VK_LAYER_KHRONOS_validation"};
-    info.setPEnabledLayerNames(layers)
-        .setPNext((VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo);
-
+    info.setPEnabledLayerNames(layers);
+       
     return vk::createInstance(info);
 }
 
@@ -177,8 +134,8 @@ void Context::initCommandPool() {
 }
 
 void Context::initShaderModules() {
-    auto vertexSource = ReadWholeFile("./shader/vert.spv");
-    auto fragSource = ReadWholeFile("./shader/frag.spv");
+    auto vertexSource = ReadWholeFile("shader/vert.spv");
+    auto fragSource = ReadWholeFile("shader/frag.spv");
     shader = std::make_unique<Shader>(vertexSource, fragSource);
 }
 

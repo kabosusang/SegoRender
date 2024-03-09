@@ -91,7 +91,12 @@ vk::Pipeline RenderProcess::createGraphicsPipeline(const Shader& shader) {
 
     // 6. depth and stencil buffer
     // We currently don't need depth and stencil buffer
-
+    vk::PipelineDepthStencilStateCreateInfo depthStencilInfo{};
+    depthStencilInfo.setDepthTestEnable(true)
+                    .setDepthWriteEnable(true)
+                    .setDepthCompareOp(vk::CompareOp::eLess)
+                    .setDepthBoundsTestEnable(false)
+                    .setStencilTestEnable(false);
     // 7. blending
     /*
      * newRGB = (srcFactor * srcRGB) <op> (dstFactor * dstRGB)
@@ -126,7 +131,8 @@ vk::Pipeline RenderProcess::createGraphicsPipeline(const Shader& shader) {
               .setPRasterizationState(&rasterInfo)
               .setPMultisampleState(&multisampleInfo)
               .setPColorBlendState(&blendInfo)
-              .setRenderPass(renderPass);
+              .setRenderPass(renderPass)
+              .setPDepthStencilState(&depthStencilInfo);
 
     auto result = ctx.device.createGraphicsPipeline(nullptr, createInfo);
     if (result.result != vk::Result::eSuccess) {
@@ -156,7 +162,7 @@ vk::RenderPass RenderProcess::createRenderPass() {
                      .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
                      .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
                      .setInitialLayout(vk::ImageLayout::eUndefined)
-                     .setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
+                     .setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);
     vk::AttachmentReference reference;
     reference.setAttachment(0)
              .setLayout(vk::ImageLayout::eColorAttachmentOptimal);

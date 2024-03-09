@@ -1,0 +1,28 @@
+#pragma once
+#include "vulkan/vulkan.hpp"
+#include <functional>
+
+class ImguiInit
+{
+public:
+    ImguiInit();
+    ~ImguiInit();
+
+    void Init_Imgui();
+    void Init();
+    vk::RenderPass& GetUiRenderpass() { return uiRenderPass; }
+    std::vector<vk::CommandBuffer> uiCommandBuffers;
+
+    void RecoreImgui(int current);
+private:
+    //
+    vk::DescriptorPool uiDescriptorPool;
+    vk::RenderPass uiRenderPass;
+    vk::CommandPool uiCommPool;
+
+    std::vector<VkFramebuffer> uiFramebuffers;
+    uint32_t MinImageCount = 0;
+
+    uint32_t curFrame_ = 0;
+};
+

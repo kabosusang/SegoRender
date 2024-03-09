@@ -2,6 +2,7 @@
 #include "../include/math.hpp"
 #include "../include/context.hpp"
 
+
 namespace Sego{
 
 Renderer::Renderer(int maxFlightCount): maxFlightCount_(maxFlightCount), curFrame_(0) {
@@ -53,25 +54,35 @@ void Renderer::DrawTexture(const Rect& rect, Texture& texture) {
     cmd.drawIndexed(6, 1, 0, 0, 0);
 }
 
+
 void Renderer::StartRender() {
+   
     auto& ctx = Context::Instance();
     auto& device = ctx.device;
     if (device.waitForFences(fences_[curFrame_], true, std::numeric_limits<std::uint64_t>::max()) != vk::Result::eSuccess) {
         throw std::runtime_error("wait for fence failed");
     }
-    device.resetFences(fences_[curFrame_]);
+   
 
     auto& swapchain = ctx.swapchain;
     auto resultValue = device.acquireNextImageKHR(swapchain->swapchain, std::numeric_limits<std::uint64_t>::max(), imageAvaliableSems_[curFrame_], nullptr);
-    if (resultValue.result != vk::Result::eSuccess) {
-        throw std::runtime_error("wait for image in swapchain failed");
+    
+    if(resultValue.result == vk::Result::eErrorOutOfDateKHR) {
+        g_SwapChainRebuild  = true;
+        swapchain->recreateSwapChain();
+        return;
+    } else if (resultValue.result != vk::Result::eSuccess && resultValue.result != vk::Result::eSuboptimalKHR) {
+        throw std::runtime_error("acquire next image failed");
     }
+    device.resetFences(fences_[curFrame_]);
+
     imageIndex_ = resultValue.value;
 
     auto& cmdMgr = ctx.commandManager;
     auto& cmd = cmdBufs_[curFrame_];
+    
     cmd.reset();
-
+    //imgui
     vk::CommandBufferBeginInfo beginInfo;
     beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
     cmd.begin(beginInfo);
@@ -90,12 +101,18 @@ void Renderer::EndRender() {
     auto& ctx = Context::Instance();
     auto& swapchain = ctx.swapchain;
     auto& cmd = cmdBufs_[curFrame_];
+
     cmd.endRenderPass();
     cmd.end();
+     //imgui
+    ui.RecoreImgui(curFrame_);
+    auto& uicmd = ui.uiCommandBuffers[curFrame_];
+    std::array<vk::CommandBuffer, 2> cmdBuffers = {cmd, uicmd};
 
     vk::SubmitInfo submit;
     vk::PipelineStageFlags flags = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-    submit.setCommandBuffers(cmd)
+
+    submit.setCommandBuffers(cmdBuffers)
           .setWaitSemaphores(imageAvaliableSems_[curFrame_])
           .setWaitDstStageMask(flags)
           .setSignalSemaphores(renderFinishSems_[curFrame_]);
@@ -105,7 +122,13 @@ void Renderer::EndRender() {
     presentInfo.setWaitSemaphores(renderFinishSems_[curFrame_])
                .setSwapchains(swapchain->swapchain)
                .setImageIndices(imageIndex_);
-    if (ctx.presentQueue.presentKHR(presentInfo) != vk::Result::eSuccess) {
+
+    vk::Result result = ctx.presentQueue.presentKHR(presentInfo);
+    if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR
+    || framebufferResized) {
+        g_SwapChainRebuild = false;
+        swapchain->recreateSwapChain();
+    } else if (result != vk::Result::eSuccess) {
         throw std::runtime_error("present queue execute failed");
     }
 

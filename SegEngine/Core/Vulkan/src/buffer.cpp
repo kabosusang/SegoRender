@@ -4,7 +4,7 @@ namespace Sego{
 
 Buffer::Buffer(vk::BufferUsageFlags usage, size_t size, vk::MemoryPropertyFlags memProperty) {
     auto& device = Context::Instance().device;
-
+    
     this->size = size;
     vk::BufferCreateInfo createInfo;
     createInfo.setUsage(usage)

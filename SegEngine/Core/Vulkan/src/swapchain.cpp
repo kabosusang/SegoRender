@@ -125,5 +125,35 @@ void Swapchain::createFramebuffers() {
     }
 }
 
+void Swapchain::cleanupSwapChain() {
+    auto& ctx = Context::Instance();
+    for (auto& framebuffer : framebuffers) {
+        Context::Instance().device.destroyFramebuffer(framebuffer);
+    }
+    framebuffers.clear();
+
+    for (auto& img : images) {
+        ctx.device.destroyImage(img.image);
+        ctx.device.destroyImageView(img.view);
+
+    }
+    images.clear();
+    ctx.device.destroySwapchainKHR(swapchain);
+    swapchain = nullptr;
+}
+
+void Swapchain::recreateSwapChain(){
+    auto& ctx = Context::Instance();
+    ctx.device.waitIdle();
+    cleanupSwapChain();
+
+    swapchain = createSwapchain();
+    createImageAndViews();
+    createFramebuffers();
+    
+    //ctx.initSwapchain(ctx.windowWidth, ctx.windowHeight);
+    //ctx.renderProcess->RecreateFramebuffers();
+}
+
 
 }

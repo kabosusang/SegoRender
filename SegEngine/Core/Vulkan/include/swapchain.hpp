@@ -10,7 +10,7 @@ public:
         vk::Image image;
         vk::ImageView view;
     };
-
+    
     vk::SurfaceKHR surface = nullptr;
     vk::SwapchainKHR swapchain = nullptr;
     std::vector<Image> images;
@@ -23,6 +23,9 @@ public:
     ~Swapchain();
 
     void InitFramebuffers();
+
+    void cleanupSwapChain();
+    void recreateSwapChain();
 
 private:
     struct SurfaceInfo {
