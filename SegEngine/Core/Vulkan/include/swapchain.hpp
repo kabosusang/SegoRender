@@ -25,7 +25,7 @@ public:
     void InitFramebuffers();
 
     void cleanupSwapChain();
-    void recreateSwapChain();
+    void recreateSwapChain(uint32_t width, uint32_t height);
 
 private:
     struct SurfaceInfo {
@@ -35,6 +35,10 @@ private:
         vk::SurfaceTransformFlagBitsKHR transform;
     } surfaceInfo_;
 
+ 
+
+
+
     vk::SwapchainKHR createSwapchain();
 
     void querySurfaceInfo(int windowWidth, int windowHeight);
@@ -42,6 +46,7 @@ private:
     vk::Extent2D querySurfaceExtent(const vk::SurfaceCapabilitiesKHR& capability, int windowWidth, int windowHeight);
     void createImageAndViews();
     void createFramebuffers();
+    void RecreateImageview();
 };
 
 }

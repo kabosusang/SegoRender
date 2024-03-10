@@ -61,6 +61,7 @@ std::vector<DescriptorSetManager::SetInfo> DescriptorSetManager::AllocBufferSets
     return result;
 }
 
+
 DescriptorSetManager::SetInfo DescriptorSetManager::AllocImageSet() {
     std::vector<vk::DescriptorSetLayout> layouts{ Context::Instance().shader->GetDescriptorSetLayouts()[1] };
     vk::DescriptorSetAllocateInfo allocInfo;

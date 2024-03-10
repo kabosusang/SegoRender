@@ -56,33 +56,36 @@ void Renderer::DrawTexture(const Rect& rect, Texture& texture) {
 
 
 void Renderer::StartRender() {
-   
+    
     auto& ctx = Context::Instance();
     auto& device = ctx.device;
     if (device.waitForFences(fences_[curFrame_], true, std::numeric_limits<std::uint64_t>::max()) != vk::Result::eSuccess) {
         throw std::runtime_error("wait for fence failed");
     }
    
-
     auto& swapchain = ctx.swapchain;
     auto resultValue = device.acquireNextImageKHR(swapchain->swapchain, std::numeric_limits<std::uint64_t>::max(), imageAvaliableSems_[curFrame_], nullptr);
-    
+    auto& queue = ctx.graphicsQueue;
     if(resultValue.result == vk::Result::eErrorOutOfDateKHR) {
-        g_SwapChainRebuild  = true;
-        swapchain->recreateSwapChain();
+        framebufferResized = false;
+        swapchain->recreateSwapChain(width,height);
+        recreateCmdBuffersAndDesetPool();
+        ui.RecreateSwapChain();
         return;
     } else if (resultValue.result != vk::Result::eSuccess && resultValue.result != vk::Result::eSuboptimalKHR) {
         throw std::runtime_error("acquire next image failed");
     }
+
     device.resetFences(fences_[curFrame_]);
-
     imageIndex_ = resultValue.value;
+     //imgui
+    ui.RecoreImgui(curFrame_,imageIndex_);
 
+    queue.waitIdle();
     auto& cmdMgr = ctx.commandManager;
     auto& cmd = cmdBufs_[curFrame_];
     
     cmd.reset();
-    //imgui
     vk::CommandBufferBeginInfo beginInfo;
     beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
     cmd.begin(beginInfo);
@@ -104,8 +107,6 @@ void Renderer::EndRender() {
 
     cmd.endRenderPass();
     cmd.end();
-     //imgui
-    ui.RecoreImgui(curFrame_);
     auto& uicmd = ui.uiCommandBuffers[curFrame_];
     std::array<vk::CommandBuffer, 2> cmdBuffers = {cmd, uicmd};
 
@@ -126,8 +127,10 @@ void Renderer::EndRender() {
     vk::Result result = ctx.presentQueue.presentKHR(presentInfo);
     if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR
     || framebufferResized) {
-        g_SwapChainRebuild = false;
-        swapchain->recreateSwapChain();
+        framebufferResized = false;
+        swapchain->recreateSwapChain(width,height);
+        recreateCmdBuffersAndDesetPool();
+        ui.RecreateSwapChain();
     } else if (result != vk::Result::eSuccess) {
         throw std::runtime_error("present queue execute failed");
     }
@@ -167,6 +170,16 @@ void Renderer::createCmdBuffers() {
     for (auto& cmd : cmdBufs_) {
         cmd = Context::Instance().commandManager->CreateOneCommandBuffer();
     }
+}
+
+void Renderer::recreateCmdBuffersAndDesetPool() {
+
+   for (auto& cmd : cmdBufs_) {
+    Context::Instance().commandManager->FreeCmd(cmd);
+    cmd = nullptr;
+   }
+    cmdBufs_.clear();
+    createCmdBuffers();
 }
 
 void Renderer::createBuffers() {

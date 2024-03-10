@@ -162,7 +162,7 @@ vk::RenderPass RenderProcess::createRenderPass() {
                      .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
                      .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
                      .setInitialLayout(vk::ImageLayout::eUndefined)
-                     .setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);
+                     .setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
     vk::AttachmentReference reference;
     reference.setAttachment(0)
              .setLayout(vk::ImageLayout::eColorAttachmentOptimal);

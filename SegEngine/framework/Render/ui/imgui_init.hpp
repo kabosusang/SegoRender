@@ -13,7 +13,12 @@ public:
     vk::RenderPass& GetUiRenderpass() { return uiRenderPass; }
     std::vector<vk::CommandBuffer> uiCommandBuffers;
 
-    void RecoreImgui(int current);
+    void RecreateSwapChain();
+    void CleanupSwapChain();
+
+    void RecoreImgui(int current,uint32_t imageindex);
+
+
 private:
     //
     vk::DescriptorPool uiDescriptorPool;

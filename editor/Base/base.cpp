@@ -24,7 +24,7 @@ namespace Sego{
     }
 
     void ImGuiBase::Render(){
-        //ImGui::ShowDemoWindow();
+        ImGui::ShowDemoWindow();
     }
 
 } // namespace Sego

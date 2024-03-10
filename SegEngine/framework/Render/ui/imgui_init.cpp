@@ -102,28 +102,28 @@ ImguiInit::ImguiInit()
 
 
 }
-void ImguiInit::RecoreImgui(int current)
+void ImguiInit::RecoreImgui(int current,uint32_t imageindex)
 {
     curFrame_ = current;
-    auto& cmd = uiCommandBuffers[curFrame_];
+    auto& cmd = uiCommandBuffers[current];
     cmd.reset();
 
     vk::CommandBufferBeginInfo beginInfo{};
     beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
     cmd.begin(beginInfo);
     vk::ClearValue clearValue;
-    clearValue.setColor(vk::ClearColorValue(std::array<float, 4>{0.1, 0.1, 0.1, 1}));
-    vk::RenderPassBeginInfo renderPassBegin;
+    clearValue.setColor(vk::ClearColorValue(std::array<float, 4>{0, 0, 0, 1}));
+    vk::RenderPassBeginInfo renderPassBegin{};
 
     renderPassBegin.setRenderPass(uiRenderPass)
-                   .setFramebuffer(uiFramebuffers[curFrame_])
+                   .setFramebuffer(uiFramebuffers[imageindex])
                    .setClearValues(clearValue)
                    .setRenderArea(vk::Rect2D({}, Sego::Context::Instance().swapchain->GetExtent()));
     cmd.beginRenderPass(&renderPassBegin, vk::SubpassContents::eInline);
     // Grab and record the draw data for Dear Imgui
-    if(ImGui::GetDrawData()!=nullptr){
-        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), uiCommandBuffers[curFrame_]);
-    }
+    
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), 
+        uiCommandBuffers[current]);
     
     cmd.endRenderPass();
     cmd.end();
@@ -178,13 +178,10 @@ void ImguiInit::Init_Imgui()
         vk::SubpassDependency dependency = {};
         dependency.setSrcSubpass(VK_SUBPASS_EXTERNAL)
                 .setDstSubpass(0)
-                .setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput |
-                                vk::PipelineStageFlagBits::eEarlyFragmentTests)
+                .setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
                 .setSrcAccessMask(vk::AccessFlagBits::eNone)
-                .setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput|
-                                vk::PipelineStageFlagBits::eEarlyFragmentTests)
-                .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite | 
-                                vk::AccessFlagBits::eDepthStencilAttachmentWrite);
+                .setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+                .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite  );
 
         vk::RenderPassCreateInfo renderPassInfo = {};
         renderPassInfo.setAttachmentCount(1)
@@ -211,17 +208,16 @@ void ImguiInit::Init_Imgui()
         uiCommandBuffers.resize(Sego::Context::Instance().swapchain->images.size());
         vk::CommandBufferAllocateInfo allocInfo = {};
         allocInfo.setCommandPool(uiCommPool)
-                .setLevel(vk::CommandBufferLevel::eSecondary)
+                .setLevel(vk::CommandBufferLevel::ePrimary)
                 .setCommandBufferCount((uint32_t)uiCommandBuffers.size());
 
         uiCommandBuffers = Sego::Context::Instance().device.allocateCommandBuffers(allocInfo);
     }
     // create frambuffers
     {
-        uiFramebuffers.resize(Sego::Context::Instance().swapchain->framebuffers.size());
+        uiFramebuffers.resize(Sego::Context::Instance().swapchain->images.size());
         vk::ImageView attachments[1];
             
-
         vk::FramebufferCreateInfo framebufferInfo = {};
         framebufferInfo.setRenderPass(uiRenderPass)
                             .setAttachmentCount(1)
@@ -236,6 +232,52 @@ void ImguiInit::Init_Imgui()
         
     }
 }
+
+void ImguiInit::CleanupSwapChain(){
+  
+    auto& ctx = Sego::Context::Instance();
+    for (auto framebuffer : uiFramebuffers) {
+        ctx.device.destroyFramebuffer(framebuffer,nullptr);
+    }
+    ctx.device.freeCommandBuffers(uiCommPool, uiCommandBuffers);
+    
+}
+
+void ImguiInit::RecreateSwapChain(){
+    CleanupSwapChain();
+    ImGui_ImplVulkan_SetMinImageCount(3);
+ //create command buffer
+    {
+        uiCommandBuffers.resize(Sego::Context::Instance().swapchain->images.size());
+        
+        vk::CommandBufferAllocateInfo allocInfo = {};
+        allocInfo.setCommandPool(uiCommPool)
+                .setLevel(vk::CommandBufferLevel::ePrimary)
+                .setCommandBufferCount((uint32_t)uiCommandBuffers.size());
+
+        uiCommandBuffers = Sego::Context::Instance().device.allocateCommandBuffers(allocInfo);
+    }
+    // create frambuffers
+    {
+        uiFramebuffers.resize(Sego::Context::Instance().swapchain->images.size());
+        vk::ImageView attachments[1];
+
+        vk::FramebufferCreateInfo framebufferInfo = {};
+        framebufferInfo.setRenderPass(uiRenderPass)
+                            .setAttachmentCount(1)
+                            .setPAttachments(attachments)
+                            .setWidth(Sego::Context::Instance().swapchain->GetExtent().width)
+                            .setHeight(Sego::Context::Instance().swapchain->GetExtent().height)
+                            .setLayers(1);
+        for (size_t i = 0; i < uiFramebuffers.size(); i++) {
+            attachments[0] = Sego::Context::Instance().swapchain->images[i].view;
+            uiFramebuffers[i] = Sego::Context::Instance().device.createFramebuffer(framebufferInfo);
+        }
+        
+    }
+
+}
+
 
 ImguiInit::~ImguiInit()
 {

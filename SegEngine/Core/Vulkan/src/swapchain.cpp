@@ -110,49 +110,70 @@ void Swapchain::createImageAndViews() {
     }
 }
 
+void Swapchain::RecreateImageview(){
+    auto& ctx = Context::Instance();
+    for (int i = 0; i < images.size(); ++i) {
+        vk::ImageViewCreateInfo viewCreateInfo;
+        vk::ImageSubresourceRange range;
+        range.setBaseArrayLayer(0)
+             .setBaseMipLevel(0)
+             .setLayerCount(1)
+             .setLevelCount(1)
+             .setAspectMask(vk::ImageAspectFlagBits::eColor);
+        viewCreateInfo.setImage(images[i].image)
+                      .setFormat(surfaceInfo_.format.format)
+                      .setViewType(vk::ImageViewType::e2D)
+                      .setSubresourceRange(range)
+                      .setComponents(vk::ComponentMapping{});
+        images[i].view = ctx.device.createImageView(viewCreateInfo);
+    }
+
+}
+
+
+
 void Swapchain::createFramebuffers() {
-    for (auto& img : images) {
-        auto& view = img.view;
+    framebuffers.resize(images.size());
+    for (int i = 0; i < images.size(); ++i) {
+        auto& view = images[i].view;
+        std::vector<vk::ImageView> attachments = { view };
 
         vk::FramebufferCreateInfo createInfo;
-        createInfo.setAttachments(view)
+        createInfo.setAttachments(attachments)
                   .setLayers(1)
                   .setHeight(GetExtent().height)
                   .setWidth(GetExtent().width)
                   .setRenderPass(Context::Instance().renderProcess->renderPass);
 
-        framebuffers.push_back(Context::Instance().device.createFramebuffer(createInfo));
+        framebuffers[i] = Context::Instance().device.createFramebuffer(createInfo);
     }
 }
 
 void Swapchain::cleanupSwapChain() {
     auto& ctx = Context::Instance();
+
+
     for (auto& framebuffer : framebuffers) {
-        Context::Instance().device.destroyFramebuffer(framebuffer);
+        Context::Instance().device.destroyFramebuffer(framebuffer,nullptr);
     }
-    framebuffers.clear();
-
     for (auto& img : images) {
-        ctx.device.destroyImage(img.image);
-        ctx.device.destroyImageView(img.view);
-
+        ctx.device.destroyImageView(img.view,nullptr);
     }
     images.clear();
-    ctx.device.destroySwapchainKHR(swapchain);
-    swapchain = nullptr;
+    ctx.device.destroySwapchainKHR(swapchain,nullptr);
 }
 
-void Swapchain::recreateSwapChain(){
+void Swapchain::recreateSwapChain(uint32_t width, uint32_t height){
     auto& ctx = Context::Instance();
     ctx.device.waitIdle();
     cleanupSwapChain();
-
+    querySurfaceInfo(width, height);
     swapchain = createSwapchain();
+
+    ctx.renderProcess->RecreateRenderPass();
     createImageAndViews();
+    ctx.renderProcess->RecreateGraphicsPipeline(*ctx.shader);
     createFramebuffers();
-    
-    //ctx.initSwapchain(ctx.windowWidth, ctx.windowHeight);
-    //ctx.renderProcess->RecreateFramebuffers();
 }
 
 

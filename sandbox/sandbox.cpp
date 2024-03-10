@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
     SDL_Vulkan_GetInstanceExtensions(window, &count, nullptr);
     std::vector<const char*> extensions(count);
     SDL_Vulkan_GetInstanceExtensions(window, &count, extensions.data());
-    extensions.push_back("VK_EXT_debug_utils");
+    
     
     Sego::Init(extensions,
         [&](VkInstance instance){
@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
                 shouldClose = true;
             }
             if(event.type == SDL_WINDOW_RESIZABLE){
-                renderer->framebufferResized = true;
+                renderer->SetFrameBufferSize(event.window.data1, event.window.data2);
             }
 
             if (event.type == SDL_KEYDOWN) {
@@ -67,13 +67,6 @@ int main(int argc, char** argv) {
         renderer->DrawTexture(Sego::Rect{Sego::Vec{x, y}, Sego::Size{200, 300}}, *texture1);
         renderer->DrawTexture(Sego::Rect{Sego::Vec{500, 100}, Sego::Size{200, 300}}, *texture2);
         renderer->EndRender();
-
-        //render imgui UI
-        if (stop_rendering) {
-            //throttle the speed to avoid the endless spinning
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            continue;
-        }		
 
     }
 

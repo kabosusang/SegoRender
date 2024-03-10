@@ -30,6 +30,7 @@ public:
 
     std::vector<SetInfo> AllocBufferSets(uint32_t num);
     SetInfo AllocImageSet();
+    
 
     void FreeImageSet(const SetInfo&);
 
