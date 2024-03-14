@@ -2,9 +2,8 @@
 #include "context.hpp"
 #include "imgui_impl_vulkan.h"
 #include "imgui_impl_sdl2.h"
-
 #include "framework/window/SGwindow.hpp"
-#include "context.hpp"
+
 
 ImguiInit::ImguiInit()
 {
@@ -19,10 +18,10 @@ ImguiInit::ImguiInit()
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
     //io.ConfigViewportsNoAutoMerge = true;
     //io.ConfigViewportsNoTaskBarIcon = true;
-    // Setup Dear ImGui style
+ 
     //ImGui::StyleColorsLight();
-
-    //io.Fonts->AddFontFromFileTTF("../resource/Fonts/ziti.ttf",18,NULL,io.Fonts->GetGlyphRangesChineseFull());
+    io.Fonts->AddFontDefault();
+    //io.Fonts->AddFontFromFileTTF("resources/Fonts/ziti.ttf",18,NULL,io.Fonts->GetGlyphRangesChineseFull());
 
     //ImGui::GetIO().IniFilename = "../SGData/imgui/imgui.ini"; //ImGui Layout 
 

@@ -25,6 +25,8 @@ namespace Sego{
 
     void ImGuiBase::Render(){
         ImGui::ShowDemoWindow();
+        
+        
     }
 
 } // namespace Sego

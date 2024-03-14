@@ -1,6 +1,7 @@
 #pragma once
-#include "vulkan/vulkan.hpp"
-#include <functional>
+
+#include <vulkan/vulkan.hpp>
+
 
 class ImguiInit
 {
@@ -12,7 +13,7 @@ public:
     void Init();
     vk::RenderPass& GetUiRenderpass() { return uiRenderPass; }
     std::vector<vk::CommandBuffer> uiCommandBuffers;
-
+    
     void RecreateSwapChain();
     void CleanupSwapChain();
 

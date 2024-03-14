@@ -10,7 +10,6 @@ include(cmake/sdl2-config.cmake)
 include(cmake/CopyFiles.cmake)
 #engine
 
-
 add_subdirectory(3rdL)
 add_subdirectory(editor)
 add_subdirectory(SegEngine)
