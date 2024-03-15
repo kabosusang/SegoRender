@@ -1,4 +1,4 @@
-#include "../include/buffer.hpp"
+#include "buffer.hpp"
 
 namespace Sego{
 

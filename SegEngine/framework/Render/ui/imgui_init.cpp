@@ -20,8 +20,7 @@ ImguiInit::ImguiInit()
     //io.ConfigViewportsNoTaskBarIcon = true;
  
     //ImGui::StyleColorsLight();
-    io.Fonts->AddFontDefault();
-    //io.Fonts->AddFontFromFileTTF("resources/Fonts/ziti.ttf",18,NULL,io.Fonts->GetGlyphRangesChineseFull());
+    io.Fonts->AddFontFromFileTTF("resources/Fonts/ziti.ttf",18,NULL,io.Fonts->GetGlyphRangesChineseFull());
 
     //ImGui::GetIO().IniFilename = "../SGData/imgui/imgui.ini"; //ImGui Layout 
 
@@ -89,7 +88,6 @@ ImguiInit::ImguiInit()
 
     // Upload the fonts for DearImgui
     {
-        
         Sego::Context::Instance().commandManager->ExecuteCmd(Sego::Context::Instance().graphicsQueue
         , [&](vk::CommandBuffer cmd){
             ImGui_ImplVulkan_CreateFontsTexture(cmd);
@@ -162,7 +160,7 @@ void ImguiInit::Init_Imgui()
                         .setStoreOp(vk::AttachmentStoreOp::eStore)
                         .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
                         .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-                        .setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal)
+                        .setInitialLayout(vk::ImageLayout::ePresentSrcKHR)
                         .setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
 
         vk::AttachmentReference colorAttachmentRef = {};
@@ -180,7 +178,7 @@ void ImguiInit::Init_Imgui()
                 .setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
                 .setSrcAccessMask(vk::AccessFlagBits::eNone)
                 .setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-                .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite  );
+                .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
 
         vk::RenderPassCreateInfo renderPassInfo = {};
         renderPassInfo.setAttachmentCount(1)

@@ -25,7 +25,9 @@ namespace Sego{
 
     void ImGuiBase::Render(){
         ImGui::ShowDemoWindow();
-        
+        ImGui::Begin("Hello, world!");
+        ImGui::Text("Hello 世界");
+        ImGui::End();
         
     }
 

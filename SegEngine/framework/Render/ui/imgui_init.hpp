@@ -10,7 +10,7 @@ public:
     ~ImguiInit();
 
     void Init_Imgui();
-    void Init();
+ 
     vk::RenderPass& GetUiRenderpass() { return uiRenderPass; }
     std::vector<vk::CommandBuffer> uiCommandBuffers;
     

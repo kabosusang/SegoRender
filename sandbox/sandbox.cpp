@@ -1,7 +1,4 @@
 #include "SegEngine.h"
-#include <imgui.h>
-#include <imgui_impl_vulkan.h>
-#include <imgui_impl_sdl2.h>
 #include "../editor/Base/base.hpp"
 
 const int WIDTH = 1024;
@@ -65,7 +62,7 @@ int main(int argc, char** argv) {
         //render the scene
         renderer->StartRender();
         renderer->DrawTexture(Sego::Rect{Sego::Vec{x, y}, Sego::Size{200, 300}}, *texture1);
-        renderer->DrawTexture(Sego::Rect{Sego::Vec{500, 100}, Sego::Size{200, 300}}, *texture2);
+        //renderer->DrawTexture(Sego::Rect{Sego::Vec{500, 100}, Sego::Size{200, 300}}, *texture2);
         renderer->EndRender();
 
     }

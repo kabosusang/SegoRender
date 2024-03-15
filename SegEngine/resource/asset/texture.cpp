@@ -1,9 +1,37 @@
-#include "../include/texture.hpp"
-
-#define STB_IMAGE_IMPLEMENTATION
-#include "../include/stb_image.h"
+#include "texture.hpp"
+#include "stb_image.h"
 
 namespace Sego {
+void Texture::fromBufferData(void *buffer, 
+vk::DeviceSize bufferSize, vk::Format format, 
+uint32_t texWidth, uint32_t texHeight, vk::Filter filter, 
+vk::ImageUsageFlags imageUsageFlags, vk::ImageLayout imageLayout)
+{
+width_ = texWidth;
+height_ = texHeight;
+mipLevels_ = 1;
+
+std::unique_ptr<Buffer> stagebuffer(new Buffer(vk::BufferUsageFlagBits::eTransferSrc,
+                                   bufferSize,
+                                   vk::MemoryPropertyFlagBits::eHostCoherent|vk::MemoryPropertyFlagBits::eHostVisible));
+memcpy(stagebuffer->map, buffer, bufferSize);
+
+createImage(width_, height_, mipLevels_, format, vk::ImageTiling::eOptimal,
+            vk::ImageUsageFlagBits::eTransferDst|imageUsageFlags);
+
+    allocMemory();
+    Context::Instance().device.bindImageMemory(image, memory, 0);
+
+    transitionImageLayoutFromUndefine2Dst();
+    transformData2Image(*stagebuffer, width_, height_);
+    transitionImageLayoutFromDst2Optimal();
+
+    createImageView();
+    stbi_image_free(buffer);
+    set = DescriptorSetManager::Instance().AllocImageSet();
+    updateDescriptorSet();
+
+}
 
 Texture::Texture(std::string_view filename) {
     int w, h, channel;
@@ -57,6 +85,24 @@ void Texture::createImage(uint32_t w, uint32_t h) {
               .setSamples(vk::SampleCountFlagBits::e1);
     image = Context::Instance().device.createImage(createInfo);
 }
+
+
+void Texture::createImage(uint32_t w, uint32_t h,uint32_t mipLevels,
+vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage){
+    vk::ImageCreateInfo createInfo;
+    createInfo.setImageType(vk::ImageType::e2D)
+              .setArrayLayers(1)
+              .setMipLevels(mipLevels)
+              .setExtent({w, h, 1})
+              .setFormat(format)
+              .setTiling(tiling)
+              .setInitialLayout(vk::ImageLayout::eUndefined)
+              .setUsage(usage)
+              .setSamples(vk::SampleCountFlagBits::e1);
+    image = Context::Instance().device.createImage(createInfo);
+}
+
+
 
 void Texture::allocMemory() {
     auto& device = Context::Instance().device;

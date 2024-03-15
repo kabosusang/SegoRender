@@ -5,10 +5,9 @@
 #include "command_manager.hpp"
 #include "swapchain.hpp"
 #include "math.hpp"
-#include "buffer.hpp"
-#include "texture.hpp"
 #include <limits>
 #include "framework/Render/UI/imgui_init.hpp"
+#include "resource/asset/mesh.hpp"
 
 namespace Sego {
 
@@ -19,6 +18,7 @@ public:
 
     void SetProject(int right, int left, int bottom, int top, int far, int near);
     void DrawTexture(const Rect&, Texture& texture);
+    void DrawModel(Node node);
     void SetDrawColor(const Color&);
     void StartRender();
     void EndRender();
@@ -64,10 +64,7 @@ private:
     void updateDescriptorSets();
     void transformBuffer2Device(Buffer& src, Buffer& dst, size_t srcOffset, size_t dstOffset, size_t size);
     std::uint32_t queryBufferMemTypeIndex(std::uint32_t, vk::MemoryPropertyFlags);
-
-
     void recreateCmdBuffersAndDesetPool();
-
 
 };
 

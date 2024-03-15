@@ -1,2 +1,5 @@
 add_subdirectory(imguidk)
 add_subdirectory(spdlog)
+add_subdirectory(glm)
+add_subdirectory(tinygltf)
+add_subdirectory(stb_image)

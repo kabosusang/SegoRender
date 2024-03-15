@@ -1,7 +1,8 @@
 #include "../include/renderer.hpp"
 #include "../include/math.hpp"
 #include "../include/context.hpp"
-
+#include "renderer.hpp"
+#include "resource/asset/Import/gltf_import.hpp"
 
 namespace Sego{
 
@@ -56,7 +57,6 @@ void Renderer::DrawTexture(const Rect& rect, Texture& texture) {
 
 
 void Renderer::StartRender() {
-    
     auto& ctx = Context::Instance();
     auto& device = ctx.device;
     if (device.waitForFences(fences_[curFrame_], true, std::numeric_limits<std::uint64_t>::max()) != vk::Result::eSuccess) {
@@ -166,7 +166,6 @@ void Renderer::createSemaphores() {
 
 void Renderer::createCmdBuffers() {
     cmdBufs_.resize(maxFlightCount_);
-
     for (auto& cmd : cmdBufs_) {
         cmd = Context::Instance().commandManager->CreateOneCommandBuffer();
     }

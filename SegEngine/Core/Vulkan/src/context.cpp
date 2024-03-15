@@ -1,5 +1,4 @@
 #include "../include/context.hpp"
-#include "SDL.h"
 
 namespace Sego {
 Context* Context::instance_ = nullptr;

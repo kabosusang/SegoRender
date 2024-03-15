@@ -1,8 +1,8 @@
 #pragma once
 
-#include "vulkan/vulkan.hpp"
 #include "buffer.hpp"
-#include "descriptor_manager.hpp"
+#include "Core/Vulkan/include/descriptor_manager.hpp"
+#include "vulkan/vulkan.hpp"
 #include <string_view>
 #include <string>
 
@@ -19,10 +19,26 @@ public:
     vk::DeviceMemory memory;
     vk::ImageView view;
     DescriptorSetManager::SetInfo set;
-
+    uint32_t width_;
+    uint32_t height_;
+    uint32_t mipLevels_;
+    void fromBufferData(
+	    void *             buffer,
+	    vk::DeviceSize     bufferSize,
+	    vk::Format         format,
+	    uint32_t           texWidth,
+	    uint32_t           texHeight,
+	    vk::Filter         filter          = vk::Filter::eLinear,
+	    vk::ImageUsageFlags  imageUsageFlags = vk::ImageUsageFlagBits::eSampled,
+	    vk::ImageLayout      imageLayout     = vk::ImageLayout::eShaderReadOnlyOptimal);
+    
 private:
     Texture(std::string_view filename);
     void createImage(uint32_t w, uint32_t h);
+    void createImage(uint32_t w, uint32_t h,uint32_t mipLevels,
+vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage);
+
+
     void createImageView();
     void allocMemory();
     uint32_t queryImageMemoryIndex();
@@ -47,7 +63,6 @@ public:
 
 private:
     static std::unique_ptr<TextureManager> instance_;
-
     std::vector<std::unique_ptr<Texture>> datas_;
 };
 
