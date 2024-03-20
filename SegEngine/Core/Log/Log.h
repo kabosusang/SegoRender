@@ -1,7 +1,7 @@
 #pragma once
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
-#include <assert.h>
+#include <cassert>
 
 namespace Sego{
 
@@ -37,4 +37,5 @@ namespace Sego{
 #define SG_TRACE(...)		::Sego::Log::GetClientLogger()->trace(__VA_ARGS__)
 #define SG_FATAL(...)		::Sego::Log::GetClientLogger()->fatal(__VA_ARGS__)
 
+#define SG_ASSERT(x, ...) { if(!(x)) { SG_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); assert(x); } }
 

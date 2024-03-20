@@ -1,6 +1,7 @@
 if (NOT TARGET SDL2)
     if (WIN32)  # Windows, use clang or MSVC
         set(SDL2_ROOT "" CACHE PATH "SDL2 root directory")
+        
         set(SDL2_INCLUDE_DIR "${SDL2_ROOT}/include/SDL2")
         set(SDL2_LIB_DIR "${SDL2_ROOT}/lib")
         add_library(SDL2::SDL2 SHARED IMPORTED GLOBAL)

@@ -12,28 +12,32 @@ Swapchain::Swapchain(vk::SurfaceKHR surface, int windowWidth, int windowHeight):
 
 Swapchain::~Swapchain() {
     auto& ctx = Context::Instance();
-    for (auto& img : images) {
+    for (auto& img : SwapchainImagesAview_) {
         ctx.device.destroyImageView(img.view);
     }
-    for (auto& framebuffer : framebuffers) {
-        Context::Instance().device.destroyFramebuffer(framebuffer);
-    }
+
     ctx.device.destroySwapchainKHR(swapchain);
     ctx.instance.destroySurfaceKHR(surface);
 }
 
-void Swapchain::InitFramebuffers() {
-    createFramebuffers();
-}
 
 void Swapchain::querySurfaceInfo(int windowWidth, int windowHeight) {
     surfaceInfo_.format = querySurfaceeFormat();
-
     auto capability = Context::Instance().phyDevice.getSurfaceCapabilitiesKHR(surface);
     surfaceInfo_.count = std::clamp(capability.minImageCount + 1,
                                     capability.minImageCount, capability.maxImageCount);
     surfaceInfo_.transform = capability.currentTransform;
     surfaceInfo_.extent = querySurfaceExtent(capability, windowWidth, windowHeight);
+    surfaceInfo_.presentMode = chooseSwapPresentMode();
+}
+vk::PresentModeKHR Swapchain::chooseSwapPresentMode() {
+    auto presentModes = Context::Instance().phyDevice.getSurfacePresentModesKHR(surface);
+    for (auto& mode : presentModes) {
+        if (mode == vk::PresentModeKHR::eMailbox) {
+            return mode;
+        }
+    }
+    return vk::PresentModeKHR::eFifo;
 }
 
 vk::SurfaceFormatKHR Swapchain::querySurfaceeFormat() {
@@ -71,7 +75,7 @@ vk::SwapchainKHR Swapchain::createSwapchain() {
               .setImageUsage(vk::ImageUsageFlagBits::eColorAttachment)
               .setMinImageCount(surfaceInfo_.count)
               .setImageArrayLayers(1)
-              .setPresentMode(vk::PresentModeKHR::eFifo)
+              .setPresentMode(surfaceInfo_.presentMode)
               .setPreTransform(surfaceInfo_.transform)
               .setSurface(surface);
 
@@ -106,60 +110,17 @@ void Swapchain::createImageAndViews() {
                       .setSubresourceRange(range)
                       .setComponents(vk::ComponentMapping{});
         img.view = ctx.device.createImageView(viewCreateInfo);
-        this->images.push_back(img);
-    }
-}
-
-void Swapchain::RecreateImageview(){
-    auto& ctx = Context::Instance();
-    for (int i = 0; i < images.size(); ++i) {
-        vk::ImageViewCreateInfo viewCreateInfo;
-        vk::ImageSubresourceRange range;
-        range.setBaseArrayLayer(0)
-             .setBaseMipLevel(0)
-             .setLayerCount(1)
-             .setLevelCount(1)
-             .setAspectMask(vk::ImageAspectFlagBits::eColor);
-        viewCreateInfo.setImage(images[i].image)
-                      .setFormat(surfaceInfo_.format.format)
-                      .setViewType(vk::ImageViewType::e2D)
-                      .setSubresourceRange(range)
-                      .setComponents(vk::ComponentMapping{});
-        images[i].view = ctx.device.createImageView(viewCreateInfo);
-    }
-
-}
-
-
-
-void Swapchain::createFramebuffers() {
-    framebuffers.resize(images.size());
-    for (int i = 0; i < images.size(); ++i) {
-        auto& view = images[i].view;
-        std::vector<vk::ImageView> attachments = { view };
-
-        vk::FramebufferCreateInfo createInfo;
-        createInfo.setAttachments(attachments)
-                  .setLayers(1)
-                  .setHeight(GetExtent().height)
-                  .setWidth(GetExtent().width)
-                  .setRenderPass(Context::Instance().renderProcess->renderPass);
-
-        framebuffers[i] = Context::Instance().device.createFramebuffer(createInfo);
+        this->SwapchainImagesAview_.push_back(img);
     }
 }
 
 void Swapchain::cleanupSwapChain() {
     auto& ctx = Context::Instance();
 
-
-    for (auto& framebuffer : framebuffers) {
-        Context::Instance().device.destroyFramebuffer(framebuffer,nullptr);
-    }
-    for (auto& img : images) {
+    for (auto& img : SwapchainImagesAview_) {
         ctx.device.destroyImageView(img.view,nullptr);
     }
-    images.clear();
+    SwapchainImagesAview_.clear();
     ctx.device.destroySwapchainKHR(swapchain,nullptr);
 }
 
@@ -169,11 +130,7 @@ void Swapchain::recreateSwapChain(uint32_t width, uint32_t height){
     cleanupSwapChain();
     querySurfaceInfo(width, height);
     swapchain = createSwapchain();
-
-    ctx.renderProcess->RecreateRenderPass();
     createImageAndViews();
-    ctx.renderProcess->RecreateGraphicsPipeline(*ctx.shader);
-    createFramebuffers();
 }
 
 

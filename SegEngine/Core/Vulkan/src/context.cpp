@@ -44,6 +44,12 @@ Context::Context(std::vector<const char*>& extensions, GetSurfaceCallback cb) {
 
     graphicsQueue = device.getQueue(queueInfo.graphicsIndex.value(), 0);
     presentQueue = device.getQueue(queueInfo.presentIndex.value(), 0);
+
+    
+    
+ 
+
+
 }
 
 vk::Instance Context::createInstance(std::vector<const char*>& extensions) {
@@ -56,7 +62,7 @@ vk::Instance Context::createInstance(std::vector<const char*>& extensions) {
 
     std::vector<const char*> layers = {"VK_LAYER_KHRONOS_validation"};
     info.setPEnabledLayerNames(layers);
-       
+
     return vk::createInstance(info);
 }
 
@@ -70,9 +76,10 @@ vk::PhysicalDevice Context::pickupPhysicalDevice() {
 }
 
 vk::Device Context::createDevice(vk::SurfaceKHR surface) {
+
     vk::DeviceCreateInfo deviceCreateInfo;
     queryQueueInfo(surface);
-    std::array extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+    std::array extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME,VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME};
     deviceCreateInfo.setPEnabledExtensionNames(extensions);
 
     std::vector<vk::DeviceQueueCreateInfo> queueInfos;
@@ -118,46 +125,11 @@ void Context::queryQueueInfo(vk::SurfaceKHR surface) {
 
 void Context::initSwapchain(int windowWidth, int windowHeight) {
     swapchain = std::make_unique<Swapchain>(surface_, windowWidth, windowHeight);
+    shaderManager = std::make_unique<ShaderManager>();
 }
 
-void Context::initRenderProcess() {
-    renderProcess = std::make_unique<RenderProcess>();
-}
-
-void Context::initGraphicsPipeline() {
-    renderProcess->RecreateGraphicsPipeline(*shader);
-}
-
-void Context::initCommandPool() {
-    commandManager = std::make_unique<CommandManager>();
-}
-
-void Context::initShaderModules() {
-    auto vertexSource = ReadWholeFile("shader/vert.spv");
-    auto fragSource = ReadWholeFile("shader/frag.spv");
-    shader = std::make_unique<Shader>(vertexSource, fragSource);
-}
-
-void Context::initSampler() {
-    vk::SamplerCreateInfo createInfo;
-    createInfo.setMagFilter(vk::Filter::eLinear)
-              .setMinFilter(vk::Filter::eLinear)
-              .setAddressModeU(vk::SamplerAddressMode::eRepeat)
-              .setAddressModeV(vk::SamplerAddressMode::eRepeat)
-              .setAddressModeW(vk::SamplerAddressMode::eRepeat)
-              .setAnisotropyEnable(false)
-              .setBorderColor(vk::BorderColor::eIntOpaqueBlack)
-              .setUnnormalizedCoordinates(false)
-              .setCompareEnable(false)
-              .setMipmapMode(vk::SamplerMipmapMode::eLinear);
-    sampler = Context::Instance().device.createSampler(createInfo);
-}
 
 Context::~Context() {
-    shader.reset();
-    device.destroySampler(sampler);
-    commandManager.reset();
-    renderProcess.reset();
     swapchain.reset();
     device.destroy();
     instance.destroy();

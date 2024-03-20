@@ -4,4 +4,3 @@ target_sources(sandbox PRIVATE ${SANDBOX_SRC})
 
 target_link_libraries(sandbox PUBLIC SGengine editor)
 CopyDLL(sandbox)
-
