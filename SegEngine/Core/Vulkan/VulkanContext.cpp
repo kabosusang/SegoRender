@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "VulkanContext.hpp"
 #include "Vulkan_rhi.hpp"
+#include "Core/Base/Input.hpp"
 
 //Imgui Context
 #include "imgui.h"
@@ -26,16 +27,16 @@ void VulkanContext::Init(){
     SDL_Vulkan_GetInstanceExtensions(windowHandle_, &count, nullptr);
     std::vector<const char*> extensions(count);
     SDL_Vulkan_GetInstanceExtensions(windowHandle_, &count, extensions.data());
-
-
+    auto[w,h] = Input::GetWindowSize();
+    width_ = w;
+    height_ = h;
+    
     VulkanRhi::Init(extensions,
     [&](VkInstance instance){
         VkSurfaceKHR surface;
         SDL_Vulkan_CreateSurface(windowHandle_, instance, &surface);
         return surface;
     }, width_, height_);
-    
-    
 }
 
 
@@ -47,6 +48,10 @@ VulkanContext::~VulkanContext(){
     VulkanRhi::Instance().destory();
 }
 
+bool VulkanContext::RebuildSwapChain(){
+    VulkanRhi::Instance().IsResized();
+    return true;
+}
 
 
 }

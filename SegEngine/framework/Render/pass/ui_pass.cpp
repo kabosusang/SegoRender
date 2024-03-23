@@ -48,7 +48,7 @@ namespace Sego{
 		createDescriptorPool();
         CreateRenderPass();
         CreateFrameBuffer();
-
+       
         //setup platform/renderer bindings
         ImGui_ImplSDL2_InitForVulkan(VulkanContext::Instance().GetWindowHandle());
 
@@ -65,6 +65,7 @@ namespace Sego{
         init_info.ImageCount = 3;
         init_info.Allocator = nullptr;
         init_info.CheckVkResultFn = nullptr;
+        
         bool is_success = ImGui_ImplVulkan_Init(&init_info, renderPass_);
         if(!is_success){
             SG_CORE_ERROR("UiPass Init Failed");
@@ -96,23 +97,14 @@ void UiPass::destroy(){
 }
 
 void UiPass::createDescriptorPool(){
+    const uint32_t maxDescriptorSet = 128;
     vk::DescriptorPoolSize poolSizes[] = {
-            { vk::DescriptorType::eSampler, 1000 },
-            { vk::DescriptorType::eCombinedImageSampler, 1000 },
-            { vk::DescriptorType::eSampledImage, 1000 },
-            { vk::DescriptorType::eStorageImage, 1000 },
-            { vk::DescriptorType::eUniformTexelBuffer, 1000 },
-            { vk::DescriptorType::eStorageTexelBuffer, 1000 },
-            { vk::DescriptorType::eUniformBuffer, 1000 },
-            { vk::DescriptorType::eStorageBuffer, 1000 },
-            { vk::DescriptorType::eUniformBufferDynamic, 1000 },
-            { vk::DescriptorType::eStorageBufferDynamic, 1000 },
-            { vk::DescriptorType::eInputAttachment, 1000 }
+            {vk::DescriptorType::eSampler, maxDescriptorSet},
         };
             vk::DescriptorPoolCreateInfo poolInfo = {};
-            poolInfo.setPoolSizeCount(11)
+            poolInfo.setPoolSizeCount((uint32_t)IM_ARRAYSIZE(poolSizes))
                     .setPPoolSizes(poolSizes)
-                    .setMaxSets(1000 * IM_ARRAYSIZE(poolSizes))
+                    .setMaxSets(maxDescriptorSet)
                     .setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet);
         descriptorPool_ = Sego::Context::Instance().device.createDescriptorPool(poolInfo);
 }
@@ -139,6 +131,7 @@ void UiPass::CreateFrameBuffer(){
     auto& ctx = Context::Instance();
     uint32_t image_count = ctx.swapchain->SwapchainImagesAview_.size();
     framebuffers_.resize(image_count);
+
 
     vk::ImageView attachments[1];
     vk::FramebufferCreateInfo framebufferInfo = {};
@@ -179,8 +172,8 @@ void UiPass::CreateRenderPass(){
     vk::SubpassDependency dependency = {};
     dependency.setSrcSubpass(VK_SUBPASS_EXTERNAL)
             .setDstSubpass(0)
-            .setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-            .setSrcAccessMask(vk::AccessFlagBits::eNone)
+            .setSrcStageMask(vk::PipelineStageFlagBits::eFragmentShader)//vk::PipelineStageFlagBits::eColorAttachmentOutput
+            .setSrcAccessMask(vk::AccessFlagBits::eShaderRead)
             .setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
             .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
 

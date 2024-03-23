@@ -1,4 +1,4 @@
-
+#include "Core/sgmacro.hpp"
 #include <string>
 #include <functional>
 #include <memory>
@@ -12,3 +12,8 @@
 #include <string_view>
 #include <sstream>
 #include <unordered_map>
+#include <chrono>
+
+
+//Core
+#include "Core/Log/Log.h"

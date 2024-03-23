@@ -35,9 +35,9 @@ namespace Sego{
 
 		// Window attributes
 		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
+		virtual bool IsWindowResize() = 0;
 
 		virtual void* GetNativeWindow() const = 0;
-
 		static Window* Create(const WindowProps& props = WindowProps());
 	};
 

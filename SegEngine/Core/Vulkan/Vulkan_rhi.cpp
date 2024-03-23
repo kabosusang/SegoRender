@@ -1,5 +1,6 @@
 #include "Vulkan_rhi.hpp"
 #include "Core/Vulkan/VulkanContext.hpp"
+#include "Core/Base/Input.hpp" 
 
 namespace Sego{
 VulkanRhi* VulkanRhi::instance_ = nullptr;
@@ -14,13 +15,13 @@ VulkanRhi::VulkanRhi(uint32_t windowWidth, uint32_t windowHeight){
     createCmdPool();
     createCmdBuffers();
     createSemaphoresAndFence();
+    loadExtensionFuncs();
+
     uiPass_ = std::make_unique<UiPass>();
     uiPass_->Init();
 
     mainPass_ = std::make_unique<MainPass>();
     mainPass_->Init();
-
-
 }
 void VulkanRhi::Init(std::vector<const char*>& extensions, 
 Context::GetSurfaceCallback cb, int windowWidth, int windowHeight) {
@@ -47,6 +48,7 @@ void VulkanRhi::destory() {
     delete instance_;
     instance_ = nullptr;
 }
+
 
 void VulkanRhi::createCmdPool() {
     auto& ctx = Context::Instance();
@@ -81,14 +83,12 @@ void VulkanRhi::createSemaphoresAndFence() {
     //semaphores GPU-GPU
     imageAvailableSemaphores_.resize(maxFlightCount_);
     renderFinishedSemaphores_.resize(maxFlightCount_);
+    vk::SemaphoreCreateInfo semaphoreInfo{};
 
     //fences CPU-GPU
     inFlightFences_.resize(maxFlightCount_);
-
-    vk::SemaphoreCreateInfo semaphoreInfo{};
-
     vk::FenceCreateInfo fenceInfo{};
-
+    
     for (size_t i = 0; i < maxFlightCount_; i++) {
         imageAvailableSemaphores_[i] = ctx.device.createSemaphore(semaphoreInfo);
         renderFinishedSemaphores_[i] = ctx.device.createSemaphore(semaphoreInfo);
@@ -96,6 +96,12 @@ void VulkanRhi::createSemaphoresAndFence() {
     }
    
 }
+
+void VulkanRhi::loadExtensionFuncs(){
+    vkCmdPushDescriptorSet_ = (PFN_vkCmdPushDescriptorSetKHR)vkGetDeviceProcAddr(Context::Instance().device, "vkCmdPushDescriptorSetKHR");
+}
+
+
 
 void VulkanRhi::render(){
     waitFrame();
@@ -113,7 +119,8 @@ void VulkanRhi::waitFrame(){
         ctx.swapchain->swapchain, 
         UINT64_MAX, imageAvailableSemaphores_[currentFrame_], nullptr);
     if(resultValue.result == vk::Result::eErrorOutOfDateKHR){
-        //ctx.swapchain->recreateSwapChain(0, 0);
+        framebufferResized  = false;
+        recreateSwapchain();
         return;
     }
     currentImageIndex_ = resultValue.value;
@@ -130,8 +137,8 @@ void VulkanRhi::recordFrame(){
 
     cmdBuffer.begin(beginInfo);
     //record all renderpass
-    mainPass_->Render();
     uiPass_->Render();
+    mainPass_->Render();
 
     cmdBuffer.end();
 }
@@ -157,8 +164,9 @@ void VulkanRhi::presentFrame(){
                .setImageIndices(currentImageIndex_);
     vk::Result result = ctx.presentQueue.presentKHR(presentInfo);
 
-    if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR) {
-        //framebufferResized = false;
+    if (result == vk::Result::eErrorOutOfDateKHR || 
+    result == vk::Result::eSuboptimalKHR || framebufferResized) {
+        framebufferResized = false;
         recreateSwapchain();
     } else if (result != vk::Result::eSuccess) {
         throw std::runtime_error("present queue execute failed");
@@ -168,12 +176,13 @@ void VulkanRhi::presentFrame(){
 }
 
 void VulkanRhi::recreateSwapchain(){
-    auto& Vctex = VulkanContext::Instance();
     auto& ctx = Context::Instance();
     ctx.device.waitIdle();
-
-    uint32_t wdith_, height_;
+    auto [width, height] = Input::GetWindowSize(); //GetWindowSizeImpl();
+    ctx.swapchain->recreateSwapChain(width,height);//Recreate Swapchain
     
+    uiPass_->recreateframbuffer();
+    mainPass_->recreateframbuffer();
 
 }
 

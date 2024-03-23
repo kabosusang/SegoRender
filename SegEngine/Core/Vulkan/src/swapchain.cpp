@@ -125,8 +125,6 @@ void Swapchain::cleanupSwapChain() {
 }
 
 void Swapchain::recreateSwapChain(uint32_t width, uint32_t height){
-    auto& ctx = Context::Instance();
-    ctx.device.waitIdle();
     cleanupSwapChain();
     querySurfaceInfo(width, height);
     swapchain = createSwapchain();

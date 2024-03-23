@@ -1,6 +1,8 @@
 #pragma once
 #include "Core/Layer/Layer.h"
-#include <vulkan/vulkan.hpp>
+#include "Core/Event/KeyEvent.h"
+#include "Core/Event/MouseEvent.h"
+#include "Core/Event/AppWinEvent.h"
 
 namespace Sego{
 
@@ -12,12 +14,13 @@ namespace Sego{
 
         void OnAttach() override;
         void OnDetach() override;
-        void OnUpdate() override;
         void OnEvent(Event& event) override;
+        virtual void OnImGuiRender() override;
+
+        void Begin();
+        void End();
     private:
-         
-
-
+   
     };
 
 

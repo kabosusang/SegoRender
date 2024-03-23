@@ -4,7 +4,9 @@
 #include "Core/Event/KeyEvent.h"
 #include "Core/Event/MouseEvent.h"
 #include "Core/Vulkan/VulkanContext.hpp"
-#include "imgui_impl_sdl2.h"
+
+#include <imgui_impl_vulkan.h>
+#include <imgui_impl_sdl2.h>
 
 namespace Sego{
 
@@ -39,7 +41,7 @@ void WindowsWindow::Init(const WindowProps &props)
     m_Data.Height = props.Height;
 
     SG_CORE_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
-    SDL_Init(SDL_INIT_EVERYTHING);
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
     window_ = SDL_CreateWindow(props.Title.c_str(),
                                           SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                           m_Data.Width, m_Data.Height,
@@ -48,7 +50,7 @@ void WindowsWindow::Init(const WindowProps &props)
         SDL_Log("create window failed");
         exit(2);
     }
-
+   
     context_ = new VulkanContext(window_);
     context_->Init(); //Vulkan Context Init
     
@@ -59,8 +61,6 @@ void WindowsWindow::Init(const WindowProps &props)
 void WindowsWindow::PollEvent(){
 SDL_Event event;
 while (SDL_PollEvent(&event)) {
-ImGui_ImplSDL2_ProcessEvent(&event);
-
        switch(event.type){
             //WINDOW EVENT
             case SDL_WINDOWEVENT :{
@@ -114,20 +114,22 @@ ImGui_ImplSDL2_ProcessEvent(&event);
                 m_Data.EventCallback(event_mouse);
             }
             break;
-
+           
             default:
             break;
        }
+       ImGui_ImplSDL2_ProcessEvent(&event);
 }
 
 }
 
-
-void WindowsWindow::Shutdown()
-{
-
+void WindowsWindow::Shutdown(){
+    
 }
 
+bool WindowsWindow::IsWindowResize(){
+    context_->RebuildSwapChain();
+}
 
 
 }

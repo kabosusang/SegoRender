@@ -2,9 +2,9 @@
 
 #include "pch.h"
 #include <vulkan/vulkan.hpp>
+#include <vk_mem_alloc.h>
 #include "swapchain.hpp"
 #include "resource/shader/shader_manager.hpp"
-
 namespace Sego {
 
 class Context {
@@ -29,6 +29,8 @@ public:
     std::unique_ptr<Swapchain> swapchain;
     std::unique_ptr<ShaderManager> shaderManager;
 
+    VmaAllocator getAllocator() { return allocator_; }
+
 private:
     static Context* instance_;
     vk::SurfaceKHR surface_;
@@ -44,7 +46,10 @@ private:
     vk::Instance createInstance(std::vector<const char*>& extensions);
     vk::PhysicalDevice pickupPhysicalDevice();
     vk::Device createDevice(vk::SurfaceKHR);
+    void createVmaAllocator();
 
+
+    VmaAllocator allocator_;
     void queryQueueInfo(vk::SurfaceKHR);
 };
 

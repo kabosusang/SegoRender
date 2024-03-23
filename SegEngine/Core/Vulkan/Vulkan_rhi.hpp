@@ -12,11 +12,10 @@ namespace Sego{
     public:
         static void Init(std::vector<const char*>& extensions,
         Context::GetSurfaceCallback cb, int windowWidth, int windowHeight);
+        void IsResized() { framebufferResized = true; }
 
         void render();
         void destory();
-      
-
         void recreateSwapchain();
         //Render Frame
 		void waitFrame();
@@ -26,17 +25,13 @@ namespace Sego{
      
         static VulkanRhi& Instance();
 
-        std::vector<vk::CommandBuffer> cmdBuffers_;
-        uint32_t currentFrame_ = 0;
-        uint32_t currentImageIndex_ = 0;
-
-
         //Output Function
-        vk::CommandBuffer getCommandBuffer() { return cmdBuffers_[currentFrame_]; }
-        vk::CommandPool getSingleCommandPool() { return singlePool_; }
-        uint32_t getImageIndex() { return currentImageIndex_; }
-        uint32_t getFlightCount() { return currentFrame_; }
-       
+        inline vk::CommandBuffer getCommandBuffer() { return cmdBuffers_[currentFrame_]; }
+        inline vk::CommandPool getSingleCommandPool() { return singlePool_; }
+        inline uint32_t getMaxFlightCount() { return maxFlightCount_; }
+        inline uint32_t getFlightCount() { return currentFrame_; }
+        inline uint32_t getImageIndex() { return currentImageIndex_; }
+        PFN_vkCmdPushDescriptorSetKHR getCmdPushDescriptorSet() { return vkCmdPushDescriptorSet_; }
 
     private:
         static VulkanRhi* instance_;
@@ -46,22 +41,32 @@ namespace Sego{
         uint32_t maxFlightCount_ = 2;
         vk::CommandPool cmdPool_;
         vk::CommandPool singlePool_;
-        
+    
+        uint32_t currentFrame_ = 0;
+        uint32_t currentImageIndex_ = 0;
 
+        std::vector<vk::CommandBuffer> cmdBuffers_;
         std::vector<vk::Semaphore> imageAvailableSemaphores_;
         std::vector<vk::Semaphore> renderFinishedSemaphores_;
         std::vector<vk::Fence> inFlightFences_;
 
+        // additional device extension functions
+        PFN_vkCmdPushDescriptorSetKHR vkCmdPushDescriptorSet_;
 
         //Function 
         void createCmdPool();
         void createCmdBuffers();
         void createSemaphoresAndFence();
+        void loadExtensionFuncs();
+
+
 
         //Test RenderPass
-        std::unique_ptr<MainPass> mainPass_;
-        std::unique_ptr<UiPass> uiPass_;
+        std::unique_ptr<RenderPass> mainPass_;
+        std::unique_ptr<RenderPass> uiPass_;
 
+
+        bool framebufferResized = false;
     };
 
 

@@ -55,9 +55,22 @@ namespace Sego {
 
 		EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput | EventCategoryMouseButton)
 	protected:
-		MouseButtonEvent(const MouseCode button)
-			: m_Button(button) {}
-
+		MouseButtonEvent(const MouseCode button) : m_Button(button){
+			switch (button)
+			{
+			case 1:
+				m_Button = 0;
+			break;
+			case 2:
+				m_Button = 2;
+			break;
+			case 3:
+				m_Button = 1;
+			break;
+			default:
+				break;
+			}
+		}
 		MouseCode m_Button;
 	};
 

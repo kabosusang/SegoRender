@@ -20,8 +20,8 @@ class WindowsWindow : public Window
 
 		// Window attributes
 		virtual void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
-		
 		virtual void* GetNativeWindow() const { return window_; }
+		virtual bool IsWindowResize();
 
 	private:
 		virtual void Init(const WindowProps& props);

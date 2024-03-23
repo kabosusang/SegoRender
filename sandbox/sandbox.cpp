@@ -1,4 +1,5 @@
 #include "Sego.hpp"
+#include "imgui.h"
 
 class ExampleLayer : public Sego::Layer{
 
@@ -10,11 +11,22 @@ public:
 
     void OnUpdate() override
     {
+        if(Sego::Input::ISKeyPressed(KeyScand::SG_KEY_TAB))
+            SG_TRACE("Tab Key is Pressed");
     
     }
+
+    virtual void OnImGuiRender() override
+    {
+        ImGui::Begin("Test");
+        ImGui::Text("Hello World");
+        ImGui::End();
+    }
+
     void OnEvent(Sego::Event& event) override
     {
-        SG_TRACE("{0}", event);
+        
+        //SG_TRACE("{0}", event);
     }
 
 };
@@ -23,7 +35,7 @@ class Sandbox : public Sego::SegEngine{
 public:
     Sandbox(){
         PushLayer(new ExampleLayer());
-        PushOverlay(new Sego::ImGuiLayer());
+        
     }
     ~Sandbox(){
     }

@@ -12,13 +12,12 @@ namespace Sego{
         ~VulkanContext();
         virtual void Init() override;
         virtual void SwapBuffers() override;
-        
+        virtual bool RebuildSwapChain() override;
         SDL_Window* GetWindowHandle() { return windowHandle_; }
 
     private:
         static VulkanContext* instance_;
-
-
+        
         SDL_Window* windowHandle_;
         uint32_t width_, height_;
         

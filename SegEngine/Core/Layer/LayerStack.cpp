@@ -15,7 +15,8 @@ namespace Sego{
 
     void LayerStack::PushLayer(Layer* layer)
     {
-        LayerInsert_ = layers_.emplace(LayerInsert_, layer);
+        layers_.emplace(layers_.begin() + LayerInsertIndex_, layer);
+        LayerInsertIndex_++;
     }
 
     void LayerStack::PushOverlay(Layer* overlay)
@@ -29,7 +30,7 @@ namespace Sego{
         if (it != layers_.end())
         {
             layers_.erase(it);
-            LayerInsert_--;
+            LayerInsertIndex_--;
         }
     }
 

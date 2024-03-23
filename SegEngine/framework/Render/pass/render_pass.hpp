@@ -10,12 +10,16 @@ public:
     virtual void Init();
     virtual void Render() = 0;
     virtual void destroy();
+    virtual void recreateframbuffer();
     //virtual void Cleanup();
 
-    //Function 
+    //Function Virtual = 0
     virtual void CreatePiepline() = 0;
     virtual void CreateFrameBuffer() = 0;
     virtual void CreateRenderPass() = 0;
+    //
+    virtual void createDescriptorSetLayout();
+    virtual void createPipelineLayouts();
 
 protected:
     //PipeLine Struct --------------------------------------------------------------
@@ -40,7 +44,9 @@ protected:
 
     //Vulkan Objects ---------------------------------------------------------------
     std::vector<vk::PipelineLayout> pipelineLayouts_;
-    vk::DescriptorPool descriptorPool_;
+    std::vector<vk::DescriptorSetLayout> descriptorSetLayouts_;
+    vk::DescriptorPool descriptorPool_ = nullptr;
+    
 
     //Renderer Needs---------------------------------------------------------------
     std::vector<vk::Pipeline> pipelines_;

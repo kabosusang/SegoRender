@@ -1,3 +1,4 @@
+#define VMA_IMPLEMENTATION
 #include "../include/context.hpp"
 
 namespace Sego {
@@ -45,9 +46,8 @@ Context::Context(std::vector<const char*>& extensions, GetSurfaceCallback cb) {
     graphicsQueue = device.getQueue(queueInfo.graphicsIndex.value(), 0);
     presentQueue = device.getQueue(queueInfo.presentIndex.value(), 0);
 
-    
-    
- 
+    createVmaAllocator(); //create Allocator
+
 
 
 }
@@ -66,6 +66,18 @@ vk::Instance Context::createInstance(std::vector<const char*>& extensions) {
     return vk::createInstance(info);
 }
 
+void Context::createVmaAllocator(){
+
+    VmaAllocatorCreateInfo allocatorInfo = {};
+    allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_3;
+    allocatorInfo.instance = instance;
+    allocatorInfo.physicalDevice = phyDevice;
+    allocatorInfo.device = device;
+    allocatorInfo.flags |= VMA_ALLOCATOR_CREATE_KHR_DEDICATED_ALLOCATION_BIT;
+
+	VkResult result = vmaCreateAllocator(&allocatorInfo, &allocator_);
+}
+
 vk::PhysicalDevice Context::pickupPhysicalDevice() {
     auto devices = instance.enumeratePhysicalDevices();
     if (devices.size() == 0) {
@@ -79,7 +91,7 @@ vk::Device Context::createDevice(vk::SurfaceKHR surface) {
 
     vk::DeviceCreateInfo deviceCreateInfo;
     queryQueueInfo(surface);
-    std::array extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME,VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME};
+    std::array extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME,VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME};
     deviceCreateInfo.setPEnabledExtensionNames(extensions);
 
     std::vector<vk::DeviceQueueCreateInfo> queueInfos;
