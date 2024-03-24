@@ -1,13 +1,13 @@
 #include "main_pass.hpp"
 #include "Core/Vulkan/Vulkan_rhi.hpp"
-#include "Core/Vulkan/tool.hpp"
+#include "Core/Vulkan/Vulkantool.hpp"
 #include "resource/asset/Vertex.hpp"
 
 const std::vector<Vertex> vertices = {
-    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
 };
 
 const std::vector<uint16_t> indices = {
@@ -30,7 +30,7 @@ void MainPass::destroy(){
     for(auto& buffer : uniformBuffers_){
         buffer.destroy();
     }
-
+    textureIVs_.destroy();
 }
 
 void MainPass::temporarilyInit(){
@@ -44,6 +44,9 @@ void MainPass::temporarilyInit(){
 
     //uniform buffer
     createUniformBuffers();
+
+    //texture 
+    textureIVs_ = Vulkantool::loadImageViewSampler("resources/texture.jpg");
 }
 
 void MainPass::createDescriptorSetLayout(){
@@ -54,10 +57,19 @@ void MainPass::createDescriptorSetLayout(){
                     .setDescriptorCount(1)
                     .setStageFlags(vk::ShaderStageFlagBits::eVertex)
                     .setPImmutableSamplers(nullptr);
+    vk::DescriptorSetLayoutBinding samplerLayoutBinding{};
+    samplerLayoutBinding.setBinding(1)
+                        .setDescriptorCount(1)
+                        .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+                        .setStageFlags(vk::ShaderStageFlagBits::eFragment)
+                        .setPImmutableSamplers(nullptr);
+
+    vk::DescriptorSetLayoutBinding bindings[] = {uboLayoutBinding, samplerLayoutBinding};
     vk::DescriptorSetLayoutCreateInfo layoutInfo{};
-    layoutInfo.setBindingCount(1)
-              .setPBindings(&uboLayoutBinding)
+    layoutInfo.setBindingCount(2)
+              .setPBindings(bindings)
               .setFlags(vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR);
+    
     descriptorSetLayouts_.resize(1);
     descriptorSetLayouts_[0] = Context::Instance().device.createDescriptorSetLayout(layoutInfo);
 
@@ -110,7 +122,8 @@ void MainPass::CreatePiepline(){
     vertex_binding_desc.setBinding(0)
                       .setStride(sizeof(Vertex))
                       .setInputRate(vk::VertexInputRate::eVertex);
-    std::array<vk::VertexInputAttributeDescription, 2> vertex_attr_descs;
+    
+    std::array<vk::VertexInputAttributeDescription, 3> vertex_attr_descs;
     vertex_attr_descs[0].setBinding(0)
                         .setLocation(0)
                         .setFormat(vk::Format::eR32G32Sfloat)
@@ -119,11 +132,17 @@ void MainPass::CreatePiepline(){
                         .setLocation(1)
                         .setFormat(vk::Format::eR32G32B32Sfloat)
                         .setOffset(offsetof(Vertex, color));
+    vertex_attr_descs[2].setBinding(0)
+                        .setLocation(2)
+                        .setFormat(vk::Format::eR32G32Sfloat)
+                        .setOffset(offsetof(Vertex, texCoord));
 
     vertex_input_ci.setVertexAttributeDescriptionCount(vertex_attr_descs.size())
                    .setPVertexAttributeDescriptions(vertex_attr_descs.data())
                    .setVertexBindingDescriptionCount(1)
                    .setPVertexBindingDescriptions(&vertex_binding_desc);
+
+
 
     //2. input assembly 
     input_assemb_ci.setTopology(vk::PrimitiveTopology::eTriangleList) //Triangle
@@ -277,12 +296,17 @@ void MainPass::Render(){
     cmdBuffer.bindIndexBuffer(indexBuffer_.buffer, 0, vk::IndexType::eUint16);
 
     std::vector<vk::WriteDescriptorSet> desc_writes;
-	std::array<vk::DescriptorBufferInfo, 1> desc_buffer_infos{};
+	std::array<vk::DescriptorBufferInfo, 1> desc_buffer_infos{}; //Uniform 
+    std::array<vk::DescriptorImageInfo,1>   desc_image_info{};   //Sample
 
     desc_buffer_infos[0].setBuffer(uniformBuffers_[VulkanRhi.getFlightCount()].buffer)
                         .setOffset(0)
                         .setRange(sizeof(UniformBufferObject));
-    desc_writes.resize(1);
+    desc_image_info[0].setSampler(textureIVs_.sampler)
+                      .setImageView(textureIVs_.image_view)
+                      .setImageLayout(textureIVs_.image_layout);
+
+    desc_writes.resize(2);
     desc_writes[0].dstSet = nullptr;
     desc_writes[0].setDstBinding(0)
                   .setDstArrayElement(0)
@@ -290,6 +314,14 @@ void MainPass::Render(){
                   .setDescriptorCount(1)
                   .setPBufferInfo(desc_buffer_infos.data())
                   .setPImageInfo(nullptr)
+                  .setPTexelBufferView(nullptr);
+    desc_writes[1].dstSet = nullptr;
+    desc_writes[1].setDstBinding(1)
+                  .setDstArrayElement(0)
+                  .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+                  .setDescriptorCount(1)
+                  .setPBufferInfo(nullptr)
+                  .setPImageInfo(desc_image_info.data())
                   .setPTexelBufferView(nullptr);
 
     VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,

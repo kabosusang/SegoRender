@@ -1,5 +1,4 @@
 #pragma once
-
 #include "pch.h"
 #include <vulkan/vulkan.hpp>
 #include <vk_mem_alloc.h>
@@ -29,6 +28,7 @@ public:
     std::unique_ptr<Swapchain> swapchain;
     std::unique_ptr<ShaderManager> shaderManager;
 
+    vk::PhysicalDeviceProperties getPhysicalDeviceProperties() { return physical_deviceproperties_; }
     VmaAllocator getAllocator() { return allocator_; }
 
 private:
@@ -43,14 +43,21 @@ public:
     void initSwapchain(int windowWidth, int windowHeight);
 
 private:
+    //Select
+    bool isDeviceSuitable(vk::PhysicalDevice device);
+
     vk::Instance createInstance(std::vector<const char*>& extensions);
     vk::PhysicalDevice pickupPhysicalDevice();
     vk::Device createDevice(vk::SurfaceKHR);
     void createVmaAllocator();
 
-
     VmaAllocator allocator_;
+    
     void queryQueueInfo(vk::SurfaceKHR);
+
+    //
+    vk::PhysicalDeviceProperties physical_deviceproperties_;
+
 };
 
 }

@@ -1,6 +1,8 @@
 #include "SegEngine.h"
 #include "Core/Log/Log.h"
 #include "Core/Base/Input.hpp"
+#include "Renderer/Render.hpp"
+
 
 namespace Sego{
 
@@ -23,7 +25,6 @@ void SegEngine::destory(){
 }
 
 void SegEngine::Run(){
-    
    while(m_Running){
         for (Layer* layer : layerStack_)
             layer->OnUpdate();
@@ -34,6 +35,12 @@ void SegEngine::Run(){
         imguiLayer_->End();
 
         window_->OnUpdate();
+        
+        Renderer::BeginScene();
+        Renderer::Render(); 
+        Renderer::EndScene();
+
+
    }
 }
 

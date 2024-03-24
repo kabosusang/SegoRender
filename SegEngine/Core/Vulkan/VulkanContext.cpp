@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "VulkanContext.hpp"
-#include "Vulkan_rhi.hpp"
 #include "Core/Base/Input.hpp"
+#include "Vulkan_rhi.hpp"
 
 //Imgui Context
 #include "imgui.h"
@@ -41,7 +41,7 @@ void VulkanContext::Init(){
 
 
 void VulkanContext::SwapBuffers(){
-    VulkanRhi::Instance().render();
+   
 }
 
 VulkanContext::~VulkanContext(){

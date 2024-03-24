@@ -22,12 +22,12 @@ namespace Sego{
         void updateUniformBuffer(uint32_t currentImage);
     private:
 
-        //temporary
+        //temporary Data
         VmaBuffer vertexBuffer_;
         VmaBuffer indexBuffer_;
         std::vector<VmaBuffer> uniformBuffers_;
-        std::vector<void*> uniformBuffersMapped;
 
+        VmaImageViewSampler textureIVs_;
     };
 
 

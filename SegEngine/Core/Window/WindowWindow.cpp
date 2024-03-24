@@ -5,6 +5,8 @@
 #include "Core/Event/MouseEvent.h"
 #include "Core/Vulkan/VulkanContext.hpp"
 
+
+
 #include <imgui_impl_vulkan.h>
 #include <imgui_impl_sdl2.h>
 
@@ -31,7 +33,6 @@ WindowsWindow::~WindowsWindow()
 void WindowsWindow::OnUpdate()
 {
     PollEvent();
-    context_->SwapBuffers();
 }
 
 void WindowsWindow::Init(const WindowProps &props)
@@ -129,6 +130,7 @@ void WindowsWindow::Shutdown(){
 
 bool WindowsWindow::IsWindowResize(){
     context_->RebuildSwapChain();
+    return true;
 }
 
 

@@ -47,9 +47,6 @@ Context::Context(std::vector<const char*>& extensions, GetSurfaceCallback cb) {
     presentQueue = device.getQueue(queueInfo.presentIndex.value(), 0);
 
     createVmaAllocator(); //create Allocator
-
-
-
 }
 
 vk::Instance Context::createInstance(std::vector<const char*>& extensions) {
@@ -58,7 +55,10 @@ vk::Instance Context::createInstance(std::vector<const char*>& extensions) {
     vk::ApplicationInfo appInfo;
     appInfo.setApiVersion(VK_API_VERSION_1_3);
     info.setPApplicationInfo(&appInfo)
-        .setPEnabledExtensionNames(extensions);
+        .setEnabledExtensionCount(extensions.size())
+        .setPpEnabledExtensionNames(extensions.data());
+    
+
 
     std::vector<const char*> layers = {"VK_LAYER_KHRONOS_validation"};
     info.setPEnabledLayerNames(layers);
@@ -78,12 +78,25 @@ void Context::createVmaAllocator(){
 	VkResult result = vmaCreateAllocator(&allocatorInfo, &allocator_);
 }
 
+bool Context::isDeviceSuitable(vk::PhysicalDevice device){
+
+    return true;
+}
+
+
 vk::PhysicalDevice Context::pickupPhysicalDevice() {
     auto devices = instance.enumeratePhysicalDevices();
     if (devices.size() == 0) {
         std::cout << "you don't have suitable device to support vulkan" << std::endl;
         exit(1);
     }
+
+    for(auto device : devices){
+        if(isDeviceSuitable(device)){
+            device.getProperties(&physical_deviceproperties_);
+        }
+    }
+
     return devices[0];
 }
 
@@ -94,6 +107,10 @@ vk::Device Context::createDevice(vk::SurfaceKHR surface) {
     std::array extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME,VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME};
     deviceCreateInfo.setPEnabledExtensionNames(extensions);
 
+    vk::PhysicalDeviceFeatures features;
+    features.setSamplerAnisotropy(true);
+
+    deviceCreateInfo.setPEnabledFeatures(&features);
     std::vector<vk::DeviceQueueCreateInfo> queueInfos;
     float priority = 1;
     if (queueInfo.graphicsIndex.value() == queueInfo.presentIndex.value()) {

@@ -11,8 +11,7 @@ public:
 
     void OnUpdate() override
     {
-        if(Sego::Input::ISKeyPressed(KeyScand::SG_KEY_TAB))
-            SG_TRACE("Tab Key is Pressed");
+      
     
     }
 
