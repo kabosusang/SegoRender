@@ -47,6 +47,10 @@ Context::Context(std::vector<const char*>& extensions, GetSurfaceCallback cb) {
     presentQueue = device.getQueue(queueInfo.presentIndex.value(), 0);
 
     createVmaAllocator(); //create Allocator
+
+    
+
+
 }
 
 vk::Instance Context::createInstance(std::vector<const char*>& extensions) {
@@ -58,8 +62,6 @@ vk::Instance Context::createInstance(std::vector<const char*>& extensions) {
         .setEnabledExtensionCount(extensions.size())
         .setPpEnabledExtensionNames(extensions.data());
     
-
-
     std::vector<const char*> layers = {"VK_LAYER_KHRONOS_validation"};
     info.setPEnabledLayerNames(layers);
 

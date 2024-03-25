@@ -2,6 +2,7 @@
 #include "SegEngine.h"
 #include "Core/Log/Log.h"
 #include "Core/Base/Input.hpp"
+#include "Core/Base/Time.hpp"
 #include "Core/Layer/Layer.h"
 #include "Imgui/ImGuiLayer.hpp"
 

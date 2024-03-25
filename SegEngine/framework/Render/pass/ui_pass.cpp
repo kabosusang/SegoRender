@@ -43,7 +43,6 @@ namespace Sego{
         width_ = ctx.swapchain->GetExtent().width;
         height_ = ctx.swapchain->GetExtent().height;
 
-        
         // create descriptor pool
 		createDescriptorPool();
         CreateRenderPass();
@@ -81,7 +80,6 @@ namespace Sego{
             ImGui_ImplVulkan_DestroyFontUploadObjects();
         }
 
-
         SG_CORE_TRACE("UiPass Init Success");
 }
 
@@ -118,7 +116,7 @@ void UiPass::Render(){
     render_pass_info.setFramebuffer(framebuffers_[image_index]);
     render_pass_info.setRenderPass(renderPass_)
                     .setRenderArea({{0, 0}, {width_, height_}});
-    vk::ClearValue clear_color = vk::ClearColorValue(std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f});
+    vk::ClearValue clear_color = vk::ClearColorValue(std::array<float, 4>{0.1f, 0.1f, 0.1f, 1.0f});
     render_pass_info.setClearValueCount(1)
                     .setPClearValues(&clear_color);
     
@@ -131,7 +129,6 @@ void UiPass::CreateFrameBuffer(){
     auto& ctx = Context::Instance();
     uint32_t image_count = ctx.swapchain->SwapchainImagesAview_.size();
     framebuffers_.resize(image_count);
-
 
     vk::ImageView attachments[1];
     vk::FramebufferCreateInfo framebufferInfo = {};

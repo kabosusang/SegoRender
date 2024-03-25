@@ -34,6 +34,18 @@ namespace Sego{
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	};
 
+	class WindowMinEvent : public Event
+	{
+	public:
+		WindowMinEvent() = default;
+		EVENT_CLASS_TYPE(WindowMin)
+		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+	public:
+		bool is_Min = false;
+	};
+
+
+	//APP
 	class AppTickEvent : public Event
 	{
 	public:
@@ -42,6 +54,7 @@ namespace Sego{
 		EVENT_CLASS_TYPE(AppTick)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	};
+	
 
 	class AppUpdateEvent : public Event
 	{

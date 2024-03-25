@@ -29,6 +29,15 @@ void Swapchain::querySurfaceInfo(int windowWidth, int windowHeight) {
     surfaceInfo_.transform = capability.currentTransform;
     surfaceInfo_.extent = querySurfaceExtent(capability, windowWidth, windowHeight);
     surfaceInfo_.presentMode = chooseSwapPresentMode();
+
+    //ImageDepthFormat
+    std::vector<vk::Format> depth_fomat_candidates = {
+        vk::Format::eD32Sfloat,
+        vk::Format::eD32SfloatS8Uint,
+        vk::Format::eD24UnormS8Uint
+    };
+    depthFormat_ = getProperImageFormat(depth_fomat_candidates, vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
+
 }
 vk::PresentModeKHR Swapchain::chooseSwapPresentMode() {
     auto presentModes = Context::Instance().phyDevice.getSurfacePresentModesKHR(surface);
@@ -64,6 +73,19 @@ vk::Extent2D Swapchain::querySurfaceExtent(const vk::SurfaceCapabilitiesKHR& cap
         return extent;
     }
 }
+vk::Format Swapchain::getProperImageFormat(const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features){
+    for (auto& format : candidates) {
+        auto props = Context::Instance().phyDevice.getFormatProperties(format);
+        if (tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features) {
+            return format;
+        } else if (tiling == vk::ImageTiling::eOptimal && (props.optimalTilingFeatures & features) == features) {
+            return format;
+        }
+    }
+    SG_CORE_ERROR("Failed to find proper image format");
+    return vk::Format::eUndefined;
+}
+
 
 vk::SwapchainKHR Swapchain::createSwapchain() {
     vk::SwapchainCreateInfoKHR createInfo;

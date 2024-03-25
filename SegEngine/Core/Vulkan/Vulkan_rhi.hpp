@@ -4,8 +4,6 @@
 #include "framework/Render/pass/main_pass.hpp"
 #include "framework/Render/pass/ui_pass.hpp"
 
-
-
 namespace Sego{
 
     class VulkanRhi{

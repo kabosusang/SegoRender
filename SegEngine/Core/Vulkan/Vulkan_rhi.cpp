@@ -119,7 +119,7 @@ void VulkanRhi::waitFrame(){
         ctx.swapchain->swapchain, 
         UINT64_MAX, imageAvailableSemaphores_[currentFrame_], nullptr);
     if(resultValue.result == vk::Result::eErrorOutOfDateKHR){
-        framebufferResized  = false;
+        framebufferResized  = true;
         recreateSwapchain();
         return;
     }
@@ -137,8 +137,8 @@ void VulkanRhi::recordFrame(){
 
     cmdBuffer.begin(beginInfo);
     //record all renderpass
-    uiPass_->Render();
     mainPass_->Render();
+    uiPass_->Render();
 
     cmdBuffer.end();
 }
@@ -180,14 +180,11 @@ void VulkanRhi::recreateSwapchain(){
     ctx.device.waitIdle();
     auto [width, height] = Input::GetWindowSize(); //GetWindowSizeImpl();
     ctx.swapchain->recreateSwapChain(width,height);//Recreate Swapchain
-    
-    uiPass_->recreateframbuffer();
+
     mainPass_->recreateframbuffer();
-
+    uiPass_->recreateframbuffer();
+    
 }
-
-
-
 
  
 }

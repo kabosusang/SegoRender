@@ -92,7 +92,7 @@ public:
         static VmaImageViewSampler loadImageViewSampler(const std::string& filename,
         uint32_t mip_levels = 1, uint32_t layers = 1, vk::Format format = vk::Format::eR8G8B8A8Srgb, 
         vk::Filter min_filter = vk::Filter::eLinear, vk::Filter mag_filter = vk::Filter::eLinear,
-        vk::SamplerAddressMode address_mode = vk::SamplerAddressMode::eClampToEdge, vk::ImageUsageFlags ext_use_flags =  vk::ImageUsageFlags{});
+        vk::SamplerAddressMode address_mode = vk::SamplerAddressMode::eRepeat, vk::ImageUsageFlags ext_use_flags =  vk::ImageUsageFlags{});
 
 };
 

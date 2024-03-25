@@ -10,6 +10,7 @@ namespace Sego{
         virtual void CreatePiepline() override;
         virtual void CreateFrameBuffer() override;
         virtual void CreateRenderPass() override;
+        virtual void recreateframbuffer();
 
         virtual void destroy() override;
         virtual void createDescriptorSetLayout();
@@ -27,7 +28,10 @@ namespace Sego{
         VmaBuffer indexBuffer_;
         std::vector<VmaBuffer> uniformBuffers_;
 
+        //Color Texture
         VmaImageViewSampler textureIVs_;
+        //Depth Texture
+        VmaImageViewSampler depthIVs_;
     };
 
 

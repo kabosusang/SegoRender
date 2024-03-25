@@ -26,9 +26,13 @@ void SegEngine::destory(){
 
 void SegEngine::Run(){
    while(m_Running){
+        float time = 0;
+        LastFrameTime_ = time;
+
+
         for (Layer* layer : layerStack_)
             layer->OnUpdate();
-            
+        
         imguiLayer_->Begin();
         for (Layer* layer : layerStack_)
             layer->OnImGuiRender();
@@ -36,10 +40,14 @@ void SegEngine::Run(){
 
         window_->OnUpdate();
         
+        if(is_Min){
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            continue;
+        }
+
         Renderer::BeginScene();
         Renderer::Render(); 
         Renderer::EndScene();
-
 
    }
 }
@@ -49,6 +57,7 @@ void SegEngine::OnEvent(Event &e)
     EventDispatcher dispatcher(e);
     dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
     dispatcher.Dispatch<WindowResizeEvent>(BIND_EVENT_FN(OnWindowResize));
+    dispatcher.Dispatch<WindowMinEvent>(BIND_EVENT_FN(OnWindowMin));
 
     //SG_CORE_TRACE("{0}", e);
 
@@ -65,9 +74,13 @@ bool SegEngine::OnWindowResize(WindowResizeEvent &e){
     return true;
 }
 
-
 bool SegEngine::OnWindowClose(WindowCloseEvent &e){
     m_Running = false;
+    return true;
+}
+
+bool SegEngine::OnWindowMin(WindowMinEvent &e){
+    is_Min = e.is_Min;
     return true;
 }
 

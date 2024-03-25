@@ -75,6 +75,16 @@ while (SDL_PollEvent(&event)) {
                     WindowData& data = *(WindowData*)SDL_GetWindowData(window_,"EventData");
                     WindowCloseEvent event_win;
                     data.EventCallback(event_win);
+                }else if (event.window.event == SDL_WINDOWEVENT_MINIMIZED){
+                    WindowData& data = *(WindowData*)SDL_GetWindowData(window_,"EventData");
+                    WindowMinEvent event_win;
+                    event_win.is_Min = true;
+                    data.EventCallback(event_win);
+                }else if (event.window.event == SDL_WINDOWEVENT_RESTORED ){
+                    WindowData& data = *(WindowData*)SDL_GetWindowData(window_,"EventData");
+                    WindowMinEvent event_win;
+                    event_win.is_Min = false;
+                    data.EventCallback(event_win);
                 }
             }
             break;

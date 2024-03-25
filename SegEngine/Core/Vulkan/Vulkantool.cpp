@@ -431,7 +431,8 @@ vk::Sampler Vulkantool::createSample(vk::Filter min_filter, vk::Filter mag_filte
 }
 
 void Vulkantool::createImageAndView(uint32_t width, uint32_t height, uint32_t mip_levels, uint32_t layers, vk::SampleCountFlagBits num_samples,
-vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags image_usage, VmaMemoryUsage memory_usage, vk::ImageAspectFlags aspect_flags, VmaImageView& vma_image_view){
+vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags image_usage, 
+VmaMemoryUsage memory_usage, vk::ImageAspectFlags aspect_flags, VmaImageView& vma_image_view){
 
     createImage(width, height, mip_levels, layers, num_samples, format, tiling, image_usage, memory_usage, vma_image_view.vma_image);
     vma_image_view.image_view = createImageView(vma_image_view.vma_image.image, format, aspect_flags, mip_levels, layers);
@@ -469,6 +470,7 @@ vk::SamplerAddressMode address_mode, VmaImageViewSampler& vma_image_view_sampler
         }else if(ext_use_flags & vk::ImageUsageFlagBits::eInputAttachment){
             vma_image_view_sampler.descriptor_type = vk::DescriptorType::eInputAttachment;
         }
+        
         if(image_data){
             size_t image_size = width * height * calcFormatSize(format);
             VmaBuffer stagin_buffer;

@@ -4,14 +4,20 @@
 #include "resource/asset/Vertex.hpp"
 
 const std::vector<Vertex> vertices = {
-    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+    {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+    {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+    {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+    {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
+
+    {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+    {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+    {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+    {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
 };
 
 const std::vector<uint16_t> indices = {
-   0, 1, 2, 2, 3, 0
+    0, 1, 2, 2, 3, 0,
+    4, 5, 6, 6, 7, 4
 };
 
 struct UniformBufferObject {
@@ -31,9 +37,12 @@ void MainPass::destroy(){
         buffer.destroy();
     }
     textureIVs_.destroy();
+    depthIVs_.destroy();
 }
 
 void MainPass::temporarilyInit(){
+    auto& Swctx =Context::Instance().swapchain;
+
     //vertex    
     Vulkantool::createVertexBuffer(sizeof(vertices[0])* vertices.size(),
     (void*)vertices.data(), vertexBuffer_);
@@ -47,6 +56,11 @@ void MainPass::temporarilyInit(){
 
     //texture 
     textureIVs_ = Vulkantool::loadImageViewSampler("resources/texture.jpg");
+    //Depth Image
+    Vulkantool::createImageViewSampler(width_,height_,nullptr,1,1,Swctx->GetDepthFormat(),
+    vk::Filter::eLinear, vk::Filter::eLinear,vk::SamplerAddressMode::eClampToEdge,
+    depthIVs_, vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eInputAttachment);
+
 }
 
 void MainPass::createDescriptorSetLayout(){
@@ -98,6 +112,7 @@ void MainPass::updateUniformBuffer(uint32_t currentImage){
     static auto startTime = std::chrono::high_resolution_clock::now();
     auto currentTime = std::chrono::high_resolution_clock::now();
     float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+    
     UniformBufferObject ubo{};
     ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -126,7 +141,7 @@ void MainPass::CreatePiepline(){
     std::array<vk::VertexInputAttributeDescription, 3> vertex_attr_descs;
     vertex_attr_descs[0].setBinding(0)
                         .setLocation(0)
-                        .setFormat(vk::Format::eR32G32Sfloat)
+                        .setFormat(vk::Format::eR32G32B32Sfloat)
                         .setOffset(offsetof(Vertex, pos));
     vertex_attr_descs[1].setBinding(0)
                         .setLocation(1)
@@ -141,7 +156,6 @@ void MainPass::CreatePiepline(){
                    .setPVertexAttributeDescriptions(vertex_attr_descs.data())
                    .setVertexBindingDescriptionCount(1)
                    .setPVertexBindingDescriptions(&vertex_binding_desc);
-
 
 
     //2. input assembly 
@@ -164,6 +178,13 @@ void MainPass::CreatePiepline(){
              .setCullMode(vk::CullModeFlagBits::eBack)
              .setFrontFace(vk::FrontFace::eCounterClockwise)
              .setDepthBiasEnable(VK_FALSE);
+    // dynamic states
+    std::vector<vk::DynamicState> dynamic_states = {vk::DynamicState::eViewport,
+    vk::DynamicState::eScissor};
+    vk::PipelineDynamicStateCreateInfo dynamicState{};
+    dynamicState.setDynamicStateCount(dynamic_states.size())
+                .setPDynamicStates(dynamic_states.data());
+
     //5. multisampling
     multisample_ci.setSampleShadingEnable(VK_FALSE)
                   .setRasterizationSamples(vk::SampleCountFlagBits::e1)
@@ -172,11 +193,14 @@ void MainPass::CreatePiepline(){
                   .setAlphaToCoverageEnable(VK_FALSE)
                   .setAlphaToOneEnable(VK_FALSE);
     //6. depth and stencil buffer
-    depth_stencil_ci.setDepthTestEnable(VK_FALSE)
+    depth_stencil_ci.setDepthTestEnable(VK_TRUE)
                     .setDepthWriteEnable(VK_TRUE)
                     .setDepthCompareOp(vk::CompareOp::eLess)
                     .setDepthBoundsTestEnable(VK_FALSE)
-                    .setStencilTestEnable(VK_FALSE);
+                    .setStencilTestEnable(VK_FALSE)
+                    .setMinDepthBounds(0.0f)
+                    .setMaxDepthBounds(1.0f);
+
     //7. color blending
     colorblendattachment_ci.setBlendEnable(true)
                  .setColorWriteMask(vk::ColorComponentFlagBits::eA|
@@ -201,6 +225,7 @@ void MainPass::CreatePiepline(){
                .setPInputAssemblyState(&input_assemb_ci)
                .setPViewportState(&viewport_state_ci)
                .setPRasterizationState(&raster_ci)
+               .setPDynamicState(&dynamicState)
                .setPMultisampleState(&multisample_ci)
                .setPDepthStencilState(&depth_stencil_ci)
                .setPColorBlendState(&blend_ci)
@@ -217,11 +242,10 @@ void MainPass::CreateFrameBuffer(){
     auto& ctx = Context::Instance();
     auto& SwapchainImage = ctx.swapchain->SwapchainImagesAview_;
     auto& Extent = ctx.swapchain->GetExtent();
-
     framebuffers_.resize(SwapchainImage.size());
     for (int i = 0; i < SwapchainImage.size(); ++i) {
         auto& view = SwapchainImage[i].view;
-        std::vector<vk::ImageView> attachments = { view };
+        std::vector<vk::ImageView> attachments = { view ,depthIVs_.image_view};
 
         vk::FramebufferCreateInfo createInfo;
         createInfo.setAttachments(attachments)
@@ -234,12 +258,10 @@ void MainPass::CreateFrameBuffer(){
 }
 
 void MainPass::CreateRenderPass(){
-     vk::RenderPassCreateInfo createInfo;
-
-    vk::AttachmentDescription colorAttachment; //color attachment
-    vk::AttachmentReference colorAttachmentRef;//color attachment reference
-
-    colorAttachment.setFormat(Context::Instance().swapchain->GetFormat().format)
+    vk::RenderPassCreateInfo createInfo;
+    std::array<vk::AttachmentDescription,2> Attachments; //color attachment
+    //Color Attachment
+    Attachments[0].setFormat(Context::Instance().swapchain->GetFormat().format)
                    .setSamples(vk::SampleCountFlagBits::e1)
                    .setLoadOp(vk::AttachmentLoadOp::eClear)
                    .setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -247,22 +269,39 @@ void MainPass::CreateRenderPass(){
                    .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
                    .setInitialLayout(vk::ImageLayout::eUndefined)
                    .setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
-    
-    colorAttachmentRef.setAttachment(0)
+    //Depth Attachment
+    auto format = Context::Instance().swapchain->GetDepthFormat();
+    Attachments[1].setFormat(format)
+                  .setSamples(vk::SampleCountFlagBits::e1)
+                  .setLoadOp(vk::AttachmentLoadOp::eClear)
+                  .setStoreOp(vk::AttachmentStoreOp::eDontCare)
+                  .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+                  .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+                  .setInitialLayout(vk::ImageLayout::eUndefined)
+                  .setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+
+    std::array<vk::AttachmentReference,2> AttachmentRef;//color attachment reference
+    AttachmentRef[0].setAttachment(0)
                      .setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+    AttachmentRef[1].setAttachment(1)
+                     .setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
     //subpass
     vk::SubpassDescription subpass; //subpass
     vk::SubpassDependency dependency; //subpass dependency
     
-    subpass.setColorAttachments(colorAttachmentRef)
-          .setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
+    subpass.setColorAttachmentCount(1)
+            .setPColorAttachments(&AttachmentRef[0])
+            .setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
+            .setPDepthStencilAttachment(&AttachmentRef[1]);
+
+
     dependency.setSrcSubpass(VK_SUBPASS_EXTERNAL)
               .setDstSubpass(0)
-              .setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-              .setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-              .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
+              .setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests )
+              .setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests )
+              .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite);
 
-    createInfo.setAttachments(colorAttachment)
+    createInfo.setAttachments(Attachments)
               .setSubpasses(subpass)
               .setDependencies(dependency);
             
@@ -278,18 +317,32 @@ void MainPass::Render(){
     //temporary
     updateUniformBuffer(VulkanRhi.getFlightCount());
 
-    vk::ClearValue clearValue;
-    clearValue.setColor(vk::ClearColorValue(std::array<float, 4>{0.1, 0.1, 0.1, 1}));
+    std::array<vk::ClearValue,2> clearValues{};
+    clearValues[0].setColor(vk::ClearColorValue(std::array<float, 4>{0.1, 0.1, 0.1, 1}));
+    clearValues[1].setDepthStencil({1.0f,0});
 
     vk::RenderPassBeginInfo renderPassBegin{};
     renderPassBegin.setRenderPass(renderPass_)
                    .setFramebuffer(framebuffers_[VulkanRhi.getImageIndex()])
-                   .setClearValues(clearValue)
+                   .setClearValues(clearValues)
                    .setRenderArea(vk::Rect2D({}, Extent));
    
     cmdBuffer.beginRenderPass(&renderPassBegin, vk::SubpassContents::eInline);
     cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines_[0]);
     
+    vk::Viewport viewport{};
+    viewport.setX(0.0f)
+            .setY(0.0f)
+            .setWidth(static_cast<float>(Extent.width))
+            .setHeight(static_cast<float>(Extent.height))
+            .setMinDepth(0.0f)
+            .setMaxDepth(1.0f);
+    cmdBuffer.setViewport(0, 1, &viewport);
+    vk::Rect2D scissor{};
+    scissor.setOffset({0, 0})
+           .setExtent(Extent);
+    cmdBuffer.setScissor(0, 1, &scissor);
+
     vk::Buffer vertexBuffers[] = { vertexBuffer_.buffer };
     vk::DeviceSize offsets[] = { 0 };
     cmdBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
@@ -337,6 +390,28 @@ void MainPass::addDescriptorSet(){
     vk::WriteDescriptorSet descriptorWrite{};
     
 }
+
+void MainPass::recreateframbuffer(){
+    auto& ctx = Context::Instance();
+    width_ = ctx.swapchain->GetExtent().width;
+    height_= ctx.swapchain->GetExtent().height;
+
+    if(width_ != 0 || height_ != 0){
+        for (auto& framebuffer : framebuffers_) {
+        ctx.device.destroyFramebuffer(framebuffer);
+        }
+        framebuffers_.clear();
+
+        depthIVs_.destroy();
+        //Depth Image
+        Vulkantool::createImageViewSampler(width_,height_,nullptr,1,1,ctx.swapchain->GetDepthFormat(),
+        vk::Filter::eLinear, vk::Filter::eLinear,vk::SamplerAddressMode::eClampToEdge,
+        depthIVs_, vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eInputAttachment);
+        CreateFrameBuffer();
+    }
+   
+}
+
 
 
 }

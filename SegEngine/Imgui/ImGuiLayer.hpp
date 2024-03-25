@@ -5,7 +5,7 @@
 #include "Core/Event/AppWinEvent.h"
 
 namespace Sego{
-
+    
     class ImGuiLayer : public Layer{
 
     public:

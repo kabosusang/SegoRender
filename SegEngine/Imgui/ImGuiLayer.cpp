@@ -25,6 +25,7 @@ void ImGuiLayer::Begin(){
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
+
 }
 void ImGuiLayer::End(){
     ImGui::Render();

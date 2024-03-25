@@ -2,6 +2,10 @@
 
 namespace Sego{
     void RenderPass::Init() {
+        auto& ctx = Context::Instance();
+        width_ = ctx.swapchain->GetExtent().width;
+        height_= ctx.swapchain->GetExtent().height;
+
         CreateRenderPass();
         createDescriptorSetLayout();
         createPipelineLayouts();
