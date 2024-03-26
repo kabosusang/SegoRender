@@ -1,12 +1,18 @@
 #include "EditorLayer.h"
 #include "imgui.h"
+#include <imgui_impl_vulkan.h>
+#include <imgui_impl_sdl2.h>
 
 
 namespace Sego{
 
 
 void EditorLayer::OnAttach(){
+	m_Cts = Vulkantool::createSample(vk::Filter::eLinear,vk::Filter::eLinear,1,
+	vk::SamplerAddressMode::eRepeat,vk::SamplerAddressMode::eRepeat,vk::SamplerAddressMode::eRepeat);
 
+	m_color_texture_set = ImGui_ImplVulkan_AddTexture(m_Cts,VulkanRhi::Instance().getColorImageView(),
+	VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
 void EditorLayer::OnDetach(){
@@ -82,8 +88,7 @@ void EditorLayer::OnImGuiRender(){
 
         ImGui::Begin("Viewport");
         ImVec2 ViewportPanelSize = ImGui::GetContentRegionAvail();
-		
-        
+        ImGui::Image(m_color_texture_set,ViewportPanelSize);
 		ImGui::End();
 
 		ImGui::End();

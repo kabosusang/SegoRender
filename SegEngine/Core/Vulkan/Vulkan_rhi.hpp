@@ -15,6 +15,7 @@ namespace Sego{
         void render();
         void destory();
         void recreateSwapchain();
+        void resizeframbuffer(uint32_t w,uint32_t h);
         //Render Frame
 		void waitFrame();
 		void recordFrame();
@@ -31,6 +32,7 @@ namespace Sego{
         inline uint32_t getImageIndex() { return currentImageIndex_; }
         PFN_vkCmdPushDescriptorSetKHR getCmdPushDescriptorSet() { return vkCmdPushDescriptorSet_; }
 
+        vk::ImageView getColorImageView();
     private:
         static VulkanRhi* instance_;
         
@@ -58,10 +60,9 @@ namespace Sego{
         void loadExtensionFuncs();
 
 
-
         //Test RenderPass
-        std::unique_ptr<RenderPass> mainPass_;
-        std::unique_ptr<RenderPass> uiPass_;
+        std::unique_ptr<class MainPass> mainPass_;
+        std::unique_ptr<class RenderPass> uiPass_;
 
 
         bool framebufferResized = false;

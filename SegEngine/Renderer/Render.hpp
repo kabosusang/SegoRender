@@ -4,10 +4,14 @@ namespace Sego{
 
 class Renderer{
 public:
-    static void BeginScene();
-    static void EndScene();
+    void Init();
 
-    static void Render();
+
+
+    void BeginScene();
+    void EndScene();
+    void Render();
+
 };
 
 

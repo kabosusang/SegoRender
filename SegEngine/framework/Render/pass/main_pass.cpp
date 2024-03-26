@@ -28,6 +28,16 @@ struct UniformBufferObject {
 
 namespace Sego{
 
+MainPass::MainPass(){
+auto& ctx = Context::Instance();
+m_formats ={
+    vk::Format::eR8G8B8A8Unorm,
+    ctx.swapchain->GetDepthFormat()
+    
+    };
+}
+
+
 void MainPass::destroy(){
     RenderPass::destroy();
     vertexBuffer_.destroy();
@@ -56,11 +66,7 @@ void MainPass::temporarilyInit(){
 
     //texture 
     textureIVs_ = Vulkantool::loadImageViewSampler("resources/texture.jpg");
-    //Depth Image
-    Vulkantool::createImageViewSampler(width_,height_,nullptr,1,1,Swctx->GetDepthFormat(),
-    vk::Filter::eLinear, vk::Filter::eLinear,vk::SamplerAddressMode::eClampToEdge,
-    depthIVs_, vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eInputAttachment);
-
+   
 }
 
 void MainPass::createDescriptorSetLayout(){
@@ -240,38 +246,42 @@ void MainPass::CreatePiepline(){
 
 void MainPass::CreateFrameBuffer(){
     auto& ctx = Context::Instance();
-    auto& SwapchainImage = ctx.swapchain->SwapchainImagesAview_;
-    auto& Extent = ctx.swapchain->GetExtent();
-    framebuffers_.resize(SwapchainImage.size());
-    for (int i = 0; i < SwapchainImage.size(); ++i) {
-        auto& view = SwapchainImage[i].view;
-        std::vector<vk::ImageView> attachments = { view ,depthIVs_.image_view};
+    //Color Image
+    Vulkantool::createImageViewSampler(width_,height_,nullptr,1,1,m_formats[0],
+    vk::Filter::eLinear, vk::Filter::eLinear,vk::SamplerAddressMode::eClampToEdge,
+    colorIVs_, vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eInputAttachment);
 
-        vk::FramebufferCreateInfo createInfo;
-        createInfo.setAttachments(attachments)
-                  .setLayers(1)
-                  .setHeight(Extent.height)
-                  .setWidth(Extent.width)
-                  .setRenderPass(renderPass_);
-        framebuffers_[i] = Context::Instance().device.createFramebuffer(createInfo);
-    }
+    //Depth Image
+    Vulkantool::createImageViewSampler(width_,height_,nullptr,1,1,m_formats[1],
+    vk::Filter::eLinear, vk::Filter::eLinear,vk::SamplerAddressMode::eClampToEdge,
+    depthIVs_, vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eInputAttachment);
+
+    std::vector<vk::ImageView> attachments = { colorIVs_.image_view ,depthIVs_.image_view};
+    vk::FramebufferCreateInfo createInfo;
+    createInfo.setAttachments(attachments)
+                .setLayers(1)
+                .setHeight(height_)
+                .setWidth(width_)
+                .setRenderPass(renderPass_);
+    framebuffer_ = Context::Instance().device.createFramebuffer(createInfo);
+
 }
 
 void MainPass::CreateRenderPass(){
     vk::RenderPassCreateInfo createInfo;
     std::array<vk::AttachmentDescription,2> Attachments; //color attachment
     //Color Attachment
-    Attachments[0].setFormat(Context::Instance().swapchain->GetFormat().format)
+    Attachments[0].setFormat(m_formats[0])
                    .setSamples(vk::SampleCountFlagBits::e1)
                    .setLoadOp(vk::AttachmentLoadOp::eClear)
                    .setStoreOp(vk::AttachmentStoreOp::eStore)
                    .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
                    .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
                    .setInitialLayout(vk::ImageLayout::eUndefined)
-                   .setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
+                   .setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
     //Depth Attachment
-    auto format = Context::Instance().swapchain->GetDepthFormat();
-    Attachments[1].setFormat(format)
+  
+    Attachments[1].setFormat(m_formats[1])
                   .setSamples(vk::SampleCountFlagBits::e1)
                   .setLoadOp(vk::AttachmentLoadOp::eClear)
                   .setStoreOp(vk::AttachmentStoreOp::eDontCare)
@@ -281,10 +291,12 @@ void MainPass::CreateRenderPass(){
                   .setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
     std::array<vk::AttachmentReference,2> AttachmentRef;//color attachment reference
+    //Color Ref
     AttachmentRef[0].setAttachment(0)
                      .setLayout(vk::ImageLayout::eColorAttachmentOptimal);
     AttachmentRef[1].setAttachment(1)
                      .setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+ 
     //subpass
     vk::SubpassDescription subpass; //subpass
     vk::SubpassDependency dependency; //subpass dependency
@@ -293,7 +305,6 @@ void MainPass::CreateRenderPass(){
             .setPColorAttachments(&AttachmentRef[0])
             .setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
             .setPDepthStencilAttachment(&AttachmentRef[1]);
-
 
     dependency.setSrcSubpass(VK_SUBPASS_EXTERNAL)
               .setDstSubpass(0)
@@ -323,7 +334,7 @@ void MainPass::Render(){
 
     vk::RenderPassBeginInfo renderPassBegin{};
     renderPassBegin.setRenderPass(renderPass_)
-                   .setFramebuffer(framebuffers_[VulkanRhi.getImageIndex()])
+                   .setFramebuffer(framebuffer_)
                    .setClearValues(clearValues)
                    .setRenderArea(vk::Rect2D({}, Extent));
    
@@ -391,27 +402,18 @@ void MainPass::addDescriptorSet(){
     
 }
 
-void MainPass::recreateframbuffer(){
+void MainPass::recreateframbuffer(uint32_t width,uint32_t height){
     auto& ctx = Context::Instance();
-    width_ = ctx.swapchain->GetExtent().width;
-    height_= ctx.swapchain->GetExtent().height;
-
-    if(width_ != 0 || height_ != 0){
-        for (auto& framebuffer : framebuffers_) {
-        ctx.device.destroyFramebuffer(framebuffer);
-        }
-        framebuffers_.clear();
-
-        depthIVs_.destroy();
-        //Depth Image
-        Vulkantool::createImageViewSampler(width_,height_,nullptr,1,1,ctx.swapchain->GetDepthFormat(),
-        vk::Filter::eLinear, vk::Filter::eLinear,vk::SamplerAddressMode::eClampToEdge,
-        depthIVs_, vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eInputAttachment);
-        CreateFrameBuffer();
-    }
+    ctx.device.destroyFramebuffer(framebuffer_);
+    depthIVs_.destroy();
+    colorIVs_.destroy();
+    
+    width_ = width;
+    height_= height;
+    CreateFrameBuffer();
+}
    
 }
 
 
 
-}

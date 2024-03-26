@@ -37,11 +37,17 @@ void VulkanContext::Init(){
         SDL_Vulkan_CreateSurface(windowHandle_, instance, &surface);
         return surface;
     }, width_, height_);
+
+    //Renderer System
+    render_ = std::make_shared<Renderer>();
+    render_->Init();
+
+
 }
 
 
 void VulkanContext::SwapBuffers(){
-   
+
 }
 
 VulkanContext::~VulkanContext(){
@@ -52,6 +58,10 @@ bool VulkanContext::RebuildSwapChain(){
     VulkanRhi::Instance().IsResized();
     return true;
 }
+
+
+
+
 
 
 }

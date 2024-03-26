@@ -1,8 +1,7 @@
 #include "SegEngine.h"
 #include "Core/Log/Log.h"
 #include "Core/Base/Input.hpp"
-#include "Renderer/Render.hpp"
-
+#include "Core/Vulkan/VulkanContext.hpp"
 
 namespace Sego{
 
@@ -10,7 +9,7 @@ namespace Sego{
 
 SegEngine* SegEngine::Instance_ = nullptr;
 
-void SegEngine::Init(){
+SegEngine::SegEngine(){
     Instance_ = this;
     Log::Log_Init();
     window_ = std::unique_ptr<Window>(Window::Create());
@@ -18,6 +17,11 @@ void SegEngine::Init(){
     
     imguiLayer_ = std::make_unique<ImGuiLayer>();
     PushOverlay(imguiLayer_.get());
+}
+
+
+void SegEngine::Init(){
+   
 }
 
 void SegEngine::destory(){
@@ -28,7 +32,6 @@ void SegEngine::Run(){
    while(m_Running){
         float time = 0;
         LastFrameTime_ = time;
-
 
         for (Layer* layer : layerStack_)
             layer->OnUpdate();
@@ -44,11 +47,11 @@ void SegEngine::Run(){
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue;
         }
-
-        Renderer::BeginScene();
-        Renderer::Render(); 
-        Renderer::EndScene();
-
+        auto& Vctx = VulkanContext::Instance();
+        Vctx.GetRenderer()->BeginScene();
+        Vctx.GetRenderer()->Render();
+        Vctx.GetRenderer()->EndScene();
+       
    }
 }
 
@@ -71,6 +74,7 @@ void SegEngine::OnEvent(Event &e)
 
 bool SegEngine::OnWindowResize(WindowResizeEvent &e){
     window_->IsWindowResize();
+    
     return true;
 }
 

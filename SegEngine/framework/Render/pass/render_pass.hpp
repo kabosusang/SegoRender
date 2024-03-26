@@ -50,7 +50,7 @@ protected:
 
     //Renderer Needs---------------------------------------------------------------
     std::vector<vk::Pipeline> pipelines_;
-    std::vector<vk::Framebuffer> framebuffers_;
+    vk::Framebuffer framebuffer_;
     vk::RenderPass renderPass_;
 
 

@@ -3,6 +3,10 @@
 
 namespace Sego{
 
+void Renderer::Init(){
+}
+
+
 void Renderer::BeginScene(){
 }
 
@@ -12,6 +16,8 @@ void Renderer::EndScene(){
 void Renderer::Render(){
     VulkanRhi::Instance().render();
 }
+
+
 
 }
 

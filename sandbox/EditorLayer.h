@@ -1,5 +1,7 @@
 #pragma once
 #include "Sego.hpp"
+#include "Core/Vulkan/Vulkan_rhi.hpp"
+#include "Core/Vulkan/VulkanTool.hpp"
 
 
 namespace Sego{
@@ -15,7 +17,9 @@ public:
     virtual void OnUpdate() override;
     virtual void OnImGuiRender() override;
     void OnEvent(Event& e) override;
-    private:
+private:
+    vk::Sampler m_Cts;
+    vk::DescriptorSet m_color_texture_set;
         
 };
 

@@ -9,7 +9,7 @@ namespace Sego{
 
 class SegEngine{
 public:
-    SegEngine() = default;
+    SegEngine();
     virtual ~SegEngine() = default;
 
     void Init();

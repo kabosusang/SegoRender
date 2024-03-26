@@ -15,10 +15,8 @@ namespace Sego{
    
     void RenderPass::recreateframbuffer(){
         auto& ctx = Context::Instance();
-        for (auto& framebuffer : framebuffers_) {
-            ctx.device.destroyFramebuffer(framebuffer);
-        }
-        framebuffers_.clear();
+        
+        ctx.device.destroyFramebuffer(framebuffer_);
 
         width_ = ctx.swapchain->GetExtent().width;
         height_= ctx.swapchain->GetExtent().height;
@@ -34,10 +32,9 @@ namespace Sego{
 
         //DescriptorPool
         ctx.device.destroyDescriptorPool(descriptorPool_);
-
-        for (auto& framebuffer : framebuffers_) {
-            ctx.device.destroyFramebuffer(framebuffer);
-        }
+        ctx.device.destroyFramebuffer(framebuffer_);
+        
+        
         for (auto& pipeline : pipelines_) {
             ctx.device.destroyPipeline(pipeline);
         }

@@ -32,7 +32,6 @@ void VulkanRhi::destory() {
     Context::Instance().device.waitIdle();
     Context::Instance().device.destroyCommandPool(cmdPool_);
 
-    
     for (auto& semaphore : imageAvailableSemaphores_) {
         Context::Instance().device.destroySemaphore(semaphore);
     }
@@ -101,6 +100,10 @@ void VulkanRhi::loadExtensionFuncs(){
     vkCmdPushDescriptorSet_ = (PFN_vkCmdPushDescriptorSetKHR)vkGetDeviceProcAddr(Context::Instance().device, "vkCmdPushDescriptorSetKHR");
 }
 
+//temprory
+vk::ImageView VulkanRhi::getColorImageView(){
+    return mainPass_->getColorTexture().image_view;
+}
 
 
 void VulkanRhi::render(){
@@ -180,11 +183,14 @@ void VulkanRhi::recreateSwapchain(){
     ctx.device.waitIdle();
     auto [width, height] = Input::GetWindowSize(); //GetWindowSizeImpl();
     ctx.swapchain->recreateSwapChain(width,height);//Recreate Swapchain
-
-    mainPass_->recreateframbuffer();
     uiPass_->recreateframbuffer();
-    
+
 }
+void VulkanRhi::resizeframbuffer(uint32_t w,uint32_t h){
+    mainPass_->recreateframbuffer(w,h);
+}
+
+
 
  
 }

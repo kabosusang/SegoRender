@@ -14,7 +14,7 @@ namespace Sego{
         virtual void CreateRenderPass() override;
         void createDescriptorPool();
     private:
-        //std::vector<vk::Framebuffer> framebuffers_;
+        std::vector<vk::Framebuffer> framebuffers_;
     };
 
 

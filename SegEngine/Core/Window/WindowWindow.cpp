@@ -140,6 +140,7 @@ void WindowsWindow::Shutdown(){
 
 bool WindowsWindow::IsWindowResize(){
     context_->RebuildSwapChain();
+    
     return true;
 }
 
