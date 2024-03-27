@@ -322,7 +322,6 @@ void MainPass::CreateRenderPass(){
 void MainPass::Render(){
     auto& ctx = Context::Instance();
     auto& VulkanRhi = VulkanRhi::Instance();
-    auto& Extent = ctx.swapchain->GetExtent();
     auto cmdBuffer = VulkanRhi.getCommandBuffer();
     
     //temporary
@@ -336,7 +335,7 @@ void MainPass::Render(){
     renderPassBegin.setRenderPass(renderPass_)
                    .setFramebuffer(framebuffer_)
                    .setClearValues(clearValues)
-                   .setRenderArea(vk::Rect2D({}, Extent));
+                   .setRenderArea(vk::Rect2D({}, {width_,height_}));
    
     cmdBuffer.beginRenderPass(&renderPassBegin, vk::SubpassContents::eInline);
     cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines_[0]);
@@ -344,14 +343,14 @@ void MainPass::Render(){
     vk::Viewport viewport{};
     viewport.setX(0.0f)
             .setY(0.0f)
-            .setWidth(static_cast<float>(Extent.width))
-            .setHeight(static_cast<float>(Extent.height))
+            .setWidth(static_cast<float>(width_))
+            .setHeight(static_cast<float>(height_))
             .setMinDepth(0.0f)
             .setMaxDepth(1.0f);
     cmdBuffer.setViewport(0, 1, &viewport);
     vk::Rect2D scissor{};
     scissor.setOffset({0, 0})
-           .setExtent(Extent);
+           .setExtent({width_,height_});
     cmdBuffer.setScissor(0, 1, &scissor);
 
     vk::Buffer vertexBuffers[] = { vertexBuffer_.buffer };

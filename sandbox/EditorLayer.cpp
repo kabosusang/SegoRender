@@ -3,7 +3,6 @@
 #include <imgui_impl_vulkan.h>
 #include <imgui_impl_sdl2.h>
 
-
 namespace Sego{
 
 
@@ -88,6 +87,13 @@ void EditorLayer::OnImGuiRender(){
 
         ImGui::Begin("Viewport");
         ImVec2 ViewportPanelSize = ImGui::GetContentRegionAvail();
+		m_viewportsize = {ViewportPanelSize.x,ViewportPanelSize.y};
+		if(m_viewportsize != *((glm::vec2*)&ViewportPanelSize)){
+			VulkanRhi::Instance().resizeframbuffer(ViewportPanelSize.x,ViewportPanelSize.y);
+			m_viewportsize = {ViewportPanelSize.x,ViewportPanelSize.y};
+			m_color_texture_set = ImGui_ImplVulkan_AddTexture(m_Cts,VulkanRhi::Instance().getColorImageView(),
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		}
         ImGui::Image(m_color_texture_set,ViewportPanelSize);
 		ImGui::End();
 
@@ -100,6 +106,10 @@ void EditorLayer::OnImGuiRender(){
         ImGui::Text("This is some useful text.");
         ImGui::End();
 	}
+}
+
+void EditorLayer::OnResize(){
+
 }
 
 void EditorLayer::OnEvent(Event &e){

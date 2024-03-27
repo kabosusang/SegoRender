@@ -1,5 +1,4 @@
 #pragma once
-
 #include "Core/Event/Event.h"
 
 namespace Sego{
@@ -15,11 +14,12 @@ namespace Sego{
 		virtual void OnUpdate() {}
 		virtual void OnImGuiRender(){}
 		virtual void OnEvent(Event& event) {}
+		virtual void OnResize(){}
 
 		const std::string& GetName() const { return m_DebugName; }
 	protected:
 		std::string m_DebugName;
-		uint32_t width,height;
+		
 	};
 
 }

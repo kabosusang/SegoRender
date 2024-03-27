@@ -184,7 +184,6 @@ void VulkanRhi::recreateSwapchain(){
     auto [width, height] = Input::GetWindowSize(); //GetWindowSizeImpl();
     ctx.swapchain->recreateSwapChain(width,height);//Recreate Swapchain
     uiPass_->recreateframbuffer();
-
 }
 void VulkanRhi::resizeframbuffer(uint32_t w,uint32_t h){
     mainPass_->recreateframbuffer(w,h);
