@@ -1,7 +1,6 @@
 #include "SegEngine.h"
 #include "Core/Log/Log.h"
 #include "Core/Base/Input.hpp"
-#include "Core/Vulkan/VulkanContext.hpp"
 
 namespace Sego{
 
@@ -33,13 +32,13 @@ void SegEngine::Run(){
         float time = 0;
         LastFrameTime_ = time;
 
-        for (Layer* layer : layerStack_)
-            layer->OnUpdate();
-        
         imguiLayer_->Begin();
         for (Layer* layer : layerStack_)
             layer->OnImGuiRender();
         imguiLayer_->End();
+
+        for (Layer* layer : layerStack_)
+            layer->OnUpdate();
 
         window_->OnUpdate();
         
@@ -47,10 +46,7 @@ void SegEngine::Run(){
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue;
         }
-        auto& Vctx = VulkanContext::Instance();
-        Vctx.GetRenderer()->BeginScene();
-        Vctx.GetRenderer()->Render();
-        Vctx.GetRenderer()->EndScene();
+       
        
    }
 }

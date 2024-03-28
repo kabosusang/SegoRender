@@ -1,3 +1,4 @@
+#include "Sego.hpp"
 #include "EditorLayer.h"
 #include "imgui.h"
 #include <imgui_impl_vulkan.h>
@@ -19,6 +20,14 @@ void EditorLayer::OnDetach(){
 }
 
 void EditorLayer::OnUpdate(){
+ 	auto& Vctx = VulkanContext::Instance();
+	Vctx.GetRenderer()->BeginScene();
+	Vctx.GetRenderer()->Render();
+	Vctx.GetRenderer()->EndScene();
+
+	
+
+
 
 }
 
@@ -85,6 +94,7 @@ void EditorLayer::OnImGuiRender(){
 			ImGui::EndMenuBar();
 		}
 
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
         ImGui::Begin("Viewport");
         ImVec2 ViewportPanelSize = ImGui::GetContentRegionAvail();
 		m_viewportsize = {ViewportPanelSize.x,ViewportPanelSize.y};
@@ -96,6 +106,8 @@ void EditorLayer::OnImGuiRender(){
 		}
         ImGui::Image(m_color_texture_set,ViewportPanelSize);
 		ImGui::End();
+		ImGui::PopStyleVar();
+
 
 		ImGui::End();
    

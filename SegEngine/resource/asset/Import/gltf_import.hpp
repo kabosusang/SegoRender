@@ -1,7 +1,6 @@
 #pragma once
 #include "tiny_gltf.h"
-#include "resource/asset/mesh.hpp"
-#include "resource/asset/texture.hpp"
+#include "resource/asset/base/Vertex.hpp"
 
 namespace Sego{
 

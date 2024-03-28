@@ -22,7 +22,6 @@ namespace Sego{
         static VulkanContext* instance_;
         //Render
         std::shared_ptr<class Renderer> render_;
-        
 
         
         SDL_Window* windowHandle_;

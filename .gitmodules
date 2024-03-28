@@ -13,3 +13,6 @@
 [submodule "3rdL/vma"]
 	path = 3rdL/vma
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
+[submodule "3rdL/entt"]
+	path = 3rdL/entt
+	url = https://github.com/skypjack/entt

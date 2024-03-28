@@ -12,3 +12,11 @@
 
 //Math
 #include <glm/glm.hpp>
+
+//ECS
+#include "Core/Scene/Scene.hpp"
+#include "Core/Scene/Component.hpp"
+#include "Core/Scene/Entity.hpp"
+
+//Context
+#include "Core/Vulkan/VulkanContext.hpp"

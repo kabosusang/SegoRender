@@ -30,6 +30,8 @@ aux_source_directory(Renderer renderer_code)
 
 
 aux_source_directory(resource/asset/ Asset)
+aux_source_directory(resource/asset/base Asset)
+
 
 add_library(SGengine STATIC ${ENTRY} ${engine_src} ${frame_work} ${Asset} ${renderer_code})
 #Vulkan
@@ -39,4 +41,4 @@ target_include_directories(SGengine PUBLIC ./)
 
 target_compile_features(SGengine PRIVATE cxx_std_17)
 target_link_libraries(SGengine PUBLIC Vulkan::Vulkan SDL2::SDL2main SDL2::SDL2 spdlog imgui 
-glm::glm stb_image tinygltf VulkanMemoryAllocator)
+glm::glm stb_image tinygltf VulkanMemoryAllocator EnTT)
