@@ -30,6 +30,7 @@ aux_source_directory(Renderer renderer_code)
 
 
 aux_source_directory(resource/asset/ Asset)
+aux_source_directory(resource/asset/Import Asset)
 aux_source_directory(resource/asset/base Asset)
 
 

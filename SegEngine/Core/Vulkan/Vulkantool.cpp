@@ -102,6 +102,7 @@ void Vulkantool::endInstantCommands(vk::CommandBuffer command_buffer){
 void Vulkantool::createBuffer(vk::DeviceSize size, vk::BufferUsageFlags buffer_usage, 
 VmaMemoryUsage memory_usage, VmaBuffer& buffer){
     auto& ctx = Context::Instance();
+    buffer.size = size;
     vk::BufferCreateInfo bufferInfo = {};
     bufferInfo.setSize(size)
               .setUsage(buffer_usage)

@@ -42,7 +42,6 @@ struct VmaImageViewSampler{
 };
 
 
-
 class Vulkantool{
 public:
         static vk::CommandBuffer beginSingleCommands();

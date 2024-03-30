@@ -2,36 +2,23 @@
 #include "Core/Vulkan/Vulkan_rhi.hpp"
 #include "Core/Vulkan/Vulkantool.hpp"
 #include "resource/asset/base/Vertex.hpp"
+#include "resource/asset/base/Mesh.hpp"
 
-const std::vector<Vertex> vertices = {
-    {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-    {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-    {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-    {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
-
-    {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-    {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-    {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-    {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
-};
-
-const std::vector<uint16_t> indices = {
-    0, 1, 2, 2, 3, 0,
-    4, 5, 6, 6, 7, 4
-};
 
 struct UniformBufferObject {
-    glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 proj;
+    alignas(16) glm::mat4 model;
+    alignas(16) glm::mat4 view;
+    alignas(16) glm::mat4 proj;
 };
 
 namespace Sego{
 
+
+
 MainPass::MainPass(){
 auto& ctx = Context::Instance();
 m_formats ={
-    vk::Format::eR8G8B8A8Unorm,
+    vk::Format::eR8G8B8A8Srgb,
     ctx.swapchain->GetDepthFormat()
     
     };
@@ -40,33 +27,26 @@ m_formats ={
 
 void MainPass::destroy(){
     RenderPass::destroy();
-    vertexBuffer_.destroy();
-    indexBuffer_.destroy();
+ 
 
     for(auto& buffer : uniformBuffers_){
         buffer.destroy();
     }
-    textureIVs_.destroy();
+  
     depthIVs_.destroy();
+    Rendata->destory();
 }
 
 void MainPass::temporarilyInit(){
     auto& Swctx =Context::Instance().swapchain;
-
-    //vertex    
-    Vulkantool::createVertexBuffer(sizeof(vertices[0])* vertices.size(),
-    (void*)vertices.data(), vertexBuffer_);
-
-    //index
-    Vulkantool::createIndexBuffer(sizeof(indices[0])* indices.size(),
-    (void*)indices.data(), indexBuffer_);
+    //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/cartoony_rubber_ducky/scene.gltf");
+    //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/gg.glb"); success
+     //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/gun/scene.gltf");
+    //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/Wolf.gltf");
+    Rendata = GlTFImporter::LoadglTFFile("resources/gltf/FlightHelmet/FlightHelmet.gltf");
 
     //uniform buffer
     createUniformBuffers();
-
-    //texture 
-    textureIVs_ = Vulkantool::loadImageViewSampler("resources/texture.jpg");
-   
 }
 
 void MainPass::createDescriptorSetLayout(){
@@ -83,7 +63,7 @@ void MainPass::createDescriptorSetLayout(){
                         .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
                         .setStageFlags(vk::ShaderStageFlagBits::eFragment)
                         .setPImmutableSamplers(nullptr);
-
+    
     vk::DescriptorSetLayoutBinding bindings[] = {uboLayoutBinding, samplerLayoutBinding};
     vk::DescriptorSetLayoutCreateInfo layoutInfo{};
     layoutInfo.setBindingCount(2)
@@ -141,22 +121,23 @@ void MainPass::CreatePiepline(){
     //1. vertex input   BindingDescription And AttributeDescription
     vk::VertexInputBindingDescription vertex_binding_desc{};
     vertex_binding_desc.setBinding(0)
-                      .setStride(sizeof(Vertex))
+                      .setStride(sizeof(StaticVertex))
                       .setInputRate(vk::VertexInputRate::eVertex);
     
     std::array<vk::VertexInputAttributeDescription, 3> vertex_attr_descs;
     vertex_attr_descs[0].setBinding(0)
                         .setLocation(0)
                         .setFormat(vk::Format::eR32G32B32Sfloat)
-                        .setOffset(offsetof(Vertex, pos));
+                        .setOffset(offsetof(StaticVertex, pos));
     vertex_attr_descs[1].setBinding(0)
                         .setLocation(1)
                         .setFormat(vk::Format::eR32G32B32Sfloat)
-                        .setOffset(offsetof(Vertex, color));
+                        .setOffset(offsetof(StaticVertex, normal));
     vertex_attr_descs[2].setBinding(0)
                         .setLocation(2)
                         .setFormat(vk::Format::eR32G32Sfloat)
-                        .setOffset(offsetof(Vertex, texCoord));
+                        .setOffset(offsetof(StaticVertex, uv));
+ 
 
     vertex_input_ci.setVertexAttributeDescriptionCount(vertex_attr_descs.size())
                    .setPVertexAttributeDescriptions(vertex_attr_descs.data())
@@ -353,60 +334,67 @@ void MainPass::Render(){
            .setExtent({width_,height_});
     cmdBuffer.setScissor(0, 1, &scissor);
 
-    vk::Buffer vertexBuffers[] = { vertexBuffer_.buffer };
+    vk::Buffer vertexBuffers[] = { Rendata->vertexBuffer_.buffer };
     vk::DeviceSize offsets[] = { 0 };
     cmdBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
-    cmdBuffer.bindIndexBuffer(indexBuffer_.buffer, 0, vk::IndexType::eUint16);
+    cmdBuffer.bindIndexBuffer(Rendata->indexBuffer_.buffer, 0, vk::IndexType::eUint32);
 
-    std::vector<vk::WriteDescriptorSet> desc_writes;
 	std::array<vk::DescriptorBufferInfo, 1> desc_buffer_infos{}; //Uniform 
-    std::array<vk::DescriptorImageInfo,1>   desc_image_info{};   //Sample
 
-    desc_buffer_infos[0].setBuffer(uniformBuffers_[VulkanRhi.getFlightCount()].buffer)
-                        .setOffset(0)
-                        .setRange(sizeof(UniformBufferObject));
-    desc_image_info[0].setSampler(textureIVs_.sampler)
-                      .setImageView(textureIVs_.image_view)
-                      .setImageLayout(textureIVs_.image_layout);
+    addBufferDescriptorSet(desc_writes, desc_buffer_infos[0], 
+    uniformBuffers_[VulkanRhi.getFlightCount()], 0);
 
-    desc_writes.resize(2);
-    desc_writes[0].dstSet = nullptr;
-    desc_writes[0].setDstBinding(0)
-                  .setDstArrayElement(0)
-                  .setDescriptorType(vk::DescriptorType::eUniformBuffer)
-                  .setDescriptorCount(1)
-                  .setPBufferInfo(desc_buffer_infos.data())
-                  .setPImageInfo(nullptr)
-                  .setPTexelBufferView(nullptr);
-    desc_writes[1].dstSet = nullptr;
-    desc_writes[1].setDstBinding(1)
-                  .setDstArrayElement(0)
-                  .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-                  .setDescriptorCount(1)
-                  .setPBufferInfo(nullptr)
-                  .setPImageInfo(desc_image_info.data())
-                  .setPTexelBufferView(nullptr);
+    //Draw Notes
+    for(auto& node : Rendata->nodes_){
+        drawNode(pipelineLayouts_[0],node);
+    }
 
-    VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-    pipelineLayouts_[0], 0, desc_writes.size(), (VkWriteDescriptorSet *)desc_writes.data());
-
-    cmdBuffer.drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+    //cmdBuffer.drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
     //end render pass
     cmdBuffer.endRenderPass();
 }
 
 
-void MainPass::addDescriptorSet(){
-    vk::WriteDescriptorSet descriptorWrite{};
-    
+void MainPass::drawNode(vk::PipelineLayout pipelineLayout, Node* node){
+    //Draw Node
+    auto& VulkanRhi = VulkanRhi::Instance();
+    auto cmdBuffer = VulkanRhi.getCommandBuffer();
+
+    if(node->mesh.primitives.size() > 0){
+        glm::mat4 nodeMatrix = node->matrix;
+        Node* currentParent = node->parent;
+        while (currentParent) {
+            nodeMatrix = currentParent->matrix * nodeMatrix;
+            currentParent = currentParent->parent;
+        }
+        for ( auto& primitive : node->mesh.primitives) {
+				if (primitive.indexCount > 0) {
+					// Get the texture index for this primitive
+                    std::array<vk::DescriptorImageInfo,1>   desc_image_info{};   //Sample
+
+                    addImageDescriptorSet(desc_writes, desc_image_info[0], 
+                    Rendata->textures_[Rendata->materials_[primitive.materialIndex].baseColorTextureIndex].image_view_sampler_,1);
+
+                    VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    pipelineLayouts_[0], 0, desc_writes.size(), (VkWriteDescriptorSet *)desc_writes.data());
+                    
+                    // Bind the descriptor for the current primitive's texture
+                    cmdBuffer.drawIndexed(primitive.indexCount,1,primitive.firstIndex,0,0);
+				}
+			}
+		}
+		for (auto& child : node->children) {
+			drawNode(pipelineLayout, child);
+		}
 }
+
 
 void MainPass::recreateframbuffer(uint32_t width,uint32_t height){
     auto& ctx = Context::Instance();
     ctx.device.destroyFramebuffer(framebuffer_);
     depthIVs_.destroy();
     colorIVs_.destroy();
-    
+
     width_ = width;
     height_= height;
     CreateFrameBuffer();

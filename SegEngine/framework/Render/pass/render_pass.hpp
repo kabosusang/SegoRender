@@ -21,6 +21,14 @@ public:
     virtual void createDescriptorSetLayout();
     virtual void createPipelineLayouts();
 
+    void addBufferDescriptorSet(std::vector<vk::WriteDescriptorSet>& desc_writes, 
+			vk::DescriptorBufferInfo& desc_buffer_info, VmaBuffer buffer, uint32_t binding);
+    void addImageDescriptorSet(std::vector<vk::WriteDescriptorSet>& desc_writes, 
+        vk::DescriptorImageInfo& desc_image_info, VmaImageViewSampler texture, uint32_t binding);
+    void addImagesDescriptorSet(std::vector<vk::WriteDescriptorSet>& desc_writes,
+		vk::DescriptorImageInfo* p_desc_image_info, const std::vector<VmaImageViewSampler>& textures, uint32_t binding);
+
+
 protected:
     //PipeLine Struct --------------------------------------------------------------
     vk::GraphicsPipelineCreateInfo pipeline_ci{};

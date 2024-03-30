@@ -1,72 +1,24 @@
 #include "gltf_import.hpp"
+
 #define TINYGLTF_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
 #define TINYGLTF_NO_STB_IMAGE_WRITE
+#ifdef VK_USE_PLATFORM_ANDROID_KHR
+#define TINYGLTF_ANDROID_LOAD_FROM_ASSETS
+#endif
 
-#include <glm/glm.hpp>
+#define INVALID_INDEX -1
+
 #include <glm/gtc/type_ptr.hpp>
-
-Sego::MeshData mesh_data;
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace Sego{
 
-void GltfImporter::loadImages(tinygltf::Model& input){
-    mesh_data.images.resize(input.images.size()); //Load iamges Count
-    for(size_t i = 0; i < input.images.size();i++){
-        tinygltf::Image& glTFImage = input.images[i];
-        //Get image data
-        unsigned char* buffer = nullptr;
-        vk::DeviceSize bufferSize = 0;
-        bool deleteBuffer = false;
-        //No Have Alpha Channel
-        if(glTFImage.component == 3){
-            bufferSize = glTFImage.width * glTFImage.height * 4;
-            buffer = new unsigned char[bufferSize];
-            unsigned char* rgba = buffer;
-            unsigned char* rgb = &glTFImage.image[0];
-            for(size_t i = 0;i < glTFImage.width * glTFImage.height; ++i){
-                memcpy(rgba, rgb, sizeof(unsigned char) * 3);
-					rgba += 4;
-					rgb += 3;
-            }
-            deleteBuffer = true;
-        }else{
-            buffer = &glTFImage.image[0];
-			bufferSize = glTFImage.image.size();
-        }
-        
-        mesh_data.images[i].fromBufferData(buffer, bufferSize, vk::Format::eR8G8B8A8Unorm, glTFImage.width, glTFImage.height);
-        if(deleteBuffer) delete[] buffer;
-    }
 
-}
-void GltfImporter::loadTextures(tinygltf::Model& input)
-{
-	mesh_data.textures.resize(input.textures.size());
-	for (size_t i = 0; i < input.textures.size(); i++) {
-		mesh_data.textures[i].index = input.textures[i].source;
-	}
-}
-
-void GltfImporter::loadMaterials(tinygltf::Model& input)
-	{
-		mesh_data.materials.resize(input.materials.size());
-		for (size_t i = 0; i < input.materials.size(); i++) {
-			// We only read the most basic properties required for our sample
-			tinygltf::Material glTFMaterial = input.materials[i];
-			// Get the base color factor
-			if (glTFMaterial.values.find("baseColorFactor") != glTFMaterial.values.end()) {
-				mesh_data.materials[i].baseColorFactor = glm::make_vec4(glTFMaterial.values["baseColorFactor"].ColorFactor().data());
-			}
-			// Get base color texture index
-			if (glTFMaterial.values.find("baseColorTexture") != glTFMaterial.values.end()) {
-				mesh_data.materials[i].baseColorTextureIndex = glTFMaterial.values["baseColorTexture"].TextureIndex();
-			}
-		}
-	}
-
-void GltfImporter::loadNodes(const tinygltf::Node& inputNode, 
-const tinygltf::Model& input,Node* parent, std::vector<uint32_t>& indexBuffer,
-std::vector<StaticVertex>& vertexBuffer)
+void GlTFImporter::LoadNodes(const tinygltf::Node& inputNode, 
+const tinygltf::Model& input, Node* parent, 
+std::vector<uint32_t>& indexBuffer, std::vector<StaticVertex>& vertexBuffer,
+std::shared_ptr<MeshRenderData>& meshRenderData)
 {
 		Node* node = new Node{};
 		node->matrix = glm::mat4(1.0f);
@@ -91,7 +43,7 @@ std::vector<StaticVertex>& vertexBuffer)
 		// Load node's children
 		if (inputNode.children.size() > 0) {
 			for (size_t i = 0; i < inputNode.children.size(); i++) {
-				loadNodes(input.nodes[inputNode.children[i]], input , node, indexBuffer, vertexBuffer);
+				LoadNodes(input.nodes[inputNode.children[i]], input , node, indexBuffer, vertexBuffer,meshRenderData);
 			}
 		}
 
@@ -139,7 +91,6 @@ std::vector<StaticVertex>& vertexBuffer)
 						vert.pos = glm::vec4(glm::make_vec3(&positionBuffer[v * 3]), 1.0f);
 						vert.normal = glm::normalize(glm::vec3(normalsBuffer ? glm::make_vec3(&normalsBuffer[v * 3]) : glm::vec3(0.0f)));
 						vert.uv = texCoordsBuffer ? glm::make_vec2(&texCoordsBuffer[v * 2]) : glm::vec3(0.0f);
-						vert.color = glm::vec3(1.0f);
 						vertexBuffer.push_back(vert);
 					}
 				}
@@ -176,6 +127,7 @@ std::vector<StaticVertex>& vertexBuffer)
 					}
 					default:
 						std::cerr << "Index component type " << accessor.componentType << " not supported!" << std::endl;
+						SG_CORE_ERROR("Index component type not supported!");
 						return;
 					}
 				}
@@ -186,18 +138,90 @@ std::vector<StaticVertex>& vertexBuffer)
 				node->mesh.primitives.push_back(primitive);
 			}
 		}
+
 		if (parent) {
 			parent->children.push_back(node);
 		}
 		else {
-			mesh_data.nodes.push_back(node);
+			meshRenderData->nodes_.push_back(node);
 		}
+}
+
+
+std::shared_ptr<MeshRenderData> GlTFImporter::LoadglTFFile(const std::string& filename){
+    tinygltf::Model gltf_model;
+    tinygltf::TinyGLTF loader;
+    std::string error,warning;
+    std::string extension = std::filesystem::path(filename).extension().string();
+	bool is_gltf = extension == ".gltf";
+	bool success = false;
+
+	if(is_gltf){
+		success = loader.LoadASCIIFromFile(&gltf_model, &error, &warning, filename);
+	}else{
+		success = loader.LoadBinaryFromFile(&gltf_model, &error, &warning, filename);
 	}
 
+	if(!success){
+		SG_CORE_ERROR("Failed to load glTF file: {0}!,error:{1},warning: {2}", filename,error,warning);
+	
+	}
+    std::shared_ptr<MeshRenderData> mesh_data = std::make_shared<MeshRenderData>();
+    
+    //1. Load Images
+    mesh_data->textures_.resize(gltf_model.images.size());
+    for(size_t i = 0; i < gltf_model.images.size(); i++){
+        tinygltf::Image& glTFImage = gltf_model.images[i];
+        
+        mesh_data->textures_[i].image_data_ = glTFImage.image;
+        mesh_data->textures_[i].width_ = glTFImage.width;
+        mesh_data->textures_[i].height_ = glTFImage.height;
+        mesh_data->textures_[i].format_ = vk::Format::eR8G8B8A8Unorm;
+        mesh_data->textures_[i].loadFromMemory();
+    }
 
+    //2. Load Materials
+    mesh_data->materials_.resize(gltf_model.materials.size());
+    for(size_t i =0; i < gltf_model.materials.size(); i++){
+        tinygltf::Material& glTFMaterial = gltf_model.materials[i];
+        Material& material = mesh_data->materials_[i];
+        //Get the base color texture
+        if(glTFMaterial.values.find("baseColorFactor") != glTFMaterial.values.end()){
+        	mesh_data->materials_[i].baseColorFactor =  glm::make_vec4(glTFMaterial.values["baseColorFactor"].ColorFactor().data());
+        }
+        //Get the color texture index
+        if(glTFMaterial.values.find("baseColorTexture") != glTFMaterial.values.end()){
+           mesh_data->materials_[i].baseColorTextureIndex = glTFMaterial.values["baseColorTexture"].TextureIndex();
+        }
 
+    }
+
+    //3. Load Textures
+    mesh_data->textureindex_.resize(gltf_model.textures.size());
+    for(size_t i = 0; i < gltf_model.textures.size(); i++){
+        tinygltf::Texture& glTFTexture = gltf_model.textures[i];
+        mesh_data->textureindex_[i].imageIndex = glTFTexture.source;
+    }
+
+    std::vector<uint32_t> indexBuffer;
+    std::vector<StaticVertex> vertexBuffer;
+
+    const tinygltf::Scene& scene = gltf_model.scenes[0];
+    //4. Load Meshes
+    for (size_t i = 0; i < scene.nodes.size(); i++) {
+        const tinygltf::Node node = gltf_model.nodes[scene.nodes[i]];
+        LoadNodes(node, gltf_model, nullptr, indexBuffer, vertexBuffer,mesh_data);
+    }
+    //5. Create buffers
+    Vulkantool::createVertexBuffer(sizeof(StaticVertex)* vertexBuffer.size(),
+    (void*)vertexBuffer.data(), mesh_data->vertexBuffer_);
+   
+    Vulkantool::createIndexBuffer(sizeof(uint32_t) * indexBuffer.size(),
+    (void*)indexBuffer.data(), mesh_data->indexBuffer_);
+
+    return mesh_data;
 }
 
 
 
-
+}

@@ -1,5 +1,6 @@
 #pragma once
 #include "render_pass.hpp"
+#include "resource/asset/Import/gltf_import.hpp"
 
 namespace Sego{
     class MainPass : public RenderPass
@@ -16,8 +17,8 @@ namespace Sego{
         virtual void destroy() override;
         virtual void createDescriptorSetLayout();
         virtual void createPipelineLayouts();
+        void drawNode(vk::PipelineLayout pipelineLayout, Node* node);
         void temporarilyInit();
-        void addDescriptorSet();
 
         VmaImageViewSampler getColorTexture() { return colorIVs_;}
 
@@ -28,15 +29,16 @@ namespace Sego{
         std::vector<vk::Format> m_formats;
 
         //temporary Data
-        VmaBuffer vertexBuffer_;
-        VmaBuffer indexBuffer_;
-        std::vector<VmaBuffer> uniformBuffers_;
-        VmaImageViewSampler textureIVs_;
+        std::shared_ptr<MeshRenderData> Rendata;
 
+        std::vector<VmaBuffer> uniformBuffers_;
         //Color Texture
         VmaImageViewSampler colorIVs_;
         //Depth Texture
         VmaImageViewSampler depthIVs_;
+
+        //DescriptorSetLayout
+        std::vector<vk::WriteDescriptorSet> desc_writes;
     };
 
 
