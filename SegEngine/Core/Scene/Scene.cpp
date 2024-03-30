@@ -27,7 +27,7 @@ void Scene::OnUpdate(){
     auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
     for(auto entity : group){
         auto [transform,sprite] = group.get<TransformComponent,SpriteRendererComponent>(entity);
-    
+        
     }
 }
 

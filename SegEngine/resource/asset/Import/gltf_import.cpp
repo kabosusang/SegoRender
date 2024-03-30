@@ -91,6 +91,7 @@ std::shared_ptr<MeshRenderData>& meshRenderData)
 						vert.pos = glm::vec4(glm::make_vec3(&positionBuffer[v * 3]), 1.0f);
 						vert.normal = glm::normalize(glm::vec3(normalsBuffer ? glm::make_vec3(&normalsBuffer[v * 3]) : glm::vec3(0.0f)));
 						vert.uv = texCoordsBuffer ? glm::make_vec2(&texCoordsBuffer[v * 2]) : glm::vec3(0.0f);
+						vert.color = glm::vec3(1.0f);
 						vertexBuffer.push_back(vert);
 					}
 				}
@@ -176,7 +177,7 @@ std::shared_ptr<MeshRenderData> GlTFImporter::LoadglTFFile(const std::string& fi
         mesh_data->textures_[i].image_data_ = glTFImage.image;
         mesh_data->textures_[i].width_ = glTFImage.width;
         mesh_data->textures_[i].height_ = glTFImage.height;
-        mesh_data->textures_[i].format_ = vk::Format::eR8G8B8A8Unorm;
+        mesh_data->textures_[i].format_ = vk::Format::eR8G8B8A8Srgb;
         mesh_data->textures_[i].loadFromMemory();
     }
 
@@ -184,7 +185,7 @@ std::shared_ptr<MeshRenderData> GlTFImporter::LoadglTFFile(const std::string& fi
     mesh_data->materials_.resize(gltf_model.materials.size());
     for(size_t i =0; i < gltf_model.materials.size(); i++){
         tinygltf::Material& glTFMaterial = gltf_model.materials[i];
-        Material& material = mesh_data->materials_[i];
+      
         //Get the base color texture
         if(glTFMaterial.values.find("baseColorFactor") != glTFMaterial.values.end()){
         	mesh_data->materials_[i].baseColorFactor =  glm::make_vec4(glTFMaterial.values["baseColorFactor"].ColorFactor().data());
@@ -199,8 +200,7 @@ std::shared_ptr<MeshRenderData> GlTFImporter::LoadglTFFile(const std::string& fi
     //3. Load Textures
     mesh_data->textureindex_.resize(gltf_model.textures.size());
     for(size_t i = 0; i < gltf_model.textures.size(); i++){
-        tinygltf::Texture& glTFTexture = gltf_model.textures[i];
-        mesh_data->textureindex_[i].imageIndex = glTFTexture.source;
+        mesh_data->textureindex_[i].imageIndex = gltf_model.textures[i].source;
     }
 
     std::vector<uint32_t> indexBuffer;
@@ -213,10 +213,10 @@ std::shared_ptr<MeshRenderData> GlTFImporter::LoadglTFFile(const std::string& fi
         LoadNodes(node, gltf_model, nullptr, indexBuffer, vertexBuffer,mesh_data);
     }
     //5. Create buffers
-    Vulkantool::createVertexBuffer(sizeof(StaticVertex)* vertexBuffer.size(),
+    Vulkantool::createVertexBuffer(sizeof(vertexBuffer[0])* vertexBuffer.size(),
     (void*)vertexBuffer.data(), mesh_data->vertexBuffer_);
    
-    Vulkantool::createIndexBuffer(sizeof(uint32_t) * indexBuffer.size(),
+    Vulkantool::createIndexBuffer(sizeof(indexBuffer[0]) * indexBuffer.size(),
     (void*)indexBuffer.data(), mesh_data->indexBuffer_);
 
     return mesh_data;

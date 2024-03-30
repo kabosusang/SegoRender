@@ -17,7 +17,7 @@ namespace Sego{
         virtual void destroy() override;
         virtual void createDescriptorSetLayout();
         virtual void createPipelineLayouts();
-        void drawNode(vk::PipelineLayout pipelineLayout, Node* node);
+        void drawNode(vk::CommandBuffer cmd,vk::PipelineLayout pipelineLayout, Node* node);
         void temporarilyInit();
 
         VmaImageViewSampler getColorTexture() { return colorIVs_;}

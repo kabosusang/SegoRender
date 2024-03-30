@@ -16,7 +16,7 @@ void ImGuiLayer::OnAttach(){
     
 }
 void ImGuiLayer::OnDetach(){
-
+    
     
 }
 
@@ -28,9 +28,15 @@ void ImGuiLayer::Begin(){
 
 }
 void ImGuiLayer::End(){
+      // 渲染 ImGui 绘制的界面
     ImGui::Render();
-    ImGui::UpdatePlatformWindows();
-    ImGui::RenderPlatformWindowsDefault();
+    // 更新平台窗口并渲染平台窗口
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+    }
+
 }
 
 void ImGuiLayer::OnImGuiRender(){

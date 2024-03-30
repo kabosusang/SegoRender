@@ -13,8 +13,6 @@ struct UniformBufferObject {
 
 namespace Sego{
 
-
-
 MainPass::MainPass(){
 auto& ctx = Context::Instance();
 m_formats ={
@@ -40,10 +38,14 @@ void MainPass::destroy(){
 void MainPass::temporarilyInit(){
     auto& Swctx =Context::Instance().swapchain;
     //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/cartoony_rubber_ducky/scene.gltf");
-    //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/gg.glb"); success
+    //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/gg.glb"); //success
      //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/gun/scene.gltf");
     //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/Wolf.gltf");
     Rendata = GlTFImporter::LoadglTFFile("resources/gltf/FlightHelmet/FlightHelmet.gltf");
+
+    SG_INFO("Rendata->textures_.size(): {0}", Rendata->textures_.size());
+
+
 
     //uniform buffer
     createUniformBuffers();
@@ -100,7 +102,7 @@ void MainPass::updateUniformBuffer(uint32_t currentImage){
     float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
     
     UniformBufferObject ubo{};
-    ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     ubo.proj = glm::perspective(glm::radians(45.0f), 1600.0f / 1000.0f, 0.1f, 10.0f);
     ubo.proj[1][1] *= -1;
@@ -124,7 +126,7 @@ void MainPass::CreatePiepline(){
                       .setStride(sizeof(StaticVertex))
                       .setInputRate(vk::VertexInputRate::eVertex);
     
-    std::array<vk::VertexInputAttributeDescription, 3> vertex_attr_descs;
+    std::array<vk::VertexInputAttributeDescription, 4> vertex_attr_descs;
     vertex_attr_descs[0].setBinding(0)
                         .setLocation(0)
                         .setFormat(vk::Format::eR32G32B32Sfloat)
@@ -137,7 +139,10 @@ void MainPass::CreatePiepline(){
                         .setLocation(2)
                         .setFormat(vk::Format::eR32G32Sfloat)
                         .setOffset(offsetof(StaticVertex, uv));
- 
+    vertex_attr_descs[3].setBinding(0)
+                        .setLocation(3)
+                        .setFormat(vk::Format::eR32G32B32Sfloat)
+                        .setOffset(offsetof(StaticVertex, color));
 
     vertex_input_ci.setVertexAttributeDescriptionCount(vertex_attr_descs.size())
                    .setPVertexAttributeDescriptions(vertex_attr_descs.data())
@@ -343,10 +348,18 @@ void MainPass::Render(){
 
     addBufferDescriptorSet(desc_writes, desc_buffer_infos[0], 
     uniformBuffers_[VulkanRhi.getFlightCount()], 0);
+    // Get the texture index for this primitive
+    std::array<vk::DescriptorImageInfo,1>   desc_image_info{};   //Sample
+    
+    addImageDescriptorSet(desc_writes, desc_image_info[0], 
+    Rendata->textures_[Rendata->materials_[4].baseColorTextureIndex].image_view_sampler_,1);
+    
+    VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+    pipelineLayouts_[0], 0, desc_writes.size(), (VkWriteDescriptorSet *)desc_writes.data());
 
     //Draw Notes
     for(auto& node : Rendata->nodes_){
-        drawNode(pipelineLayouts_[0],node);
+        drawNode(cmdBuffer,pipelineLayouts_[0],node);
     }
 
     //cmdBuffer.drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
@@ -355,36 +368,29 @@ void MainPass::Render(){
 }
 
 
-void MainPass::drawNode(vk::PipelineLayout pipelineLayout, Node* node){
-    //Draw Node
-    auto& VulkanRhi = VulkanRhi::Instance();
-    auto cmdBuffer = VulkanRhi.getCommandBuffer();
+void MainPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelineLayout, Node* node){
+     auto& VulkanRhi = VulkanRhi::Instance();
 
     if(node->mesh.primitives.size() > 0){
-        glm::mat4 nodeMatrix = node->matrix;
-        Node* currentParent = node->parent;
-        while (currentParent) {
-            nodeMatrix = currentParent->matrix * nodeMatrix;
-            currentParent = currentParent->parent;
-        }
         for ( auto& primitive : node->mesh.primitives) {
+                // Pass the node's matrix via push constants
+                // Traverse the node hierarchy to the top-most parent to get the final matrix of the current node
+                glm::mat4 nodeMatrix = node->matrix;
+                Node* currentParent = node->parent;
+                while (currentParent) {
+                    nodeMatrix = currentParent->matrix * nodeMatrix;
+                    currentParent = currentParent->parent;
+                }
+                // Update the push constant block
 				if (primitive.indexCount > 0) {
-					// Get the texture index for this primitive
-                    std::array<vk::DescriptorImageInfo,1>   desc_image_info{};   //Sample
-
-                    addImageDescriptorSet(desc_writes, desc_image_info[0], 
-                    Rendata->textures_[Rendata->materials_[primitive.materialIndex].baseColorTextureIndex].image_view_sampler_,1);
-
-                    VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    pipelineLayouts_[0], 0, desc_writes.size(), (VkWriteDescriptorSet *)desc_writes.data());
-                    
+					
                     // Bind the descriptor for the current primitive's texture
                     cmdBuffer.drawIndexed(primitive.indexCount,1,primitive.firstIndex,0,0);
 				}
 			}
 		}
 		for (auto& child : node->children) {
-			drawNode(pipelineLayout, child);
+			drawNode(cmdBuffer,pipelineLayout, child);
 		}
 }
 

@@ -105,7 +105,6 @@ vk::ImageView VulkanRhi::getColorImageView(){
     return mainPass_->getColorTexture().image_view;
 }
 
-
 void VulkanRhi::render(){
     waitFrame();
 	recordFrame();

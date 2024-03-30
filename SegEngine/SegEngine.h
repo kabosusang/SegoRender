@@ -3,6 +3,7 @@
 #include "Core/Event/AppWinEvent.h"
 #include "Core/Layer/LayerStack.h"
 #include "Core/Base/Time.hpp"
+#include "Core/Base/Timestep.hpp"
 #include "Imgui/ImGuiLayer.hpp"
 
 namespace Sego{
@@ -19,7 +20,6 @@ public:
     void OnEvent(Event& e);
     void PushLayer(Layer* layer);
     void PushOverlay(Layer* overlay);
-
 
     inline Window& GetWindow() { return *window_; }
     inline static SegEngine& Instance(){ return *Instance_;}

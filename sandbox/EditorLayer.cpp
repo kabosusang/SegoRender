@@ -16,7 +16,7 @@ void EditorLayer::OnAttach(){
 }
 
 void EditorLayer::OnDetach(){
-
+	ImGui_ImplVulkan_RemoveTexture(m_color_texture_set); //remove old texture
 }
 
 void EditorLayer::OnUpdate(){
@@ -24,10 +24,6 @@ void EditorLayer::OnUpdate(){
 	Vctx.GetRenderer()->BeginScene();
 	Vctx.GetRenderer()->Render();
 	Vctx.GetRenderer()->EndScene();
-
-	
-
-
 
 }
 
@@ -101,6 +97,10 @@ void EditorLayer::OnImGuiRender(){
 		if(m_viewportsize != *((glm::vec2*)&ViewportPanelSize)){
 			VulkanRhi::Instance().resizeframbuffer(ViewportPanelSize.x,ViewportPanelSize.y);
 			m_viewportsize = {ViewportPanelSize.x,ViewportPanelSize.y};
+			
+			if (m_color_texture_set != VK_NULL_HANDLE)
+			ImGui_ImplVulkan_RemoveTexture(m_color_texture_set); //remove old texture
+			
 			m_color_texture_set = ImGui_ImplVulkan_AddTexture(m_Cts,VulkanRhi::Instance().getColorImageView(),
 			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		}

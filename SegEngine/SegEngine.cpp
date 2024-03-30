@@ -2,6 +2,7 @@
 #include "Core/Log/Log.h"
 #include "Core/Base/Input.hpp"
 
+
 namespace Sego{
 
 #define BIND_EVENT_FN(x) std::bind(&SegEngine::x, this, std::placeholders::_1)
@@ -29,8 +30,13 @@ void SegEngine::destory(){
 
 void SegEngine::Run(){
    while(m_Running){
-        float time = 0;
+        
+        float time = Timer::GetTime();
+        Timestep timestep = time - LastFrameTime_;
         LastFrameTime_ = time;
+
+        
+        SG_CORE_INFO("FPS: {0}", 1.0f / timestep.GetSeconds());
 
         imguiLayer_->Begin();
         for (Layer* layer : layerStack_)
@@ -42,12 +48,10 @@ void SegEngine::Run(){
 
         window_->OnUpdate();
         
-        if(is_Min){
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+         if(is_Min){
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue;
         }
-       
-       
    }
 }
 
