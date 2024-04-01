@@ -11,7 +11,7 @@ include_directories(${PROJECT_SOURCE_DIR})
 
 set(PCH_HEADER "pch.h")  # 设置预编译头文件的路径
 # 添加预编译头
-target_precompile_headers(editor PRIVATE ${PCH_HEADER})
+#target_precompile_headers(SegEngine PRIVATE ${PCH_HEADER})
 aux_source_directory(. ENTRY)
 
 aux_source_directory(Core/Base engine_src)

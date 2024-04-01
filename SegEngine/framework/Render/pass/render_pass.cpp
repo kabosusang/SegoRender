@@ -102,6 +102,14 @@ const std::vector<VmaImageViewSampler> &textures, uint32_t binding){
 
 }
 
+void RenderPass::setClearColor(const glm::vec4 &color){
+    clearColor_ = color;
+}
+
+
+
+
+
 
 
 }

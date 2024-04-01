@@ -1,5 +1,5 @@
 #include "Render.hpp"
-#include "Core/Vulkan/Vulkan_rhi.hpp"
+
 
 namespace Sego{
 
@@ -21,6 +21,19 @@ void Renderer::EndScene(){
 
 void Renderer::Render(){
     VulkanRhi::Instance().render();
+}
+
+void Renderer::SetClearColor(const glm::vec4& color){
+    VulkanRhi::Instance().setClearColor(color);
+}
+
+void Renderer::resizeframbuffer(uint32_t w, uint32_t h)
+{
+    VulkanRhi::Instance().resizeframbuffer(w,h);
+}
+
+vk::ImageView Renderer::GetColorImageView(){
+    return VulkanRhi::Instance().getColorImageView();
 }
 
 

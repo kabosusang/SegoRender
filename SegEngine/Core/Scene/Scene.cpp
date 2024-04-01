@@ -26,7 +26,6 @@ Entity Scene::CreateEntity(const std::string& name){
 void Scene::OnUpdate(Timestep ts){
 auto& Vctx = VulkanContext::Instance();
 
-
 Camera* mainCamera = nullptr;
 glm::mat4* CameraTransform = nullptr;
 
@@ -52,8 +51,6 @@ glm::mat4* CameraTransform = nullptr;
             auto [transform,sprite] = group.get<TransformComponent,SpriteRendererComponent>(entity);
             //Render}
              }
-
-        
         Vctx.GetRenderer()->Render();
         Vctx.GetRenderer()->EndScene();
     }
@@ -68,7 +65,10 @@ void Scene::OnViewportResize(uint32_t width, uint32_t height){
     //Resize cameras
     auto view = m_Registry.view<CameraComponent>();
     for (auto entity : view){
-        
+        auto& cameraComponent = view.get<CameraComponent>(entity);
+        if(!cameraComponent.FixedAspectRatio){
+            cameraComponent.Camera.SetViewportSize(width,height);
+        }
     }
     
 }

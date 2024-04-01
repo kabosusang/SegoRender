@@ -38,14 +38,12 @@ void MainPass::destroy(){
 void MainPass::temporarilyInit(){
     auto& Swctx =Context::Instance().swapchain;
     //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/cartoony_rubber_ducky/scene.gltf");
-    //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/gg.glb"); //success
-     //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/gun/scene.gltf");
+    //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/BoomBox/BoomBox.gltf"); //success
+    //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/gun/scene.gltf");
     //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/Wolf.gltf");
     Rendata = GlTFImporter::LoadglTFFile("resources/gltf/FlightHelmet/FlightHelmet.gltf");
 
     SG_INFO("Rendata->textures_.size(): {0}", Rendata->textures_.size());
-
-
 
     //uniform buffer
     createUniformBuffers();
@@ -312,9 +310,9 @@ void MainPass::Render(){
     
     //temporary
     updateUniformBuffer(VulkanRhi.getFlightCount());
-
+  
     std::array<vk::ClearValue,2> clearValues{};
-    clearValues[0].setColor(vk::ClearColorValue(std::array<float, 4>{0.1, 0.1, 0.1, 1}));
+    clearValues[0].setColor(vk::ClearColorValue(reinterpret_cast<vk::ClearColorValue&>(clearColor_)));
     clearValues[1].setDepthStencil({1.0f,0});
 
     vk::RenderPassBeginInfo renderPassBegin{};
@@ -406,6 +404,13 @@ void MainPass::recreateframbuffer(uint32_t width,uint32_t height){
     height_= height;
     CreateFrameBuffer();
 }
+
+
+
+
+
+
+
    
 }
 

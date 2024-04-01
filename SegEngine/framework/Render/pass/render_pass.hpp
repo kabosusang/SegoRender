@@ -1,6 +1,7 @@
 #pragma once
 #include "pch.h"
 #include "context.hpp"
+#include <glm/glm.hpp>
 
 namespace Sego{
 
@@ -10,7 +11,7 @@ public:
     virtual void Init();
     virtual void Render() = 0;
     virtual void destroy();
-    virtual void recreateframbuffer();
+   
     //virtual void Cleanup();
 
     //Function Virtual = 0
@@ -28,6 +29,13 @@ public:
     void addImagesDescriptorSet(std::vector<vk::WriteDescriptorSet>& desc_writes,
 		vk::DescriptorImageInfo* p_desc_image_info, const std::vector<VmaImageViewSampler>& textures, uint32_t binding);
 
+
+
+
+
+    //Output Function
+    virtual void recreateframbuffer();
+    virtual void setClearColor(const glm::vec4& color);
 
 protected:
     //PipeLine Struct --------------------------------------------------------------
@@ -55,7 +63,6 @@ protected:
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts_;
     vk::DescriptorPool descriptorPool_ = nullptr;
     
-
     //Renderer Needs---------------------------------------------------------------
     std::vector<vk::Pipeline> pipelines_;
     vk::Framebuffer framebuffer_;
@@ -65,6 +72,8 @@ protected:
     //Renderer tagret Extent
     uint32_t width_,height_;
 
+    //SetColor
+    glm::vec4 clearColor_ = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 };
 
 

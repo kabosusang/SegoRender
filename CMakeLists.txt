@@ -11,7 +11,6 @@ include(cmake/CopyFiles.cmake)
 #engine
 
 add_subdirectory(3rdL)
-add_subdirectory(editor)
 add_subdirectory(SegEngine)
-add_subdirectory(sandbox)
+add_subdirectory(Editor)
 #add_subdirectory(plugins)

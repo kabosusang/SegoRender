@@ -1,5 +1,6 @@
-aux_source_directory(Base/ base)
-add_library(editor STATIC ${base})
+add_executable(Editor)
+aux_source_directory(./ SANDBOX_SRC)
+target_sources(Editor PRIVATE ${SANDBOX_SRC})
 
-target_include_directories(editor PUBLIC ./)
-target_link_libraries(editor PUBLIC imgui SDL2 spdlog)
+target_link_libraries(Editor PUBLIC SGengine)
+CopyDLL(Editor)

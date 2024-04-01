@@ -12,7 +12,6 @@ namespace Sego{
         virtual void CreatePiepline() override;
         virtual void CreateFrameBuffer() override;
         virtual void CreateRenderPass() override;
-        virtual void recreateframbuffer(uint32_t width,uint32_t height);
 
         virtual void destroy() override;
         virtual void createDescriptorSetLayout();
@@ -21,6 +20,10 @@ namespace Sego{
         void temporarilyInit();
 
         VmaImageViewSampler getColorTexture() { return colorIVs_;}
+
+
+        //Output Function
+        virtual void recreateframbuffer(uint32_t width,uint32_t height);
 
         //temporary
         void createUniformBuffers();

@@ -177,6 +177,7 @@ void VulkanRhi::presentFrame(){
     currentFrame_ = (currentFrame_ + 1) % maxFlightCount_;
 }
 
+//Out Put Function
 void VulkanRhi::recreateSwapchain(){
     auto& ctx = Context::Instance();
     ctx.device.waitIdle();
@@ -184,8 +185,13 @@ void VulkanRhi::recreateSwapchain(){
     ctx.swapchain->recreateSwapChain(width,height);//Recreate Swapchain
     uiPass_->recreateframbuffer();
 }
+
 void VulkanRhi::resizeframbuffer(uint32_t w,uint32_t h){
     mainPass_->recreateframbuffer(w,h);
+}
+
+void VulkanRhi::setClearColor(const glm::vec4& color){
+    mainPass_->setClearColor(color);
 }
 
 

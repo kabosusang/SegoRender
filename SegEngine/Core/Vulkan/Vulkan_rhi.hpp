@@ -31,8 +31,11 @@ namespace Sego{
         inline uint32_t getFlightCount() { return currentFrame_; }
         inline uint32_t getImageIndex() { return currentImageIndex_; }
         PFN_vkCmdPushDescriptorSetKHR getCmdPushDescriptorSet() { return vkCmdPushDescriptorSet_; }
-
         vk::ImageView getColorImageView();
+
+
+        void setClearColor(const glm::vec4& color);
+
     private:
         static VulkanRhi* instance_;
         
