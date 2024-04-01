@@ -3,7 +3,13 @@
 
 namespace Sego{
 
+void Renderer::BeginScene(const Camera& camera, const glm::mat4& transform){
+    glm::mat4 viewProj = camera.GetProjectionMatrix() * glm::inverse(transform);
+
+}
+
 void Renderer::Init(){
+   
 }
 
 

@@ -397,6 +397,7 @@ void MainPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelin
 
 void MainPass::recreateframbuffer(uint32_t width,uint32_t height){
     auto& ctx = Context::Instance();
+    ctx.device.waitIdle();
     ctx.device.destroyFramebuffer(framebuffer_);
     depthIVs_.destroy();
     colorIVs_.destroy();

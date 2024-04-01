@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include "Renderer/Camera.hpp"
 
 
 namespace Sego{
@@ -35,6 +36,17 @@ namespace Sego{
             : Color(color) {}
 
     };
+
+    struct CameraComponent{
+        Camera Camera;
+        bool Primary = true;
+
+        CameraComponent() = default;
+        CameraComponent(const CameraComponent&) = default;
+        CameraComponent(const glm::mat4& projection)
+            : Camera(projection) {}
+    };
+    
 
 
 

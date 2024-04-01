@@ -1,12 +1,10 @@
 #include "pch.h"
-#include "WindowInput.hpp"
-
+#include "Input.hpp"
 #include <SDL.h>
 
 namespace Sego{
-Input* Input::instance_ = new WindowsInput();
 
-bool WindowsInput::IsKeyPressedImpl(int keycode)
+bool Input::ISKeyPressed(int keycode)
 {  
     const Uint8* state = SDL_GetKeyboardState(NULL);
     if (state[keycode])
@@ -15,38 +13,37 @@ bool WindowsInput::IsKeyPressedImpl(int keycode)
     return false;
 }
 
-bool WindowsInput::IsMouseButtonPressedImpl(int button)
+bool Input::ISMouseButtonPressed(int button)
 {
     const Uint32 state = SDL_GetMouseState(NULL, NULL);
     if (state & SDL_BUTTON(button))
         return true;
-
+    
     return false;
 }
 
-float WindowsInput::GetMouseXImpl()
+float Input::GetMouseX()
 {
-    auto v = GetMousePosImpl();
+    auto v = GetMousePos();
     return std::get<0>(v);
 }
 
-float WindowsInput::GetMouseYImpl()
+float Input::GetMouseY()
 {
-    auto v = GetMousePosImpl();
+    auto v = GetMousePos();
     return std::get<1>(v);
 }
 
-std::pair<float, float> WindowsInput::GetMousePosImpl()
+std::pair<float, float> Input::GetMousePos()
 {
     int x,y;
     int mouseX, mouseY;  // 鼠标相对窗口的坐标
-
     //auto window = SDL_GetMouseFocus();
     SDL_GetMouseState(&mouseX, &mouseY);
     return {(float)mouseX,(float)mouseY};
 }
 
-std::pair<uint32_t, uint32_t> WindowsInput::GetWindowSizeImpl()
+std::pair<uint32_t, uint32_t> Input::GetWindowSize()
 {
     int w, h;
     SDL_GetWindowSize(SDL_GetWindowFromID(1), &w, &h);

@@ -2,6 +2,7 @@
 #include "Sego.hpp"
 #include "Core/Vulkan/Vulkan_rhi.hpp"
 #include "Core/Vulkan/VulkanTool.hpp"
+#include "Core/Scene/Scene.hpp"
 
 namespace Sego{
 class EditorLayer : public Layer{
@@ -12,7 +13,7 @@ public:
 
     virtual void OnAttach() override;
     virtual void OnDetach() override;
-    virtual void OnUpdate() override;
+    virtual void OnUpdate(Timestep ts) override;
     virtual void OnImGuiRender() override;
 
     virtual void OnResize() override;
@@ -21,7 +22,11 @@ private:
     vk::Sampler m_Cts;
     vk::DescriptorSet m_color_texture_set;
     glm::vec2 m_viewportsize;
-        
+    bool m_ViewportFocused = false, m_ViewportHovered = false;
+    
+    std::shared_ptr<Scene> m_ActiveScene;
+    Entity m_CameraEntity;
+    
 };
 
 

@@ -9,6 +9,4 @@ Entity::Entity(entt::entity handle, Scene* scene)
 }
 
 
-
-
 }

@@ -35,8 +35,6 @@ void SegEngine::Run(){
         Timestep timestep = time - LastFrameTime_;
         LastFrameTime_ = time;
 
-        
-        SG_CORE_INFO("FPS: {0}", 1.0f / timestep.GetSeconds());
 
         imguiLayer_->Begin();
         for (Layer* layer : layerStack_)
@@ -44,7 +42,7 @@ void SegEngine::Run(){
         imguiLayer_->End();
 
         for (Layer* layer : layerStack_)
-            layer->OnUpdate();
+            layer->OnUpdate(timestep);
 
         window_->OnUpdate();
         

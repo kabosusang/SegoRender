@@ -23,7 +23,8 @@ public:
 
     inline Window& GetWindow() { return *window_; }
     inline static SegEngine& Instance(){ return *Instance_;}
-    
+
+    ImGuiLayer* GetImGuiLayer() { return imguiLayer_.get(); }
 private:
     //Event
     bool OnWindowClose(WindowCloseEvent& e);

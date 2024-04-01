@@ -1,5 +1,6 @@
 #pragma once
 #include "Core/Event/Event.h"
+#include "Core/Base/Timestep.hpp"
 
 namespace Sego{
 
@@ -11,7 +12,7 @@ namespace Sego{
 
 		virtual void OnAttach() {}
 		virtual void OnDetach() {}
-		virtual void OnUpdate() {}
+		virtual void OnUpdate(Timestep ts) {}
 		virtual void OnImGuiRender(){}
 		virtual void OnEvent(Event& event) {}
 		virtual void OnResize(){}

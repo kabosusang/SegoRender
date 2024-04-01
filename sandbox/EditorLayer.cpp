@@ -13,18 +13,22 @@ void EditorLayer::OnAttach(){
 
 	m_color_texture_set = ImGui_ImplVulkan_AddTexture(m_Cts,VulkanRhi::Instance().getColorImageView(),
 	VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+	m_ActiveScene = std::make_shared<Scene>();
+	//Entity
+	m_CameraEntity = m_ActiveScene->CreateEntity("Camera Entity");
+	m_CameraEntity.AddComponent<CameraComponent>(glm::ortho(-1.6f,1.6f,-0.9f,0.9f,-1.0f,1.0f));
+	
+
 }
 
 void EditorLayer::OnDetach(){
 	ImGui_ImplVulkan_RemoveTexture(m_color_texture_set); //remove old texture
 }
 
-void EditorLayer::OnUpdate(){
- 	auto& Vctx = VulkanContext::Instance();
-	Vctx.GetRenderer()->BeginScene();
-	Vctx.GetRenderer()->Render();
-	Vctx.GetRenderer()->EndScene();
-
+void EditorLayer::OnUpdate(Timestep ts){
+ 	
+	m_ActiveScene->OnUpdate(ts);
 }
 
 void EditorLayer::OnImGuiRender(){
@@ -92,8 +96,12 @@ void EditorLayer::OnImGuiRender(){
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
         ImGui::Begin("Viewport");
+		
+		m_ViewportFocused = ImGui::IsWindowFocused();
+		m_ViewportHovered = ImGui::IsWindowHovered();
+		SegEngine::Instance().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
+		
         ImVec2 ViewportPanelSize = ImGui::GetContentRegionAvail();
-		m_viewportsize = {ViewportPanelSize.x,ViewportPanelSize.y};
 		if(m_viewportsize != *((glm::vec2*)&ViewportPanelSize)){
 			VulkanRhi::Instance().resizeframbuffer(ViewportPanelSize.x,ViewportPanelSize.y);
 			m_viewportsize = {ViewportPanelSize.x,ViewportPanelSize.y};
@@ -104,6 +112,7 @@ void EditorLayer::OnImGuiRender(){
 			m_color_texture_set = ImGui_ImplVulkan_AddTexture(m_Cts,VulkanRhi::Instance().getColorImageView(),
 			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		}
+		
         ImGui::Image(m_color_texture_set,ViewportPanelSize);
 		ImGui::End();
 		ImGui::PopStyleVar();

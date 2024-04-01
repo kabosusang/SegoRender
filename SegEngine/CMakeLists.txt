@@ -18,6 +18,7 @@ aux_source_directory(Core/Base engine_src)
 aux_source_directory(Core/Log engine_src)
 aux_source_directory(Core/Window engine_src)
 aux_source_directory(Core/Layer engine_src)
+aux_source_directory(Core/Scene engine_src)
 
 aux_source_directory(framework/Render/pass frame_work)
 aux_source_directory(imgui frame_work)
