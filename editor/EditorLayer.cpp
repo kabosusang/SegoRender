@@ -62,9 +62,9 @@ void EditorLayer::OnUpdate(Timestep ts){
 	//Render
 	m_Renderer->SetClearColor({0.1f,0.1f,0.1f,1.0f});
 	m_ActiveScene->OnUpdate(ts);
-
+	//Fps
+	SG_INFO("FPS: {0}",1.0f/ts);
 	
-
 
 }
 
@@ -153,6 +153,7 @@ void EditorLayer::OnImGuiRender(){
 
 void EditorLayer::FramBufferResize(float w,float h){
 	m_Renderer->resizeframbuffer(w,h);
+	m_ActiveScene->OnViewportResize(w,h);
 
 	if (m_color_texture_set != VK_NULL_HANDLE)
 		ImGui_ImplVulkan_RemoveTexture(m_color_texture_set); //remove old texture
@@ -160,7 +161,6 @@ void EditorLayer::FramBufferResize(float w,float h){
 	m_color_texture_set = ImGui_ImplVulkan_AddTexture(m_Cts,m_Renderer->GetColorImageView(),
 	VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-	m_ActiveScene->OnViewportResize(w,h);
 }
 
 void EditorLayer::OnEvent(Event &e){

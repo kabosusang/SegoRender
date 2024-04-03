@@ -6,7 +6,6 @@
 
 
 struct UniformBufferObject {
-    alignas(16) glm::mat4 model;
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 proj;
 };
@@ -40,7 +39,7 @@ void MainPass::temporarilyInit(){
     //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/cartoony_rubber_ducky/scene.gltf");
     //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/BoomBox/BoomBox.gltf"); //success
     //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/gun/scene.gltf");
-    //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/Wolf.gltf");
+    //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/LanTern/Lantern.gltf");
     Rendata = GlTFImporter::LoadglTFFile("resources/gltf/FlightHelmet/FlightHelmet.gltf");
 
     SG_INFO("Rendata->textures_.size(): {0}", Rendata->textures_.size());
@@ -78,6 +77,15 @@ void MainPass::createPipelineLayouts(){
     vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.setSetLayoutCount(descriptorSetLayouts_.size())
                       .setPSetLayouts(descriptorSetLayouts_.data());
+
+    //PUSH CONSTANT
+    vk::PushConstantRange pushConstantRange{};
+    pushConstantRange.setStageFlags(vk::ShaderStageFlagBits::eVertex)
+                     .setOffset(0)
+                     .setSize(sizeof(glm::mat4));
+    pipelineLayoutInfo.setPushConstantRangeCount(1)
+                      .setPPushConstantRanges(&pushConstantRange);
+    
     pipelineLayouts_.resize(1);
     pipelineLayouts_[0] = Context::Instance().device.createPipelineLayout(pipelineLayoutInfo);
 
@@ -100,7 +108,6 @@ void MainPass::updateUniformBuffer(uint32_t currentImage){
     float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
     
     UniformBufferObject ubo{};
-    ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     ubo.view = CameraView_;
     ubo.proj = projection_;
     
@@ -154,11 +161,11 @@ void MainPass::CreatePiepline(){
                   .setPrimitiveRestartEnable(VK_FALSE);
 
     //3. viewport and scissor
-    viewport_ci.setX(0.0f).setY(0.0f).setWidth(ctx.swapchain->GetExtent().width)
-                .setHeight(ctx.swapchain->GetExtent().height)
+    viewport_ci.setX(0.0f).setY(0.0f).setWidth(width_)
+                .setHeight(height_)
                 .setMinDepth(0.0f).setMaxDepth(1.0f);
     scissor_ci.setOffset({0,0})
-              .setExtent(ctx.swapchain->GetExtent());
+              .setExtent({width_,height_});
     viewport_state_ci.setViewports(viewport_ci)
                      .setScissors(scissor_ci);
     //4. rasteraizer
@@ -343,20 +350,15 @@ void MainPass::Render(){
     cmdBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
     cmdBuffer.bindIndexBuffer(Rendata->indexBuffer_.buffer, 0, vk::IndexType::eUint32);
 
+    desc_writes.clear();
     //1. Uniform
 	std::array<vk::DescriptorBufferInfo, 1> desc_buffer_infos{}; //Uniform 
     addBufferDescriptorSet(desc_writes, desc_buffer_infos[0], 
     uniformBuffers_[VulkanRhi.getFlightCount()], 0);
    
 
-    //2. Image Sample
-    std::array<vk::DescriptorImageInfo,1>   desc_image_info{};   //Sample
-    addImageDescriptorSet(desc_writes, desc_image_info[0], 
-    Rendata->textures_[Rendata->materials_[4].baseColorTextureIndex].image_view_sampler_,1);
-    
-
-    VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-    pipelineLayouts_[0], 0, desc_writes.size(), (VkWriteDescriptorSet *)desc_writes.data());
+    //IMAGE SIZE
+    //SG_INFO("Rendata->textures_.size() {0}", Rendata->textures_.size());
 
     //Draw Notes
     for(auto& node : Rendata->nodes_){
@@ -382,9 +384,19 @@ void MainPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelin
                     nodeMatrix = currentParent->matrix * nodeMatrix;
                     currentParent = currentParent->parent;
                 }
+                cmdBuffer.pushConstants(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(glm::mat4), &nodeMatrix);
                 // Update the push constant block
 				if (primitive.indexCount > 0) {
-					
+
+                    //2. Image Sample
+                    std::array<vk::DescriptorImageInfo,1>   desc_image_info{};   //Sample
+
+                    addImageDescriptorSet(desc_writes, desc_image_info[0], 
+                    Rendata->textures_[Rendata->materials_[primitive.materialIndex].baseColorTextureIndex].image_view_sampler_,1);
+
+					VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    pipelineLayouts_[0], 0, static_cast<uint32_t>(desc_writes.size()), (VkWriteDescriptorSet *)desc_writes.data());
+    
                     // Bind the descriptor for the current primitive's texture
                     cmdBuffer.drawIndexed(primitive.indexCount,1,primitive.firstIndex,0,0);
 				}

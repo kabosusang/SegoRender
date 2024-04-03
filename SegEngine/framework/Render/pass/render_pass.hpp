@@ -29,10 +29,6 @@ public:
     void addImagesDescriptorSet(std::vector<vk::WriteDescriptorSet>& desc_writes,
 		vk::DescriptorImageInfo* p_desc_image_info, const std::vector<VmaImageViewSampler>& textures, uint32_t binding);
 
-
-
-
-
     //Output Function
     virtual void recreateframbuffer();
     virtual void setClearColor(const glm::vec4& color);
