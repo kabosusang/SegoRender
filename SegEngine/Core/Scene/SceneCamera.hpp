@@ -1,5 +1,5 @@
 #pragma once
-#include "Camera.hpp"
+#include "Renderer/Camera.hpp"
 
 namespace Sego{
     class SceneCamera : public Camera{

@@ -28,9 +28,9 @@ namespace Sego{
         float orthoBottom = -m_OrthographicSize * 0.5f;
         float orthoTop = m_OrthographicSize * 0.5f;
 
-        m_ProjectionMatrix = glm::ortho(orthoLeft, orthoRight, orthoBottom, orthoTop, m_OrthographicNear, m_OrthographicFar);
+        m_Projection = glm::perspective(glm::radians(45.0f), 
+        m_AspectRation, 0.1f, 10.0f);
     }
-
 
 
 }

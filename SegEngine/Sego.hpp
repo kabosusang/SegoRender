@@ -18,6 +18,7 @@
 #include "Core/Scene/Scene.hpp"
 #include "Core/Scene/Component.hpp"
 #include "Core/Scene/Entity.hpp"
+#include "Core/Scene/ScriptEntity.hpp"
 
 //Context
 #include "Core/Vulkan/VulkanContext.hpp"

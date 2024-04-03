@@ -33,8 +33,10 @@ namespace Sego{
         PFN_vkCmdPushDescriptorSetKHR getCmdPushDescriptorSet() { return vkCmdPushDescriptorSet_; }
         vk::ImageView getColorImageView();
 
-
+        //Render Output Function
         void setClearColor(const glm::vec4& color);
+        void setProjection(const glm::mat4& projection);
+        void setView(const glm::mat4& view);
 
     private:
         static VulkanRhi* instance_;

@@ -101,8 +101,9 @@ void MainPass::updateUniformBuffer(uint32_t currentImage){
     
     UniformBufferObject ubo{};
     ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    ubo.proj = glm::perspective(glm::radians(45.0f), 1600.0f / 1000.0f, 0.1f, 10.0f);
+    ubo.view = CameraView_;
+    ubo.proj = projection_;
+    
     ubo.proj[1][1] *= -1;
     Vulkantool::updateBuffer(uniformBuffers_[currentImage], &ubo, sizeof(ubo));
 }
@@ -342,16 +343,18 @@ void MainPass::Render(){
     cmdBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
     cmdBuffer.bindIndexBuffer(Rendata->indexBuffer_.buffer, 0, vk::IndexType::eUint32);
 
+    //1. Uniform
 	std::array<vk::DescriptorBufferInfo, 1> desc_buffer_infos{}; //Uniform 
-
     addBufferDescriptorSet(desc_writes, desc_buffer_infos[0], 
     uniformBuffers_[VulkanRhi.getFlightCount()], 0);
-    // Get the texture index for this primitive
+   
+
+    //2. Image Sample
     std::array<vk::DescriptorImageInfo,1>   desc_image_info{};   //Sample
-    
     addImageDescriptorSet(desc_writes, desc_image_info[0], 
     Rendata->textures_[Rendata->materials_[4].baseColorTextureIndex].image_view_sampler_,1);
     
+
     VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
     pipelineLayouts_[0], 0, desc_writes.size(), (VkWriteDescriptorSet *)desc_writes.data());
 

@@ -194,7 +194,13 @@ void VulkanRhi::setClearColor(const glm::vec4& color){
     mainPass_->setClearColor(color);
 }
 
+void VulkanRhi::setProjection(const glm::mat4& projection){
+    mainPass_->setProjection(projection);
+}
 
+void VulkanRhi::setView(const glm::mat4& view){
+    mainPass_->setView(view);
+}
 
  
 }

@@ -8,17 +8,50 @@ namespace Sego{
 
 
 void EditorLayer::OnAttach(){
-	auto& VctxRender = VulkanContext::Instance().GetRenderer();
+
+	m_Renderer = VulkanContext::Instance().GetRenderer();
 	m_Cts = Vulkantool::createSample(vk::Filter::eLinear,vk::Filter::eLinear,1,
 	vk::SamplerAddressMode::eRepeat,vk::SamplerAddressMode::eRepeat,vk::SamplerAddressMode::eRepeat);
 
-	m_color_texture_set = ImGui_ImplVulkan_AddTexture(m_Cts,VctxRender->GetColorImageView(),
+	m_color_texture_set = ImGui_ImplVulkan_AddTexture(m_Cts,m_Renderer->GetColorImageView(),
 	VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 	m_ActiveScene = std::make_shared<Scene>();
 	//Entity
 	m_CameraEntity = m_ActiveScene->CreateEntity("Camera Entity");
 	m_CameraEntity.AddComponent<CameraComponent>();
+	
+	class CameraController : public ScriptableEntity
+	{
+	public:
+		void OnCreate(){
+			//GetComponent<TransformComponent>();
+			std::cout << "CameraController::OnCrearte!"<<std::endl;
+		}
+
+		void OnDestroy(){
+
+		}
+
+		void OnUpdate(Timestep ts){
+			auto& transform = GetComponent<TransformComponent>().Transform;
+			float speed = 5.0f;
+
+			if(Input::ISKeyPressed(KeySanCode::A))
+				transform[3][0] -= speed * ts;
+			if(Input::ISKeyPressed(KeySanCode::D))
+				transform[3][0] += speed * ts;
+			if(Input::ISKeyPressed(KeySanCode::W))
+				transform[3][1] += speed * ts;
+			if(Input::ISKeyPressed(KeySanCode::S))
+				transform[3][1] -= speed * ts;
+
+		}
+
+	};
+
+	m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
+
 }
 
 void EditorLayer::OnDetach(){
@@ -26,11 +59,13 @@ void EditorLayer::OnDetach(){
 }
 
 void EditorLayer::OnUpdate(Timestep ts){
-	auto& VctxRender = VulkanContext::Instance().GetRenderer();
 	//Render
-	VctxRender->SetClearColor({0.1f,0.1f,0.1f,1.0f});
-
+	m_Renderer->SetClearColor({0.1f,0.1f,0.1f,1.0f});
 	m_ActiveScene->OnUpdate(ts);
+
+	
+
+
 }
 
 void EditorLayer::OnImGuiRender(){
@@ -108,7 +143,6 @@ void EditorLayer::OnImGuiRender(){
 		m_viewportsize = {ViewportPanelSize.x,ViewportPanelSize.y};
 	}
 	
-
 	ImGui::Image(m_color_texture_set,ViewportPanelSize);
 	ImGui::End();
 	ImGui::PopStyleVar();
@@ -118,16 +152,15 @@ void EditorLayer::OnImGuiRender(){
 
 
 void EditorLayer::FramBufferResize(float w,float h){
-	auto& VctxRender = VulkanContext::Instance().GetRenderer();
-	VctxRender->resizeframbuffer(w,h);
+	m_Renderer->resizeframbuffer(w,h);
 
 	if (m_color_texture_set != VK_NULL_HANDLE)
 		ImGui_ImplVulkan_RemoveTexture(m_color_texture_set); //remove old texture
 	
-	m_color_texture_set = ImGui_ImplVulkan_AddTexture(m_Cts,VctxRender->GetColorImageView(),
+	m_color_texture_set = ImGui_ImplVulkan_AddTexture(m_Cts,m_Renderer->GetColorImageView(),
 	VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-
+	m_ActiveScene->OnViewportResize(w,h);
 }
 
 void EditorLayer::OnEvent(Event &e){

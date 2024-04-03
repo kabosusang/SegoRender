@@ -19,6 +19,9 @@ public:
     void FramBufferResize(float ,float) ;
     void OnEvent(Event& e) override;
 private:
+    //Renderer
+    std::shared_ptr<Sego::Renderer> m_Renderer;
+
     vk::Sampler m_Cts;
     vk::DescriptorSet m_color_texture_set;
     glm::vec2 m_viewportsize;

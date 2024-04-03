@@ -4,14 +4,21 @@
 namespace Sego{
 
 void Renderer::BeginScene(const Camera& camera, const glm::mat4& transform){
-    glm::mat4 viewProj = camera.GetProjectionMatrix() * glm::inverse(transform);
+    auto& Vctx = VulkanRhi::Instance();
+    //glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
+    glm::mat4 Proj = camera.GetProjection();
 
+    //glm::mat4 inverseTransform = glm::inverse(transform);
+    glm::vec3 cameraPosition = glm::vec3(transform[3]);
+    glm::mat4 view = glm::lookAt(cameraPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    
+    Vctx.setProjection(Proj);
+    Vctx.setView(view);
 }
 
 void Renderer::Init(){
    
 }
-
 
 void Renderer::BeginScene(){
 }

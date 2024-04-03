@@ -6,7 +6,7 @@
 
 namespace Sego{
 Scene::Scene(){
- 
+
     
 }
 
@@ -26,6 +26,19 @@ Entity Scene::CreateEntity(const std::string& name){
 void Scene::OnUpdate(Timestep ts){
 auto& Vctx = VulkanContext::Instance();
 
+//Update scripts
+{
+    m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc){
+        if(!nsc.Instance){
+            nsc.InstantiateFunction();
+            nsc.Instance->m_Entity = Entity{entity,this};
+            nsc.OnCreateFunction(nsc.Instance);
+        }
+        nsc.OnUpdateFunction(nsc.Instance,ts);
+    });
+}
+
+//Render3D
 Camera* mainCamera = nullptr;
 glm::mat4* CameraTransform = nullptr;
 
@@ -45,7 +58,7 @@ glm::mat4* CameraTransform = nullptr;
     }
 
     if(mainCamera){
-        Vctx.GetRenderer()->BeginScene();
+        Vctx.GetRenderer()->BeginScene(mainCamera->GetProjection(),*CameraTransform);
         auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
         for(auto entity : group){
             auto [transform,sprite] = group.get<TransformComponent,SpriteRendererComponent>(entity);
