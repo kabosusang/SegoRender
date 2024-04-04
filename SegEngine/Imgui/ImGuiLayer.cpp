@@ -30,15 +30,12 @@ void ImGuiLayer::Begin(){
 void ImGuiLayer::End(){
       // 渲染 ImGui 绘制的界面
     ImGui::Render();
-   
-
+    ImGui::UpdatePlatformWindows();
+    ImGui::RenderPlatformWindowsDefault();
 }
 
 void ImGuiLayer::OnImGuiRender(){
-    ImGui::ShowDemoWindow();
-    ImGui::Begin("Hello, world!");
-    ImGui::Text("Hello Wolrd");
-    ImGui::End();
+    
 }
 
 void ImGuiLayer::OnEvent(Event& event){

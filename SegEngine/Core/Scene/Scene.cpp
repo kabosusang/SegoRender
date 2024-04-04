@@ -68,8 +68,6 @@ glm::mat4* CameraTransform = nullptr;
         Vctx.GetRenderer()->Render();
         Vctx.GetRenderer()->EndScene();
     }
-
-
 }
 
 void Scene::OnViewportResize(uint32_t width, uint32_t height){

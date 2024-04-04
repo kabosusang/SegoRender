@@ -40,7 +40,9 @@ void MainPass::temporarilyInit(){
     //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/BoomBox/BoomBox.gltf"); //success
     //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/gun/scene.gltf");
     //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/LanTern/Lantern.gltf");
+    //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/saki.glb");
     Rendata = GlTFImporter::LoadglTFFile("resources/gltf/FlightHelmet/FlightHelmet.gltf");
+    
 
     SG_INFO("Rendata->textures_.size(): {0}", Rendata->textures_.size());
 
@@ -103,10 +105,6 @@ void MainPass::createUniformBuffers(){
 }
 
 void MainPass::updateUniformBuffer(uint32_t currentImage){
-    static auto startTime = std::chrono::high_resolution_clock::now();
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-    
     UniformBufferObject ubo{};
     ubo.view = CameraView_;
     ubo.proj = projection_;
@@ -390,7 +388,7 @@ void MainPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelin
 
                     //2. Image Sample
                     std::array<vk::DescriptorImageInfo,1>   desc_image_info{};   //Sample
-
+                    
                     addImageDescriptorSet(desc_writes, desc_image_info[0], 
                     Rendata->textures_[Rendata->materials_[primitive.materialIndex].baseColorTextureIndex].image_view_sampler_,1);
 
@@ -418,6 +416,7 @@ void MainPass::recreateframbuffer(uint32_t width,uint32_t height){
     width_ = width;
     height_= height;
     CreateFrameBuffer();
+    
 }
 
 

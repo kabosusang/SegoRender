@@ -20,7 +20,14 @@ void EditorLayer::OnAttach(){
 	//Entity
 	m_CameraEntity = m_ActiveScene->CreateEntity("Camera Entity");
 	m_CameraEntity.AddComponent<CameraComponent>();
-	
+
+	//Vulkan Right hand coordinate system
+	auto& transform = m_CameraEntity.GetComponent<TransformComponent>().Transform;
+	transform[3][2] = -1.0f;
+
+
+	m_ModelEntity = m_ActiveScene->CreateEntity("Model Entity");
+
 	class CameraController : public ScriptableEntity
 	{
 	public:
@@ -36,6 +43,7 @@ void EditorLayer::OnAttach(){
 		void OnUpdate(Timestep ts){
 			auto& transform = GetComponent<TransformComponent>().Transform;
 			float speed = 5.0f;
+			
 
 			if(Input::ISKeyPressed(KeySanCode::A))
 				transform[3][0] -= speed * ts;
@@ -52,6 +60,7 @@ void EditorLayer::OnAttach(){
 
 	m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
 
+	m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 }
 
 void EditorLayer::OnDetach(){
@@ -61,10 +70,7 @@ void EditorLayer::OnDetach(){
 void EditorLayer::OnUpdate(Timestep ts){
 	//Render
 	m_Renderer->SetClearColor({0.1f,0.1f,0.1f,1.0f});
-	m_ActiveScene->OnUpdate(ts);
-	//Fps
-	SG_INFO("FPS: {0}",1.0f/ts);
-	
+	m_ActiveScene->OnUpdate(ts);	
 
 }
 
@@ -128,7 +134,10 @@ void EditorLayer::OnImGuiRender(){
 
 			ImGui::EndMenuBar();
 		}
-	
+	//Scene Hierarchy
+	m_SceneHierarchyPanel.OnImGuiRender();
+
+
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 	ImGui::Begin("Viewport");
 	
@@ -148,8 +157,8 @@ void EditorLayer::OnImGuiRender(){
 	ImGui::PopStyleVar();
 	ImGui::End();
 
-}
 
+}
 
 void EditorLayer::FramBufferResize(float w,float h){
 	m_Renderer->resizeframbuffer(w,h);
@@ -164,6 +173,8 @@ void EditorLayer::FramBufferResize(float w,float h){
 }
 
 void EditorLayer::OnEvent(Event &e){
+
+
 
 }
 

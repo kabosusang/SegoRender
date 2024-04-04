@@ -18,14 +18,14 @@ namespace Sego{
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-        
+        //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
         io.Fonts->AddFontDefault(); // default font
         io.Fonts->Build();
 		// setup Dear ImGui style
 		ImGui::StyleColorsDark();
 		//ImGui::StyleColorsLight();
-		ImGui::GetStyle().WindowMenuButtonPosition = ImGuiDir_None;
+		//ImGui::GetStyle().WindowMenuButtonPosition = ImGuiDir_None;
 
         //io.Fonts->AddFontFromFileTTF("resources/Fonts/ziti.ttf",18,NULL,io.Fonts->GetGlyphRangesChineseFull());
 		// setup Dear ImGui style
