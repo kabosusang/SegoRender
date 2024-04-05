@@ -232,6 +232,10 @@ void MainPass::CreatePiepline(){
     auto Result = ctx.device.createGraphicsPipeline(nullptr, pipeline_ci);
     pipelines_[0] = Result.value;
 
+
+
+
+
 }
 
 void MainPass::CreateFrameBuffer(){
@@ -328,8 +332,6 @@ void MainPass::Render(){
                    .setRenderArea(vk::Rect2D({}, {width_,height_}));
    
     cmdBuffer.beginRenderPass(&renderPassBegin, vk::SubpassContents::eInline);
-    cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines_[0]);
-    
     vk::Viewport viewport{};
     viewport.setX(0.0f)
             .setY(0.0f)
@@ -343,6 +345,9 @@ void MainPass::Render(){
            .setExtent({width_,height_});
     cmdBuffer.setScissor(0, 1, &scissor);
 
+
+    //pipelines_[0] Normal GLTF Model Renderer
+    cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines_[0]);
     vk::Buffer vertexBuffers[] = { Rendata->vertexBuffer_.buffer };
     vk::DeviceSize offsets[] = { 0 };
     cmdBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
@@ -354,17 +359,15 @@ void MainPass::Render(){
     addBufferDescriptorSet(desc_writes, desc_buffer_infos[0], 
     uniformBuffers_[VulkanRhi.getFlightCount()], 0);
    
-
-    //IMAGE SIZE
-    //SG_INFO("Rendata->textures_.size() {0}", Rendata->textures_.size());
-
     //Draw Notes
     for(auto& node : Rendata->nodes_){
         drawNode(cmdBuffer,pipelineLayouts_[0],node);
     }
 
-    //cmdBuffer.drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
-    //end render pass
+    //pipelines_[1] Sprite Renderer 
+    
+
+
     cmdBuffer.endRenderPass();
 }
 
@@ -382,10 +385,11 @@ void MainPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelin
                     nodeMatrix = currentParent->matrix * nodeMatrix;
                     currentParent = currentParent->parent;
                 }
+                
                 cmdBuffer.pushConstants(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(glm::mat4), &nodeMatrix);
                 // Update the push constant block
 				if (primitive.indexCount > 0) {
-
+                
                     //2. Image Sample
                     std::array<vk::DescriptorImageInfo,1>   desc_image_info{};   //Sample
                     
@@ -405,8 +409,8 @@ void MainPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelin
 		}
 }
 
-
 void MainPass::recreateframbuffer(uint32_t width,uint32_t height){
+
     auto& ctx = Context::Instance();
     ctx.device.waitIdle();
     ctx.device.destroyFramebuffer(framebuffer_);

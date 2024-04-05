@@ -173,7 +173,6 @@ void VulkanRhi::presentFrame(){
     } else if (result != vk::Result::eSuccess) {
         throw std::runtime_error("present queue execute failed");
     }
-    
     currentFrame_ = (currentFrame_ + 1) % maxFlightCount_;
 }
 

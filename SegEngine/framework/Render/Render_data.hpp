@@ -50,9 +50,4 @@ namespace Sego{
 
     
 
-
-
-
-    
-
 }

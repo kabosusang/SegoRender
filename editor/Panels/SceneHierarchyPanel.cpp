@@ -105,7 +105,18 @@ void SceneHierarchyPanel::DrawComponents(Entity entity){
             }
 
             if(camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective){
-               
+                
+                float verticalFov =  glm::degrees(camera.GerPerspectiveVerticalFOV());
+                if(ImGui::DragFloat("FOV",&verticalFov))
+                    camera.SetPerspectiveVerticalFOV(glm::radians(verticalFov));
+            
+                float Near = camera.GerPerspectiveNearClip();
+                if(ImGui::DragFloat("Near Clip",&Near))
+                    camera.SetPerspectiveNearClip(Near);
+                
+                float Far = camera.GerPerspectiveFarClip();
+                if(ImGui::DragFloat("Far Clip",&Far))
+                    camera.SetPerspectiveFarClip(Far);
             }
 
             if(camera.GetProjectionType() == SceneCamera::ProjectionType::Orthographic){
@@ -120,15 +131,28 @@ void SceneHierarchyPanel::DrawComponents(Entity entity){
                 float orthoFar = camera.GetOrthographicFarClip();
                 if(ImGui::DragFloat("Far Clip",&orthoFar))
                     camera.SetOrthographicFarClip(orthoFar);
-
             }
             ImGui::TreePop();
         }
+
     }
+
+    if(entity.HasComponent<SpriteRendererComponent>()){
+        if(ImGui::TreeNodeEx((void*)typeid(SpriteRendererComponent).hash_code(),ImGuiTreeNodeFlags_DefaultOpen,"Sprite Renderer")){
+            
+            auto& src = entity.GetComponent<SpriteRendererComponent>();
+            ImGui::ColorEdit4("Color",glm::value_ptr(src.Color));
+            
+            ImGui::TreePop();
+        }
+        
+    }
+
+
+
 }
 
-
-
+   
 
 
 
