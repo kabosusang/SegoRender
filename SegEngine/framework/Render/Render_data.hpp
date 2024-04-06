@@ -5,7 +5,6 @@
 #include "resource/asset/Texture2D.hpp"
 #include "resource/asset/Material.hpp"
 
-
 namespace Sego{
     struct Node{
         Node* parent;
@@ -20,11 +19,31 @@ namespace Sego{
     };
 
     enum class RenderDataType{
-        Base
+        Sprite,Base
     };
 
     struct RenderData{
-        RenderDataType type = RenderDataType::Base;
+        RenderDataType type ;
+        RenderData() :type(RenderDataType::Base){}
+    };
+
+    struct SpriteRenderData : public RenderData{
+       SpriteRenderData(){
+              type = RenderDataType::Sprite;
+         }
+        //Texture2D texture;
+        VmaBuffer vertexBuffer_;
+        VmaBuffer indexBuffer_;
+        uint32_t indexCount_;
+        
+        glm::mat4 Spritemodel; //model matrix
+        
+
+        void destory(){
+            vertexBuffer_.destroy();
+            indexBuffer_.destroy();
+        }
+
     };
 
     struct MeshRenderData : public RenderData{
@@ -47,7 +66,8 @@ namespace Sego{
             
         }
     };
-
     
+    extern std::vector<std::shared_ptr<SpriteRenderData>> g_spriteRenderData;
+    extern std::vector<std::shared_ptr<MeshRenderData>> g_meshRenderData;
 
 }

@@ -18,15 +18,20 @@ void EditorLayer::OnAttach(){
 
 	m_ActiveScene = std::make_shared<Scene>();
 	//Entity
+	auto redsquare = m_ActiveScene->CreateEntity("Rend Square Entity");
+	redsquare.AddComponent<SpriteRendererComponent>(glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f });
+
+	auto greensquare = m_ActiveScene->CreateEntity("Green Square Entity");
+	greensquare.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.0f, 1.0f, 0.0f, 1.0f });
+
+	//Camera
 	m_CameraEntity = m_ActiveScene->CreateEntity("Camera Entity");
 	m_CameraEntity.AddComponent<CameraComponent>();
 
+	
 	//Vulkan Right hand coordinate system
 	auto& transform = m_CameraEntity.GetComponent<TransformComponent>().Transform;
 	transform[3][2] = -1.0f;
-
-
-	m_ModelEntity = m_ActiveScene->CreateEntity("Model Entity");
 
 	class CameraController : public ScriptableEntity
 	{

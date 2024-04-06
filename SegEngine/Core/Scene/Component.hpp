@@ -27,7 +27,6 @@ namespace Sego{
     };
 
     struct SpriteRendererComponent{
-        
         glm::vec4 Color{1.0f,1.0f,1.0f,1.0f};
 
         SpriteRendererComponent() = default;

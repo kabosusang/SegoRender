@@ -31,8 +31,7 @@ private:
     
     std::shared_ptr<Scene> m_ActiveScene;
     Entity m_CameraEntity;
-    Entity m_ModelEntity;
-
+  
     //Panels
     SceneHierarchyPanel m_SceneHierarchyPanel;
     

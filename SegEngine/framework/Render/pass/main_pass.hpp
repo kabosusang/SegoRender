@@ -16,16 +16,20 @@ namespace Sego{
         virtual void destroy() override;
         virtual void createDescriptorSetLayout();
         virtual void createPipelineLayouts();
-        void drawNode(vk::CommandBuffer cmd,vk::PipelineLayout pipelineLayout, Node* node);
-        void temporarilyInit();
 
         VmaImageViewSampler getColorTexture() { return colorIVs_;}
-
 
         //Output Function
         virtual void recreateframbuffer(uint32_t width,uint32_t height);
         void setProjection(const glm::mat4& projection){projection_ = projection;}
         void setView(const glm::mat4& view){CameraView_ = view;}
+    private:
+        void drawNode(vk::CommandBuffer cmd,vk::PipelineLayout pipelineLayout, Node* node);
+        void temporarilyInit();
+
+        void render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<MeshRenderData> Rendata);
+        void render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteRenderData> sprite);
+    
     private:
         glm::mat4 projection_ = glm::mat4(1.0f);
         glm::mat4 CameraView_ = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -38,10 +42,7 @@ namespace Sego{
     private:
         std::vector<vk::Format> m_formats;
 
-        //temporary Data
-        std::shared_ptr<MeshRenderData> Rendata;
-
-        std::vector<VmaBuffer> uniformBuffers_;
+        std::vector<VmaBuffer> uniformBuffers_; // View Projection Uniform
         //Color Texture
         VmaImageViewSampler colorIVs_;
         //Depth Texture

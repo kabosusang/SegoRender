@@ -63,8 +63,9 @@ glm::mat4* CameraTransform = nullptr;
         auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
         for(auto entity : group){
             auto [transform,sprite] = group.get<TransformComponent,SpriteRendererComponent>(entity);
-            //Render}
-             }
+            Vctx.GetRenderer()->DrawQuad(transform.Transform,sprite.Color); //TODO: Add texture
+            
+        }
         Vctx.GetRenderer()->Render();
         Vctx.GetRenderer()->EndScene();
     }

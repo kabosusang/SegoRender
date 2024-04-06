@@ -16,5 +16,6 @@
 #include <algorithm>
 #include <queue>
 #include <filesystem>
+#include <stack>
 //Core
 #include "Core/Log/Log.h"

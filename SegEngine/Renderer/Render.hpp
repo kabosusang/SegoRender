@@ -19,6 +19,8 @@ public:
     void resizeframbuffer(uint32_t w,uint32_t h);
     vk::ImageView GetColorImageView();
 
+    void DrawQuad(const glm::mat4& transform, const glm::vec4& color);
+
 };
 
 
