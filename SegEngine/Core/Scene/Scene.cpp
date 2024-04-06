@@ -20,7 +20,10 @@ Entity Scene::CreateEntity(const std::string& name){
     auto& tag = entity.AddComponent<TagComponent>(name);
     tag.Tag = name.empty() ? "Entity" : name;
     return entity;
-    
+}
+
+void Scene::DestroyEntity(Entity entity){
+    m_Registry.destroy(entity);
 }
 
 void Scene::OnUpdate(Timestep ts){

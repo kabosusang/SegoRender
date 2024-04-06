@@ -11,6 +11,7 @@ public:
     ~Scene();
 
     Entity CreateEntity(const std::string& name);
+    void DestroyEntity(Entity entity);
     
     void OnUpdate(Timestep ts);
     void OnViewportResize(uint32_t width, uint32_t height);
