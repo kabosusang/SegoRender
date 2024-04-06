@@ -28,10 +28,9 @@ void EditorLayer::OnAttach(){
 	m_CameraEntity = m_ActiveScene->CreateEntity("Camera Entity");
 	m_CameraEntity.AddComponent<CameraComponent>();
 
-	
 	//Vulkan Right hand coordinate system
-	auto& transform = m_CameraEntity.GetComponent<TransformComponent>().Transform;
-	transform[3][2] = -1.0f;
+	auto& translate = m_CameraEntity.GetComponent<TransformComponent>().Translation;
+	translate.z = -6.0f;
 
 	class CameraController : public ScriptableEntity
 	{
@@ -46,18 +45,18 @@ void EditorLayer::OnAttach(){
 		}
 
 		void OnUpdate(Timestep ts){
-			auto& transform = GetComponent<TransformComponent>().Transform;
+			auto& translation = GetComponent<TransformComponent>().Translation;
 			float speed = 5.0f;
 			
 
 			if(Input::ISKeyPressed(KeySanCode::A))
-				transform[3][0] -= speed * ts;
+				translation.x -= speed * ts;
 			if(Input::ISKeyPressed(KeySanCode::D))
-				transform[3][0] += speed * ts;
+				translation.x += speed * ts;
 			if(Input::ISKeyPressed(KeySanCode::W))
-				transform[3][1] += speed * ts;
+				translation.y += speed * ts;
 			if(Input::ISKeyPressed(KeySanCode::S))
-				transform[3][1] -= speed * ts;
+				translation.y -= speed * ts;
 
 		}
 

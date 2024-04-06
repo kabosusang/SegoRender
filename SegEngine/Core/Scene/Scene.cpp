@@ -41,7 +41,7 @@ auto& Vctx = VulkanContext::Instance();
 
 //Render3D
 Camera* mainCamera = nullptr;
-glm::mat4* CameraTransform = nullptr;
+glm::mat4 CameraTransform;
 
     //Render
     {
@@ -51,7 +51,7 @@ glm::mat4* CameraTransform = nullptr;
             
            if(camera.Primary){
                mainCamera = &camera.Camera;
-               CameraTransform = &transform.Transform;
+               CameraTransform = transform.GetTransform();
                break;
            }
 
@@ -59,11 +59,11 @@ glm::mat4* CameraTransform = nullptr;
     }
 
     if(mainCamera){
-        Vctx.GetRenderer()->BeginScene(mainCamera->GetProjection(),*CameraTransform);
+        Vctx.GetRenderer()->BeginScene(mainCamera->GetProjection(),CameraTransform);
         auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
         for(auto entity : group){
             auto [transform,sprite] = group.get<TransformComponent,SpriteRendererComponent>(entity);
-            Vctx.GetRenderer()->DrawQuad(transform.Transform,sprite.Color); //TODO: Add texture
+            Vctx.GetRenderer()->DrawQuad(transform.GetTransform(),sprite.Color); //TODO: Add texture
             
         }
         Vctx.GetRenderer()->Render();

@@ -52,7 +52,7 @@ vk::PresentModeKHR Swapchain::chooseSwapPresentMode() {
 vk::SurfaceFormatKHR Swapchain::querySurfaceeFormat() {
     auto formats = Context::Instance().phyDevice.getSurfaceFormatsKHR(surface);
     for (auto& format : formats) {
-        if (format.format == vk::Format::eR8G8B8A8Srgb && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
+        if (format.format == vk::Format::eB8G8R8A8Unorm && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
             return format;
         }
     }

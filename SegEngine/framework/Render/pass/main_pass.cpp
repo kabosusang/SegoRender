@@ -44,8 +44,8 @@ void MainPass::temporarilyInit(){
     //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/gun/scene.gltf");
     //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/LanTern/Lantern.gltf");
     //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/saki.glb");
-    g_meshRenderData.push_back(GlTFImporter::LoadglTFFile("resources/gltf/FlightHelmet/FlightHelmet.gltf"));
-    g_meshRenderData.push_back(GlTFImporter::LoadglTFFile("resources/gltf/LanTern/Lantern.gltf"));
+    //g_meshRenderData.push_back(GlTFImporter::LoadglTFFile("resources/gltf/FlightHelmet/FlightHelmet.gltf"));
+    //g_meshRenderData.push_back(GlTFImporter::LoadglTFFile("resources/gltf/LanTern/Lantern.gltf"));
     //uniform buffer
     createUniformBuffers();
 }
