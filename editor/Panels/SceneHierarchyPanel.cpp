@@ -75,7 +75,7 @@ void SceneHierarchyPanel::DrawEnityNode(Entity entity){
 
     bool entityDeleted = false;
     if (ImGui::BeginPopupContextItem()){
-        if (ImGui::MenuItem("Delete Empty Entity"))
+        if (ImGui::MenuItem("Delete Entity"))
             entityDeleted = true;
         ImGui::EndPopup();
     }
@@ -194,6 +194,8 @@ void SceneHierarchyPanel::DrawComponents(Entity entity){
             auto& cameraComponent =  entity.GetComponent<CameraComponent>();
             auto& camera = cameraComponent.Camera;
             
+            ImGui::Checkbox("Primary",&cameraComponent.Primary);
+
             const char* projectionTypeStirngs[] = {"Perspective","Orthographic"};
             const char* currentProjectionTypeString = projectionTypeStirngs[(int)camera.GetProjectionType()];
 
@@ -240,6 +242,8 @@ void SceneHierarchyPanel::DrawComponents(Entity entity){
                 float orthoFar = camera.GetOrthographicFarClip();
                 if(ImGui::DragFloat("Far Clip",&orthoFar))
                     camera.SetOrthographicFarClip(orthoFar);
+
+                ImGui::Checkbox("Fixed Aspect Ratio",&cameraComponent.FixedAspectRatio);
             }
             ImGui::TreePop();
         }

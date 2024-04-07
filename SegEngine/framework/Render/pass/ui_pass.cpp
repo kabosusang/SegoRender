@@ -27,7 +27,7 @@ namespace Sego{
 		//ImGui::StyleColorsLight();
 		//ImGui::GetStyle().WindowMenuButtonPosition = ImGuiDir_None;
 
-        //io.Fonts->AddFontFromFileTTF("resources/Fonts/ziti.ttf",18,NULL,io.Fonts->GetGlyphRangesChineseFull());
+        io.Fonts->AddFontFromFileTTF("resources/Fonts/ziti.ttf",18,NULL,io.Fonts->GetGlyphRangesChineseFull());
 		// setup Dear ImGui style
         ImGuiStyle& style = ImGui::GetStyle();
 		ImGui::StyleColorsDark();

@@ -8,7 +8,7 @@ namespace Sego{
 
 
 void EditorLayer::OnAttach(){
-
+	
 	m_Renderer = VulkanContext::Instance().GetRenderer();
 	m_Cts = Vulkantool::createSample(vk::Filter::eLinear,vk::Filter::eLinear,1,
 	vk::SamplerAddressMode::eRepeat,vk::SamplerAddressMode::eRepeat,vk::SamplerAddressMode::eRepeat);
@@ -150,6 +150,7 @@ void EditorLayer::OnImGuiRender(){
 	SegEngine::Instance().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
 	
 	ImVec2 ViewportPanelSize = ImGui::GetContentRegionAvail();
+
 	if(m_viewportsize != *((glm::vec2*)&ViewportPanelSize) && 
 	ViewportPanelSize.x > 0 && ViewportPanelSize.y > 0){
 		FramBufferResize(ViewportPanelSize.x,ViewportPanelSize.y);
