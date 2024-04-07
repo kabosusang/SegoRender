@@ -23,6 +23,7 @@ private:
     uint32_t m_ViewportWidth = 1600,m_ViewportHeight = 1000;
 
     friend class Entity;
+    friend class SceneSerializer;
     friend class SceneHierarchyPanel;
 };
 

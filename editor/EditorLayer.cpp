@@ -4,6 +4,8 @@
 #include <imgui_impl_vulkan.h>
 #include <imgui_impl_sdl2.h>
 
+#include "Core/Scene/SceneSerializer.hpp"
+
 namespace Sego{
 
 
@@ -48,7 +50,6 @@ void EditorLayer::OnAttach(){
 			auto& translation = GetComponent<TransformComponent>().Translation;
 			float speed = 5.0f;
 			
-
 			if(Input::ISKeyPressed(KeySanCode::A))
 				translation.x -= speed * ts;
 			if(Input::ISKeyPressed(KeySanCode::D))
@@ -63,8 +64,10 @@ void EditorLayer::OnAttach(){
 	};
 
 	m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
-
 	m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+	SceneSerializer serializer(m_ActiveScene);
+	serializer.Serialize("resources/scenes/Example.sego");
+
 }
 
 void EditorLayer::OnDetach(){
@@ -118,11 +121,15 @@ void EditorLayer::OnImGuiRender(){
 
 		// DockSpace
 		ImGuiIO& io = ImGui::GetIO();
+		ImGuiStyle& style = ImGui::GetStyle();
+		float minWinSizeX = style.WindowMinSize.x;
+		style.WindowMinSize.x = 370.0f;
 		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 		{
 			ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 		}
+		style.WindowMinSize.x = minWinSizeX;
 
 		if (ImGui::BeginMenuBar())
 		{

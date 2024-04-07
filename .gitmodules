@@ -16,3 +16,6 @@
 [submodule "3rdL/entt"]
 	path = 3rdL/entt
 	url = https://github.com/skypjack/entt
+[submodule "3rdL/yamlcpp"]
+	path = 3rdL/yamlcpp
+	url = https://github.com/jbeder/yaml-cpp

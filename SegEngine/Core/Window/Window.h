@@ -2,8 +2,8 @@
 #include "pch.h"
 
 #include "Core/Event/Event.h"
-const int DFWIDTH = 1280;
-const int DFHEIGHT = 800;
+const int DFWIDTH = 1600;
+const int DFHEIGHT = 1000;
 
 namespace Sego{
     struct WindowProps

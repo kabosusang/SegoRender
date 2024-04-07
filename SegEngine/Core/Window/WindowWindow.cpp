@@ -46,7 +46,8 @@ void WindowsWindow::Init(const WindowProps &props)
     window_ = SDL_CreateWindow(props.Title.c_str(),
                                           SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                           m_Data.Width, m_Data.Height,
-                                          SDL_WINDOW_SHOWN|SDL_WINDOW_VULKAN|SDL_WINDOW_RESIZABLE);
+                                          SDL_WINDOW_SHOWN|SDL_WINDOW_VULKAN|SDL_WINDOW_RESIZABLE
+                                          |SDL_WINDOW_ALLOW_HIGHDPI);
     if (!window_) {
         SDL_Log("create window failed");
         exit(2);

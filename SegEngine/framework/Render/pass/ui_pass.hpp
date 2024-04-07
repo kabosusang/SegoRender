@@ -14,6 +14,8 @@ namespace Sego{
         virtual void CreateRenderPass() override;
         void createDescriptorPool();
     private:
+        void setDarkThemeColors();
+    private:
         std::vector<vk::Framebuffer> framebuffers_;
     };
 

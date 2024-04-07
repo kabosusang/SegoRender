@@ -15,11 +15,11 @@ namespace Sego{
         void SetPerspective(float verticalFOV, float nearClip, float farClip);
         
         //Perspective
-        float GerPerspectiveVerticalFOV() const {return m_PerspectiveFOV;}
+        float GetPerspectiveVerticalFOV() const {return m_PerspectiveFOV;}
         void SetPerspectiveVerticalFOV(float verticalFov)  { m_PerspectiveFOV = verticalFov;RecalculateProjection();}
-        float GerPerspectiveNearClip() const {return m_PerspectiveNear;}
+        float GetPerspectiveNearClip() const {return m_PerspectiveNear;}
         void SetPerspectiveNearClip(float nearClip)  { m_PerspectiveNear = nearClip;RecalculateProjection();}
-        float GerPerspectiveFarClip() const {return m_PerspectiveFar;}
+        float GetPerspectiveFarClip() const {return m_PerspectiveFar;}
         void SetPerspectiveFarClip(float farClip)  { m_PerspectiveFar = farClip;RecalculateProjection();}
 
         //Orthographic

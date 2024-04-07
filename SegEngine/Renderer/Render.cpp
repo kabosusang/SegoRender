@@ -12,7 +12,7 @@ void Renderer::BeginScene(const Camera& camera, const glm::mat4& transform){
     //glm::vec3 cameraPosition = glm::vec3(transform[3]);
     //Right 
     glm::mat4 view = transform;
-
+    
     Vctx.setProjection(Proj);
     Vctx.setView(view);
 }

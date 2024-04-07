@@ -13,7 +13,6 @@ public:
     void EndScene();
     void Render();
 
-
     // Output Function
     void SetClearColor(const glm::vec4& color);
     void resizeframbuffer(uint32_t w,uint32_t h);
