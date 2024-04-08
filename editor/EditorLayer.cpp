@@ -19,6 +19,7 @@ void EditorLayer::OnAttach(){
 	VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 	m_ActiveScene = std::make_shared<Scene>();
+#if 0
 	//Entity
 	auto redsquare = m_ActiveScene->CreateEntity("Rend Square Entity");
 	redsquare.AddComponent<SpriteRendererComponent>(glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f });
@@ -64,10 +65,13 @@ void EditorLayer::OnAttach(){
 	};
 
 	m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
-	m_SceneHierarchyPanel.SetContext(m_ActiveScene);
-	SceneSerializer serializer(m_ActiveScene);
-	serializer.Serialize("resources/scenes/Example.sego");
+#endif
 
+	m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+
+	SceneSerializer serializer(m_ActiveScene);
+	//serializer.Serialize("resources/scenes/Example.sego");
+	serializer.Deserialize("resources/scenes/Example.sego");
 }
 
 void EditorLayer::OnDetach(){
