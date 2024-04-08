@@ -5,7 +5,7 @@
 #include <imgui_impl_sdl2.h>
 
 #include "Core/Scene/SceneSerializer.hpp"
-
+#include "platform/Utils/PlatformUtils.h"
 namespace Sego{
 
 
@@ -68,10 +68,8 @@ void EditorLayer::OnAttach(){
 #endif
 
 	m_SceneHierarchyPanel.SetContext(m_ActiveScene);
-
-	SceneSerializer serializer(m_ActiveScene);
-	//serializer.Serialize("resources/scenes/Example.sego");
-	serializer.Deserialize("resources/scenes/Example.sego");
+	
+	
 }
 
 void EditorLayer::OnDetach(){
@@ -142,6 +140,17 @@ void EditorLayer::OnImGuiRender(){
 				// Disabling fullscreen would allow the window to be moved to the front of other windows, 
 				// which we can't undo at the moment without finer window depth/z control.
 				//ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);
+				if (ImGui::MenuItem("New","Ctrl+N")){
+					NewScene();
+				}
+
+				if (ImGui::MenuItem("Open...","Ctrl+O")){
+						OpenScene();
+
+				}
+				if (ImGui::MenuItem("Save AS...","Ctrl+Shift+S")){
+					SaveSceneAs();
+				}
 
 				if (ImGui::MenuItem("Exit")) SegEngine::Instance().Close();
 				ImGui::EndMenu();
@@ -189,14 +198,68 @@ void EditorLayer::FramBufferResize(float w,float h){
 }
 
 void EditorLayer::OnEvent(Event &e){
+	EventDispatcher dispatcher(e);
+	dispatcher.Dispatch<KeyPressedEvent>(SG_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
+}
+
+bool EditorLayer::OnKeyPressed(KeyPressedEvent& e){
+	
+	if (e.IsRepeat() > 0)
+		return false;
+	bool control = Input::ISKeyPressed(KeySanCode::LCTRL) || Input::ISKeyPressed(KeySanCode::RCTRL);
+	bool shit = Input::ISKeyPressed(KeySanCode::LSHIFT) || Input::ISKeyPressed(KeySanCode::RSHIFT);
+
+	switch (e.GetKeyCode()){
+		case KeySanCode::N:{
+			if (control)
+				NewScene();
+				
+			break;
+		}
+		case KeySanCode::O:{
+			if (control)
+				OpenScene();
+
+			break;
+		}
+		case KeySanCode::S:{
+			if (control && shit)
+				SaveSceneAs();
+
+			break;
+		}
+
+	}
 
 
 
+	return true;
+}
+
+void EditorLayer::NewScene(){
+	m_ActiveScene = std::make_shared<Scene>();
+	m_ActiveScene->OnViewportResize(m_viewportsize.x,m_viewportsize.y);
+	m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+
+}
+void EditorLayer::OpenScene(){
+	std::string filepath = FileDialogs::OpenFile("Sego Scene(*.Sego)\0*.sego\0");
+	if(!filepath.empty()){
+		m_ActiveScene = std::make_shared<Scene>();
+		m_ActiveScene->OnViewportResize(m_viewportsize.x,m_viewportsize.y);
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+
+		SceneSerializer serializer(m_ActiveScene);
+		serializer.Deserialize(filepath);
+	}
+}
+void EditorLayer::SaveSceneAs(){
+	std::string filepath = FileDialogs::SaveFile("Sego Scene(*.Sego)\0*.sego\0");
+	if(!filepath.empty()){
+		SceneSerializer serializer(m_ActiveScene);
+		serializer.Serialize(filepath);
+	}
 }
 
 
-
-
 }
-
-

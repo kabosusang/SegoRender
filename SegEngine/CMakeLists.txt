@@ -22,13 +22,13 @@ aux_source_directory(Core/Scene engine_src)
 
 aux_source_directory(framework/Render/pass frame_work)
 aux_source_directory(imgui frame_work)
+aux_source_directory(platform/Windows frame_work)
 
 aux_source_directory(resource/shader renderer_code)
 aux_source_directory(framework/Render renderer_code)
 aux_source_directory(Core/Vulkan renderer_code)
 aux_source_directory(Core/Vulkan/src renderer_code)
 aux_source_directory(Renderer renderer_code)
-
 
 aux_source_directory(resource/asset/ Asset)
 aux_source_directory(resource/asset/Import Asset)

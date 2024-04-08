@@ -18,8 +18,14 @@ public:
     virtual void OnImGuiRender() override;
 
     
-    void FramBufferResize(float ,float) ;
+    void FramBufferResize(float ,float);
     void OnEvent(Event& e) override;
+private:
+    bool OnKeyPressed(KeyPressedEvent& e);
+
+    void NewScene();
+    void OpenScene();
+    void SaveSceneAs();
 private:
     //Renderer
     std::shared_ptr<Sego::Renderer> m_Renderer;
