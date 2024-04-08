@@ -19,3 +19,6 @@
 [submodule "3rdL/yamlcpp"]
 	path = 3rdL/yamlcpp
 	url = https://github.com/jbeder/yaml-cpp
+[submodule "3rdL/ImGuiZmo"]
+	path = 3rdL/ImGuiZmo
+	url = https://github.com/CedricGuillemet/ImGuizmo

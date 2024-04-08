@@ -5,6 +5,8 @@
 #include <imgui_impl_vulkan.h>
 #include <imgui_impl_sdl2.h>
 
+#include <Imguizmo.h>
+
 namespace Sego{
 ImGuiLayer::ImGuiLayer()
     : Layer("ImGuiLayer"){
@@ -25,6 +27,7 @@ void ImGuiLayer::Begin(){
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
+    ImGuizmo::BeginFrame();
 
 }
 void ImGuiLayer::End(){

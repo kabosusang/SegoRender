@@ -11,8 +11,8 @@ void Renderer::BeginScene(const Camera& camera, const glm::mat4& transform){
     //glm::mat4 inverseTransform = glm::inverse(transform);
     //glm::vec3 cameraPosition = glm::vec3(transform[3]);
     //Right 
-    glm::mat4 view = transform;
-    
+    glm::mat4 view = glm::inverse(transform);
+  
     Vctx.setProjection(Proj);
     Vctx.setView(view);
 }

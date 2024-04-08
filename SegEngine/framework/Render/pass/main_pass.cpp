@@ -306,7 +306,11 @@ void MainPass::CreatePiepline(){
                             .setAlphaBlendOp(vk::BlendOp::eAdd);
     blend_ci.setAttachments(colorblendattachment_ci)    
             .setLogicOpEnable(false);
-     pipeline_ci.setStages(shader_stage_cis)
+    
+
+    raster_ci.setCullMode(vk::CullModeFlagBits::eNone);
+    
+    pipeline_ci.setStages(shader_stage_cis)
                .setPVertexInputState(&vertex_input_ci)
                .setPInputAssemblyState(&input_assemb_ci)
                .setPViewportState(&viewport_state_ci)

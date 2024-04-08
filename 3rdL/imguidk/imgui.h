@@ -33,6 +33,7 @@
 #define IMGUI_HAS_VIEWPORT          // Viewport WIP branch
 #define IMGUI_HAS_DOCK              // Docking WIP branch
 
+#define IMGUI_DEFINE_MATH_OPERATORS //I not't know what is ADD form this imgui!!!
 /*
 
 Index of this file:
