@@ -10,6 +10,7 @@
 #include <ImGuizmo.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "Math/Math.h"
 
 namespace Sego{
 
@@ -185,7 +186,7 @@ void EditorLayer::OnImGuiRender(){
 
 	// Gizmos
 	Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
-	if (selectedEntity){
+	if (selectedEntity && m_GizmoType != -1){
 		ImGuizmo::SetOrthographic(false);
 		ImGuizmo::SetDrawlist();
 		float windowWidth = (float)ImGui::GetWindowWidth();
@@ -202,14 +203,30 @@ void EditorLayer::OnImGuiRender(){
 		auto& tc = selectedEntity.GetComponent<TransformComponent>();
 		glm::mat4 transform = tc.GetTransform();
 
+		// Snapping
+		bool snap = Input::ISKeyPressed(KeySanCode::LCTRL);
+		float snapValue = 0.5f;
+
+		//Snap to 45 degrees for rotation
+		if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
+			snapValue = 45.0f;
+		float snapValues[3] = {snapValue,snapValue,snapValue };
+
+
 		ImGuizmo::Manipulate(glm::value_ptr(cameraView),glm::value_ptr(cameraProjection),
-		ImGuizmo::OPERATION::TRANSLATE,ImGuizmo::MODE::LOCAL,glm::value_ptr(transform));
+		(ImGuizmo::OPERATION)m_GizmoType,ImGuizmo::MODE::LOCAL,glm::value_ptr(transform),
+		nullptr,snap ? snapValues : nullptr);
 
 		if (ImGuizmo::IsUsing()){
-			tc.Translation = transform[3];
+			glm::vec3 translation,rotation,scale;
+			Math::DecomposeTransform(transform,translation,rotation,scale);
+
+			glm::vec3 deltaRotation =rotation- tc.Rotation;
+			tc.Translation = translation;
+			tc.Rotation += deltaRotation;
+			tc.Scale = scale;
 		}
 		//glm::decompose
-
 
 	}
 
@@ -266,6 +283,21 @@ bool EditorLayer::OnKeyPressed(KeyPressedEvent& e){
 
 			break;
 		}
+
+
+		//Gizmos
+		case KeySanCode::Q :
+			m_GizmoType = -1;
+			break;
+		case KeySanCode::W :
+			m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+			break;
+		case KeySanCode::E :
+			m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+			break;
+		case KeySanCode::R :
+			m_GizmoType = ImGuizmo::OPERATION::SCALE;
+			break;
 
 	}
 

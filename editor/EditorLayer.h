@@ -38,6 +38,7 @@ private:
     std::shared_ptr<Scene> m_ActiveScene;
     Entity m_CameraEntity;
   
+    int m_GizmoType = -1;
     //Panels
     SceneHierarchyPanel m_SceneHierarchyPanel;
     
