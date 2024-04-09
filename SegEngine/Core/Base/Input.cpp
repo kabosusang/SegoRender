@@ -13,7 +13,7 @@ bool Input::ISKeyPressed(int keycode)
     return false;
 }
 
-bool Input::ISMouseButtonPressed(int button)
+bool Input::IsMouseButtonPressed(int button)
 {
     const Uint32 state = SDL_GetMouseState(NULL, NULL);
     if (state & SDL_BUTTON(button))

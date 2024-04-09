@@ -25,6 +25,9 @@ void EditorLayer::OnAttach(){
 	VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 	m_ActiveScene = std::make_shared<Scene>();
+	
+	m_EditorCamera = EditorCamera(30.0f,1.778f,0.1f,1000.0f);
+
 #if 0
 	//Entity
 	auto redsquare = m_ActiveScene->CreateEntity("Rend Square Entity");
@@ -75,7 +78,6 @@ void EditorLayer::OnAttach(){
 
 	m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 	
-	
 }
 
 void EditorLayer::OnDetach(){
@@ -85,8 +87,12 @@ void EditorLayer::OnDetach(){
 void EditorLayer::OnUpdate(Timestep ts){
 	//Render
 	m_Renderer->SetClearColor({0.1f,0.1f,0.1f,1.0f});
-	m_ActiveScene->OnUpdate(ts);	
-
+	if (m_ViewportFocused){
+	}
+	m_EditorCamera.OnUpdate(ts);
+	m_ActiveScene->OnUpdateEditor(ts,m_EditorCamera);
+	//m_ActiveScene->OnUpdateRuntime(ts);
+	
 }
 
 void EditorLayer::OnImGuiRender(){
@@ -194,10 +200,19 @@ void EditorLayer::OnImGuiRender(){
 		ImGuizmo::SetRect(ImGui::GetWindowPos().x,ImGui::GetWindowPos().y,windowWidth,windowHeight);
 		
 		//Camera
-		auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
+
+
+		//Runtime camera from entity
+		/* auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
 		const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
 		const glm::mat4 cameraProjection = camera.GetProjection();
 		glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
+ 		*/
+
+		//Editor Camera
+		const glm::mat4& cameraProjection = m_EditorCamera.GetProjection();
+		const glm::mat4& cameraView = m_EditorCamera.GetViewMatrix();
+		
 
 		//Entity transform
 		auto& tc = selectedEntity.GetComponent<TransformComponent>();
@@ -231,8 +246,6 @@ void EditorLayer::OnImGuiRender(){
 	}
 
 
-
-
 	ImGui::End();
 	ImGui::PopStyleVar();
 	ImGui::End();
@@ -243,6 +256,8 @@ void EditorLayer::OnImGuiRender(){
 void EditorLayer::FramBufferResize(float w,float h){
 	m_Renderer->resizeframbuffer(w,h);
 	m_ActiveScene->OnViewportResize(w,h);
+	m_EditorCamera.SetViewportSize(w,h);
+
 
 	if (m_color_texture_set != VK_NULL_HANDLE)
 		ImGui_ImplVulkan_RemoveTexture(m_color_texture_set); //remove old texture
@@ -253,6 +268,10 @@ void EditorLayer::FramBufferResize(float w,float h){
 }
 
 void EditorLayer::OnEvent(Event &e){
+
+	m_EditorCamera.OnEvent(e); //EditorCamera Pull Events
+
+
 	EventDispatcher dispatcher(e);
 	dispatcher.Dispatch<KeyPressedEvent>(SG_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
 }

@@ -1,6 +1,13 @@
 #pragma once
 
 //Form SDL_mouse.h
+enum Mouse{
+    ButtonLeft = 1,
+    ButtonMiddle = 2,
+    ButtonRight = 3
+};
+
+
 #define SG_MOUSE_BUTTON(X)       (1 << ((X)-1))
 #define SG_MOUSE_BUTTON_LEFT     1
 #define SG_MOUSE_BUTTON_MIDDLE   2

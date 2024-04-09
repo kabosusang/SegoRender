@@ -5,7 +5,7 @@ namespace Sego{
     class Input{
     public:
         static bool ISKeyPressed(int keycode);
-        static bool ISMouseButtonPressed(int button);
+        static bool IsMouseButtonPressed(int button);
         static float GetMouseX();
         static float GetMouseY();
         static std::pair<float, float> GetMousePos();

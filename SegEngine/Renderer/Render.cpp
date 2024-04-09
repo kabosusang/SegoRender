@@ -17,6 +17,17 @@ void Renderer::BeginScene(const Camera& camera, const glm::mat4& transform){
     Vctx.setView(view);
 }
 
+void Renderer::BeginScene(const EditorCamera &camera){
+auto& Vctx = VulkanRhi::Instance();
+//glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
+glm::mat4 view = camera.GetViewMatrix();
+glm::mat4 proj = camera.GetProjectionMatrix();
+
+Vctx.setView(view);
+Vctx.setProjection(proj);
+
+}
+
 void Renderer::Init(){
    
 }

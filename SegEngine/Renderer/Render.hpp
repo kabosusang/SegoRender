@@ -1,7 +1,8 @@
 #pragma once
-#include "Renderer/Camera.hpp"
+
 #include "Core/Vulkan/Vulkan_rhi.hpp"
 
+#include "EditorCamera.hpp"
 namespace Sego{
 
 class Renderer{
@@ -9,7 +10,9 @@ public:
     void Init();
 
     void BeginScene(const Camera& camera, const glm::mat4& transform);
+    void BeginScene(const EditorCamera& camera);
     void BeginScene();
+
     void EndScene();
     void Render();
 

@@ -2,8 +2,9 @@
 #include "Sego.hpp"
 #include "Core/Vulkan/VulkanTool.hpp"
 #include "Core/Scene/Scene.hpp"
-
 #include "Panels/SceneHierarchyPanel.hpp"
+
+#include "Renderer/EditorCamera.hpp"
 
 namespace Sego{
 class EditorLayer : public Layer{
@@ -37,7 +38,8 @@ private:
     
     std::shared_ptr<Scene> m_ActiveScene;
     Entity m_CameraEntity;
-  
+
+    EditorCamera m_EditorCamera;
     int m_GizmoType = -1;
     //Panels
     SceneHierarchyPanel m_SceneHierarchyPanel;

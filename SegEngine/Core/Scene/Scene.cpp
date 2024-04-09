@@ -26,25 +26,26 @@ void Scene::DestroyEntity(Entity entity){
     m_Registry.destroy(entity);
 }
 
-void Scene::OnUpdate(Timestep ts){
-auto& Vctx = VulkanContext::Instance();
-
-//Update scripts
+void Scene::OnUpdateRuntime(Timestep ts)
 {
-    m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc){
+    auto &Vctx = VulkanContext::Instance();
+
+    // Update scripts
+    {
+        m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto &nsc)
+                                                      {
         //TODO: Move to Scene::OnPlay
         if(!nsc.Instance){
             nsc.Instance = nsc.InstantiateScript();
             nsc.Instance->m_Entity = Entity{entity,this};
             nsc.Instance->OnCreate();
         }
-            nsc.Instance->OnUpdate(ts);
-    });
-}
+            nsc.Instance->OnUpdate(ts); });
+    }
 
-//Render3D
-Camera* mainCamera = nullptr;
-glm::mat4 CameraTransform;
+    // Render2D
+    Camera *mainCamera = nullptr;
+    glm::mat4 CameraTransform;
 
     //Render
     {
@@ -60,19 +61,23 @@ glm::mat4 CameraTransform;
 
         }
     }
+    
+}
 
-    if(mainCamera){
-        Vctx.GetRenderer()->BeginScene(mainCamera->GetProjection(),CameraTransform);
-        auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-        for(auto entity : group){
-            auto [transform,sprite] = group.get<TransformComponent,SpriteRendererComponent>(entity);
-            Vctx.GetRenderer()->DrawQuad(transform.GetTransform(),sprite.Color); //TODO: Add texture
-            
-        }
+void Scene::OnUpdateEditor(Timestep ts,EditorCamera& camera){
+    auto &Vctx = VulkanContext::Instance();
+    Vctx.GetRenderer()->BeginScene(camera);
+    
+    auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+    for(auto entity : group){
+        auto [transform,sprite] = group.get<TransformComponent,SpriteRendererComponent>(entity);
+        Vctx.GetRenderer()->DrawQuad(transform.GetTransform(),sprite.Color); //TODO: Add texture
     }
-    Vctx.GetRenderer()->Render();
+
+    Vctx.GetRenderer()->Render(); //AllPass Render (Must Call)
     Vctx.GetRenderer()->EndScene();
 }
+
 
 void Scene::OnViewportResize(uint32_t width, uint32_t height){
     m_ViewportWidth = width;

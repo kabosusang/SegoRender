@@ -25,7 +25,6 @@ m_formats ={
 void MainPass::destroy(){
     RenderPass::destroy();
  
-
     for(auto& buffer : uniformBuffers_){
         buffer.destroy();
     }
@@ -338,7 +337,13 @@ void MainPass::CreateFrameBuffer(){
     vk::Filter::eLinear, vk::Filter::eLinear,vk::SamplerAddressMode::eClampToEdge,
     depthIVs_, vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eInputAttachment);
 
-    std::vector<vk::ImageView> attachments = { colorIVs_.image_view ,depthIVs_.image_view};
+    std::vector<vk::ImageView> attachments = { 
+    colorIVs_.image_view ,
+    depthIVs_.image_view
+    
+    };
+
+    
     vk::FramebufferCreateInfo createInfo;
     createInfo.setAttachments(attachments)
                 .setLayers(1)
