@@ -3,12 +3,7 @@
 #include "Core/Vulkan/Vulkantool.hpp"
 #include "resource/asset/base/Vertex.hpp"
 #include "resource/asset/base/Mesh.hpp"
-
-
-struct UniformBufferObject {
-    alignas(16) glm::mat4 view;
-    alignas(16) glm::mat4 proj;
-};
+#include "resource/asset/Import/gltf_import.hpp"
 
 namespace Sego{
 
@@ -21,19 +16,10 @@ m_formats ={
     };
 }
 
-
 void MainPass::destroy(){
     RenderPass::destroy();
- 
-    for(auto& buffer : uniformBuffers_){
-        buffer.destroy();
-    }
-  
+    colorIVs_.destroy();
     depthIVs_.destroy();
-    for(auto& mesh :g_meshRenderData){
-        mesh->destory();
-    }
-
 }
 
 void MainPass::temporarilyInit(){
@@ -45,14 +31,12 @@ void MainPass::temporarilyInit(){
     //Rendata = GlTFImporter::LoadglTFFile("resources/gltf/saki.glb");
     //g_meshRenderData.push_back(GlTFImporter::LoadglTFFile("resources/gltf/FlightHelmet/FlightHelmet.gltf"));
     //g_meshRenderData.push_back(GlTFImporter::LoadglTFFile("resources/gltf/LanTern/Lantern.gltf"));
-    //uniform buffer
-    createUniformBuffers();
 }
 
 void MainPass::createDescriptorSetLayout(){
     descriptorSetLayouts_.resize(2);
-
-    // Image sampler descriptor
+    vk::DescriptorSetLayoutCreateInfo desc_set_layout_ci{};
+   
     vk::DescriptorSetLayoutBinding uboLayoutBinding{};
     uboLayoutBinding.setBinding(0)
                     .setDescriptorType(vk::DescriptorType::eUniformBuffer)
@@ -65,91 +49,47 @@ void MainPass::createDescriptorSetLayout(){
                         .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
                         .setStageFlags(vk::ShaderStageFlagBits::eFragment)
                         .setPImmutableSamplers(nullptr);
-    
     vk::DescriptorSetLayoutBinding bindings[] = {uboLayoutBinding, samplerLayoutBinding};
-    vk::DescriptorSetLayoutCreateInfo layoutInfo{};
-    layoutInfo.setBindingCount(2)
-              .setPBindings(bindings)
-              .setFlags(vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR);
+
+    // mesh
+    desc_set_layout_ci.setBindingCount(2)
+                      .setBindings(bindings)
+                      .setFlags(vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR);
     
-    //1 Normal GLTF Model Renderer
-    descriptorSetLayouts_[0] = Context::Instance().device.createDescriptorSetLayout(layoutInfo);
+    descriptorSetLayouts_[0] = Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci);
 
-    //2 Sprite Renderer
-    uboLayoutBinding.setBinding(0)
-                    .setDescriptorType(vk::DescriptorType::eUniformBuffer)
-                    .setDescriptorCount(1)
-                    .setStageFlags(vk::ShaderStageFlagBits::eVertex)
-                    .setPImmutableSamplers(nullptr);
+    //spritor
+    desc_set_layout_ci.setBindingCount(1)
+                      .setBindings(uboLayoutBinding)
+                      .setFlags(vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR);
 
-    layoutInfo.setBindingCount(1)
-               .setBindings(uboLayoutBinding)
-               .setFlags(vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR);
-     //2 
-    descriptorSetLayouts_[1]= Context::Instance().device.createDescriptorSetLayout(layoutInfo);
+    descriptorSetLayouts_[1]= Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci);
 
 }
 void MainPass::createPipelineLayouts(){
     pipelineLayouts_.resize(2);
+    push_constant_ranges_ = {
+        {vk::ShaderStageFlagBits::eVertex,0,sizeof(glm::mat4)}
+    };
+    
+    vk::PipelineLayoutCreateInfo pipeline_layout_ci{};
+    pipeline_layout_ci.setSetLayoutCount(1)
+                      .setPSetLayouts(&descriptorSetLayouts_[0])
+                      .setPushConstantRangeCount(static_cast<uint32_t>(push_constant_ranges_.size()))
+                      .setPPushConstantRanges(push_constant_ranges_.data());
 
-    vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-    pipelineLayoutInfo.setSetLayoutCount(1)
-                      .setPSetLayouts(&descriptorSetLayouts_[0]);
-
-    //PUSH CONSTANT
-    vk::PushConstantRange pushConstantRange{};
-    pushConstantRange.setStageFlags(vk::ShaderStageFlagBits::eVertex)
-                     .setOffset(0)
-                     .setSize(sizeof(glm::mat4));
-    pipelineLayoutInfo.setPushConstantRangeCount(1)
-                      .setPPushConstantRanges(&pushConstantRange);
     //1 Normal GLTF Model Renderer
-    pipelineLayouts_[0] = Context::Instance().device.createPipelineLayout(pipelineLayoutInfo);
+    pipelineLayouts_[0] = Context::Instance().device.createPipelineLayout(pipeline_layout_ci);
 
-    //2 Sprite Renderer
-    vk::PipelineLayoutCreateInfo pipelineLayoutInfo_sprite{};
-    pipelineLayoutInfo_sprite.setSetLayoutCount(1)
-                      .setPSetLayouts(&descriptorSetLayouts_[1]);
-
-    //PUSH CONSTANT
-    vk::PushConstantRange pushConstantRange_sprite{};
-    pushConstantRange_sprite.setStageFlags(vk::ShaderStageFlagBits::eVertex)
-                     .setOffset(0)
-                     .setSize(sizeof(glm::mat4));
-    pipelineLayoutInfo_sprite.setPushConstantRangeCount(1)
-                      .setPPushConstantRanges(&pushConstantRange_sprite);
-    
-    pipelineLayouts_[1] = Context::Instance().device.createPipelineLayout(pipelineLayoutInfo);
-
+    pipelineLayouts_[1] = Context::Instance().device.createPipelineLayout(pipeline_layout_ci);
 
 }
-
-void MainPass::createUniformBuffers(){
-    auto& Vctx = VulkanRhi::Instance();
-    vk::DeviceSize bufferSize = sizeof(UniformBufferObject);
-    uniformBuffers_.resize(Vctx.getMaxFlightCount());
-
-    for(int i = 0; i < Vctx.getMaxFlightCount(); ++i){
-        Vulkantool::createBuffer(bufferSize,vk::BufferUsageFlagBits::eUniformBuffer,
-        VMA_MEMORY_USAGE_CPU_TO_GPU, uniformBuffers_[i]);
-    }
-}
-
-void MainPass::updateUniformBuffer(uint32_t currentImage){
-    UniformBufferObject ubo{};
-    ubo.view = CameraView_;
-    ubo.proj = projection_;
-    
-    ubo.proj[1][1] *= -1;
-    Vulkantool::updateBuffer(uniformBuffers_[currentImage], &ubo, sizeof(ubo));
-}
-
 
 void MainPass::CreatePiepline(){
     auto& ctx = Context::Instance();
     temporarilyInit(); //temporary init vertex buffer
 
-     pipelines_.resize(2);
+    pipelines_.resize(2);
     
      // 0. shader prepare
     std::vector<vk::PipelineShaderStageCreateInfo> shader_stage_cis  ={
@@ -340,7 +280,6 @@ void MainPass::CreateFrameBuffer(){
     std::vector<vk::ImageView> attachments = { 
     colorIVs_.image_view ,
     depthIVs_.image_view
-    
     };
 
     
@@ -411,9 +350,6 @@ void MainPass::Render(){
     auto& VulkanRhi = VulkanRhi::Instance();
     auto cmdBuffer = VulkanRhi.getCommandBuffer();
     
-    //temporary
-    updateUniformBuffer(VulkanRhi.getFlightCount());
-  
     std::array<vk::ClearValue,2> clearValues{};
     clearValues[0].setColor(vk::ClearColorValue(reinterpret_cast<vk::ClearColorValue&>(clearColor_)));
     clearValues[1].setDepthStencil({1.0f,0});
@@ -439,15 +375,12 @@ void MainPass::Render(){
     cmdBuffer.setScissor(0, 1, &scissor);
 
     //pipelines_[0] Normal GLTF Model Renderer
-    for(auto& Rendata : g_meshRenderData){
-       render_mesh(cmdBuffer,Rendata);
+    for(const auto& Rendata : renderDatas_){
+       if (Rendata->type == RenderDataType::Sprite){
+            std::shared_ptr<SpriteRenderData> spritedata = std::static_pointer_cast<SpriteRenderData>(Rendata);
+            render_sprite(cmdBuffer,spritedata);
+       }
     }
-    
-    //pipelines_[1] Sprite Renderer 
-    for(auto& Sprite:g_spriteRenderData){
-        render_sprite(cmdBuffer,Sprite);
-    }
-
 
     cmdBuffer.endRenderPass();
 }
@@ -466,7 +399,8 @@ void MainPass::render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<MeshRende
     //1. Uniform
     std::array<vk::DescriptorBufferInfo, 1> desc_buffer_infos{}; //Uniform 
     addBufferDescriptorSet(desc_writes, desc_buffer_infos[0], 
-    uniformBuffers_[VulkanRhi.getFlightCount()], 0);
+    VulkanRhi.getCurrentUniformBuffer(), 0);
+
     //2. Image Sample
     std::array<vk::DescriptorImageInfo,1>   desc_image_info{};   //Sample
     
@@ -494,9 +428,9 @@ void MainPass::render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteR
     //1. Uniform
     std::array<vk::DescriptorBufferInfo, 1> desc_buffer_infos{}; //Uniform 
     addBufferDescriptorSet(desc_writes, desc_buffer_infos[0], 
-    uniformBuffers_[VulkanRhi.getFlightCount()], 0);
+    VulkanRhi.getCurrentUniformBuffer(), 0);
 
-    cmdBuffer.pushConstants(pipelineLayouts_[1], vk::ShaderStageFlagBits::eVertex, 0, sizeof(glm::mat4), &Rendata->Spritemodel);
+    updatePushConstants(cmdBuffer,pipelineLayouts_[1],{&Rendata->Spritemodel});
     //2. Image Sample TODO: SpriteRendererComponent
     
     VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -539,7 +473,6 @@ void MainPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelin
 }
 
 void MainPass::recreateframbuffer(uint32_t width,uint32_t height){
-
     auto& ctx = Context::Instance();
     ctx.device.waitIdle();
     ctx.device.destroyFramebuffer(framebuffer_);

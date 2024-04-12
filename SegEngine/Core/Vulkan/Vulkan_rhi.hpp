@@ -18,6 +18,7 @@ namespace Sego{
         void resizeframbuffer(uint32_t w,uint32_t h);
         //Render Frame
 		void waitFrame();
+        void updtaUniform();
 		void recordFrame();
 		void submitFrame();
 		void presentFrame();
@@ -32,11 +33,20 @@ namespace Sego{
         inline uint32_t getImageIndex() { return currentImageIndex_; }
         PFN_vkCmdPushDescriptorSetKHR getCmdPushDescriptorSet() { return vkCmdPushDescriptorSet_; }
         vk::ImageView getColorImageView();
+        inline VmaBuffer getCurrentUniformBuffer() { return uniformBuffers_[currentFrame_];}
+
 
         //Render Output Function
         void setClearColor(const glm::vec4& color);
         void setProjection(const glm::mat4& projection);
         void setView(const glm::mat4& view);
+
+        void SetRenderDatas(std::vector<std::shared_ptr<RenderData>>& render_Datas){
+            mainPass_->setRenderDatas(render_Datas);
+        }
+    private:
+        glm::mat4 CameraView_ = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        glm::mat4 projection_ = glm::mat4(1.0f);
 
     private:
         static VulkanRhi* instance_;
@@ -63,11 +73,13 @@ namespace Sego{
         void createCmdBuffers();
         void createSemaphoresAndFence();
         void loadExtensionFuncs();
-
-
+        void createUniformBuffers();
         //Test RenderPass
         std::unique_ptr<class MainPass> mainPass_;
         std::unique_ptr<class RenderPass> uiPass_;
+
+        //All Render mvp UniformBuffer
+        std::vector<VmaBuffer> uniformBuffers_;
 
 
         bool framebufferResized = false;

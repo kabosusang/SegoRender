@@ -1,6 +1,12 @@
 #include "Vulkan_rhi.hpp"
 #include "Core/Vulkan/VulkanContext.hpp"
 #include "Core/Base/Input.hpp" 
+#include "framework/Render/Render_data.hpp"
+
+struct UniformBufferObject {
+    alignas(16) glm::mat4 view;
+    alignas(16) glm::mat4 proj;
+};
 
 namespace Sego{
 VulkanRhi* VulkanRhi::instance_ = nullptr;
@@ -16,6 +22,8 @@ VulkanRhi::VulkanRhi(uint32_t windowWidth, uint32_t windowHeight){
     createCmdBuffers();
     createSemaphoresAndFence();
     loadExtensionFuncs();
+
+    createUniformBuffers();
 
     uiPass_ = std::make_unique<UiPass>();
     uiPass_->Init();
@@ -96,6 +104,16 @@ void VulkanRhi::createSemaphoresAndFence() {
    
 }
 
+void VulkanRhi::createUniformBuffers(){
+    vk::DeviceSize bufferSize = sizeof(glm::mat4) * 2;
+    uniformBuffers_.resize(maxFlightCount_);
+    for(int i = 0; i < maxFlightCount_; ++i){
+        Vulkantool::createBuffer(bufferSize,vk::BufferUsageFlagBits::eUniformBuffer,
+        VMA_MEMORY_USAGE_CPU_TO_GPU, uniformBuffers_[i]);
+    }
+
+}
+
 void VulkanRhi::loadExtensionFuncs(){
     vkCmdPushDescriptorSet_ = (PFN_vkCmdPushDescriptorSetKHR)vkGetDeviceProcAddr(Context::Instance().device, "vkCmdPushDescriptorSetKHR");
 }
@@ -107,6 +125,7 @@ vk::ImageView VulkanRhi::getColorImageView(){
 
 void VulkanRhi::render(){
     waitFrame();
+    updtaUniform();
 	recordFrame();
 	submitFrame();
 	presentFrame();
@@ -126,7 +145,7 @@ void VulkanRhi::waitFrame(){
         return;
     }
     currentImageIndex_ = resultValue.value;
-} 
+}
 
 void VulkanRhi::recordFrame(){
     auto& ctx = Context::Instance();
@@ -194,12 +213,33 @@ void VulkanRhi::setClearColor(const glm::vec4& color){
 }
 
 void VulkanRhi::setProjection(const glm::mat4& projection){
-    mainPass_->setProjection(projection);
+    projection_ = projection;
 }
 
 void VulkanRhi::setView(const glm::mat4& view){
-    mainPass_->setView(view);
+    CameraView_ = view;
+}
+
+void VulkanRhi::updtaUniform()
+{
+    UniformBufferObject ubo;
+    ubo.view = CameraView_;
+    ubo.proj = projection_;
+    ubo.proj[1][1] *= -1;
+    Vulkantool::updateBuffer(uniformBuffers_[currentFrame_], &ubo, sizeof(ubo));
 }
 
  
+ 
+
+
+
+
+
+
+
+
+
+
+
 }

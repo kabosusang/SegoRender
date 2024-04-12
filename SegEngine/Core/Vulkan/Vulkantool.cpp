@@ -2,7 +2,6 @@
 #include "Vulkan_rhi.hpp"
 #include "stb_image.h"
 
-
 namespace Sego {
 
 void VmaBuffer::destroy(){
@@ -116,6 +115,15 @@ VmaMemoryUsage memory_usage, VmaBuffer& buffer){
    vmaCreateBuffer(ctx.getAllocator(), reinterpret_cast<VkBufferCreateInfo*>(&bufferInfo), &allocInfo, reinterpret_cast<VkBuffer*>(&buffer), &buffer.allocation, nullptr);
 }
 
+void Vulkantool::updateBuffer(VmaBuffer& buffer, void* data, size_t size){
+    void* mappedData;
+    vmaMapMemory(Context::Instance().getAllocator(), buffer.allocation, &mappedData);
+    memcpy(mappedData, data, size);
+    vmaUnmapMemory(Context::Instance().getAllocator(),buffer.allocation);
+}
+
+
+
 void Vulkantool::copyBuffer(vk::Buffer src_buffer, vk::Buffer dst_buffer, vk::DeviceSize size){
     vk::CommandBuffer cmd = beginSingleCommands();
 
@@ -125,12 +133,6 @@ void Vulkantool::copyBuffer(vk::Buffer src_buffer, vk::Buffer dst_buffer, vk::De
     endInstantCommands(cmd);
 }
 
-void Vulkantool::updateBuffer(VmaBuffer& buffer, void* data, size_t size){
-    void* mappedData;
-    vmaMapMemory(Context::Instance().getAllocator(), buffer.allocation, &mappedData);
-    memcpy(mappedData, data, size);
-    vmaUnmapMemory(Context::Instance().getAllocator(),buffer.allocation);
-}
 
 void Vulkantool::createVertexBuffer(uint32_t buffer_size, void* data, VmaBuffer& vertex_buffer){
     VmaBuffer staging_buffer;

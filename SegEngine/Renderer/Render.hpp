@@ -1,10 +1,9 @@
 #pragma once
-
 #include "Core/Vulkan/Vulkan_rhi.hpp"
-
 #include "EditorCamera.hpp"
-namespace Sego{
 
+namespace Sego{
+class Scene;
 class Renderer{
 public:
     void Init();
@@ -14,15 +13,15 @@ public:
     void BeginScene();
 
     void EndScene();
-    void Render();
+    void Render(Scene* scene);
 
     // Output Function
     void SetClearColor(const glm::vec4& color);
     void resizeframbuffer(uint32_t w,uint32_t h);
     vk::ImageView GetColorImageView();
-
-    void DrawQuad(const glm::mat4& transform, const glm::vec4& color);
-
+private:
+    glm::mat4 m_ViewProj;
+ 
 };
 
 

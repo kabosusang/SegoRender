@@ -4,6 +4,7 @@
 #include "Entity.hpp" 
 #include "Core/Vulkan/VulkanContext.hpp"
 
+
 namespace Sego{
 Scene::Scene(){
 
@@ -67,17 +68,10 @@ void Scene::OnUpdateRuntime(Timestep ts)
 void Scene::OnUpdateEditor(Timestep ts,EditorCamera& camera){
     auto &Vctx = VulkanContext::Instance();
     Vctx.GetRenderer()->BeginScene(camera);
-    
-    auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-    for(auto entity : group){
-        auto [transform,sprite] = group.get<TransformComponent,SpriteRendererComponent>(entity);
-        Vctx.GetRenderer()->DrawQuad(transform.GetTransform(),sprite.Color); //TODO: Add texture
-    }
 
-    Vctx.GetRenderer()->Render(); //AllPass Render (Must Call)
+    Vctx.GetRenderer()->Render(this); //AllPass Render (Must Call)
     Vctx.GetRenderer()->EndScene();
 }
-
 
 void Scene::OnViewportResize(uint32_t width, uint32_t height){
     m_ViewportWidth = width;

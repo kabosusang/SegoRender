@@ -52,6 +52,19 @@ void RenderPass::createPipelineLayouts(){
 
 }
 
+void RenderPass::updatePushConstants(vk::CommandBuffer commandbuffer, 
+vk::PipelineLayout pipeline_layout, const std::vector<const void*>&(pcos), std::vector<vk::PushConstantRange> push_constant_ranges){
+
+const std::vector<vk::PushConstantRange>& pcrs = push_constant_ranges.empty() ? 
+push_constant_ranges_ : push_constant_ranges;
+    for (size_t c = 0; c < pcrs.size(); ++c)
+    {
+        const vk::PushConstantRange& push_constant_range = pcrs[c];
+        commandbuffer.pushConstants(pipeline_layout,push_constant_range.stageFlags
+        ,push_constant_range.offset,push_constant_range.size,pcos[c]);
+    }
+}
+
 void RenderPass::addBufferDescriptorSet(std::vector<vk::WriteDescriptorSet> &desc_writes, vk::DescriptorBufferInfo &desc_buffer_info, VmaBuffer buffer, uint32_t binding){
     desc_buffer_info.buffer = buffer.buffer;
     desc_buffer_info.offset = 0;

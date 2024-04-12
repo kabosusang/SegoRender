@@ -2,6 +2,7 @@
 #include "pch.h"
 #include "context.hpp"
 #include <glm/glm.hpp>
+#include "framework/Render/Render_data.hpp"
 
 namespace Sego{
 
@@ -22,6 +23,9 @@ public:
     virtual void createDescriptorSetLayout();
     virtual void createPipelineLayouts();
 
+    void updatePushConstants(vk::CommandBuffer commandbuffer,vk::PipelineLayout pipeline_layout,
+    const std::vector<const void*>& (pcos),std::vector<vk::PushConstantRange> push_constant_ranges = {});
+    
     void addBufferDescriptorSet(std::vector<vk::WriteDescriptorSet>& desc_writes, 
 			vk::DescriptorBufferInfo& desc_buffer_info, VmaBuffer buffer, uint32_t binding);
     void addImageDescriptorSet(std::vector<vk::WriteDescriptorSet>& desc_writes, 
@@ -32,6 +36,9 @@ public:
     //Output Function
     virtual void recreateframbuffer();
     virtual void setClearColor(const glm::vec4& color);
+    void setRenderDatas(std::vector<std::shared_ptr<RenderData>>& renderDatas){
+        renderDatas_ = renderDatas;
+    }
 
 protected:
     //PipeLine Struct --------------------------------------------------------------
@@ -55,21 +62,24 @@ protected:
     vk::PipelineColorBlendStateCreateInfo blend_ci{};
 
     //Vulkan Objects ---------------------------------------------------------------
+    std::vector<vk::PushConstantRange> push_constant_ranges_;
     std::vector<vk::PipelineLayout> pipelineLayouts_;
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts_;
     vk::DescriptorPool descriptorPool_ = nullptr;
+
     
     //Renderer Needs---------------------------------------------------------------
     std::vector<vk::Pipeline> pipelines_;
     vk::Framebuffer framebuffer_;
     vk::RenderPass renderPass_;
 
-
     //Renderer tagret Extent
     uint32_t width_,height_;
 
     //SetColor
     glm::vec4 clearColor_ = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+    std::vector<std::shared_ptr<RenderData>> renderDatas_;
 };
 
 

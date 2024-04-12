@@ -200,8 +200,6 @@ void EditorLayer::OnImGuiRender(){
 		ImGuizmo::SetRect(ImGui::GetWindowPos().x,ImGui::GetWindowPos().y,windowWidth,windowHeight);
 		
 		//Camera
-
-
 		//Runtime camera from entity
 		/* auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
 		const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
@@ -244,7 +242,6 @@ void EditorLayer::OnImGuiRender(){
 		//glm::decompose
 
 	}
-
 
 	ImGui::End();
 	ImGui::PopStyleVar();

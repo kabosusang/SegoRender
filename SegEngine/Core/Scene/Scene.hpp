@@ -1,8 +1,8 @@
 #pragma once
 #include "Core/Base/Timestep.hpp"
 #include <entt.hpp>
-
 #include "Renderer/EditorCamera.hpp"
+
 namespace Sego{
 
 class Entity;
@@ -29,6 +29,7 @@ private:
     friend class Entity;
     friend class SceneSerializer;
     friend class SceneHierarchyPanel;
+    friend class Renderer;
 };
 
 

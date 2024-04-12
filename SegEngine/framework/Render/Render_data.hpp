@@ -5,6 +5,9 @@
 #include "resource/asset/Texture2D.hpp"
 #include "resource/asset/Material.hpp"
 
+
+#include "resource/host_device.h"
+
 namespace Sego{
     struct Node{
         Node* parent;
@@ -35,9 +38,7 @@ namespace Sego{
         VmaBuffer vertexBuffer_;
         VmaBuffer indexBuffer_;
         uint32_t indexCount_;
-        
-        glm::mat4 Spritemodel; //model matrix
-        
+        glm::mat4 Spritemodel;
 
         void destory(){
             vertexBuffer_.destroy();
@@ -54,6 +55,9 @@ namespace Sego{
         std::vector<Texture2D> textures_;
         std::vector<Material> materials_;
         std::vector<Node*> nodes_;
+
+        glm::mat4 Meshmodel_;
+
         void destory(){
             for(auto& node : nodes_){
                 delete node;
@@ -66,8 +70,5 @@ namespace Sego{
             
         }
     };
-    
-    extern std::vector<std::shared_ptr<SpriteRenderData>> g_spriteRenderData;
-    extern std::vector<std::shared_ptr<MeshRenderData>> g_meshRenderData;
 
 }

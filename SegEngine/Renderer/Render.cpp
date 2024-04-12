@@ -1,6 +1,8 @@
 #include "Render.hpp"
 #include "framework/Render/Render_data.hpp"
 #include "Core/Vulkan/Vulkantool.hpp"
+#include "Core/Scene/Scene.hpp"
+#include "Core/Scene/Component.hpp"
 
 namespace Sego{
 
@@ -12,9 +14,7 @@ void Renderer::BeginScene(const Camera& camera, const glm::mat4& transform){
     //glm::vec3 cameraPosition = glm::vec3(transform[3]);
     //Right 
     glm::mat4 view = glm::inverse(transform);
-  
-    Vctx.setProjection(Proj);
-    Vctx.setView(view);
+    m_ViewProj = Proj * view;
 }
 
 void Renderer::BeginScene(const EditorCamera &camera){
@@ -36,13 +36,9 @@ void Renderer::BeginScene(){
 }
 
 void Renderer::EndScene(){
-    g_spriteRenderData.clear(); //Clear Sprite
 
 }
 
-void Renderer::Render(){
-    VulkanRhi::Instance().render();
-}
 
 void Renderer::SetClearColor(const glm::vec4& color){
     VulkanRhi::Instance().setClearColor(color);
@@ -60,27 +56,55 @@ vk::ImageView Renderer::GetColorImageView(){
 const std::vector<uint32_t> Squardindices = {
     0, 1, 2, 2, 3, 0
 };
-//Render Data
-void Renderer::DrawQuad(const glm::mat4& transform, const glm::vec4& color){
-    std::shared_ptr<SpriteRenderData> Rendata = std::make_shared<SpriteRenderData>();
-    std::vector<SpriteVertex> squard = {
-    {{-0.5f, -0.5f,0.0f}, color},
-    {{0.5f, -0.5f,0.0f}, color},
-    {{0.5f, 0.5f,0.0f}, color},
-    {{-0.5f, 0.5f,0.0f}, color}
-    };
 
-    Vulkantool::createVertexBuffer(sizeof(squard[0])* squard.size(),
-    (void*)squard.data(), Rendata->vertexBuffer_);
+void Renderer::Render(Scene* scene){
+    auto& VCtx =  VulkanRhi::Instance();
 
-    Vulkantool::createIndexBuffer(sizeof(Squardindices[0]) * Squardindices.size(),
-    (void*)Squardindices.data(), Rendata->indexBuffer_);
+    //Render 2D
+    std::vector<std::shared_ptr<RenderData>> SpriteRenderDatas;
+    auto view = scene->m_Registry.view<TransformComponent,SpriteRendererComponent>();
+    for(auto entity : view){
+        auto [transform,spriteRenderer] = view.get<TransformComponent,SpriteRendererComponent>(entity);
+        std::shared_ptr<SpriteRenderData> Rendata = std::make_shared<SpriteRenderData>();
+        std::vector<SpriteVertex> squard = {
+        {{-0.5f, -0.5f,0.0f}, spriteRenderer.Color},
+        {{0.5f, -0.5f,0.0f}, spriteRenderer.Color},
+        {{0.5f, 0.5f,0.0f}, spriteRenderer.Color},
+        {{-0.5f, 0.5f,0.0f}, spriteRenderer.Color}
+        };
 
-    Rendata->Spritemodel = transform;
-    Rendata->indexCount_ = Squardindices.size();
-    g_spriteRenderData.emplace_back(Rendata);
+        Vulkantool::createVertexBuffer(sizeof(squard[0])* squard.size(),
+        (void*)squard.data(), Rendata->vertexBuffer_);
+
+        Vulkantool::createIndexBuffer(sizeof(Squardindices[0]) * Squardindices.size(),
+        (void*)Squardindices.data(), Rendata->indexBuffer_);
+        Rendata->Spritemodel= transform.GetTransform();
+
+        Rendata->indexCount_ = Squardindices.size();
+        SpriteRenderDatas.push_back(Rendata);
+    }
+
+    //Push Renderer
+    VCtx.SetRenderDatas(SpriteRenderDatas);
+    
+
+    VulkanRhi::Instance().render();
 }
 
 
+
+
+
+
+
+
+
+
+
+
 }
+
+
+
+
 
