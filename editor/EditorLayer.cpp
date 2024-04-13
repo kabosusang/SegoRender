@@ -18,11 +18,20 @@ namespace Sego{
 void EditorLayer::OnAttach(){
 	
 	m_Renderer = VulkanContext::Instance().GetRenderer();
+	//Color
 	m_Cts = Vulkantool::createSample(vk::Filter::eLinear,vk::Filter::eLinear,1,
 	vk::SamplerAddressMode::eRepeat,vk::SamplerAddressMode::eRepeat,vk::SamplerAddressMode::eRepeat);
 
 	m_color_texture_set = ImGui_ImplVulkan_AddTexture(m_Cts,m_Renderer->GetColorImageView(),
 	VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+	//Depth
+	m_Dts = Vulkantool::createSample(vk::Filter::eLinear,vk::Filter::eLinear,1,
+	vk::SamplerAddressMode::eRepeat,vk::SamplerAddressMode::eRepeat,vk::SamplerAddressMode::eRepeat);
+
+	m_depth_texture_set = ImGui_ImplVulkan_AddTexture(m_Dts,m_Renderer->GetDepthImageView(),
+	VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+
 
 	m_ActiveScene = std::make_shared<Scene>();
 	
@@ -93,6 +102,19 @@ void EditorLayer::OnUpdate(Timestep ts){
 	m_ActiveScene->OnUpdateEditor(ts,m_EditorCamera);
 	//m_ActiveScene->OnUpdateRuntime(ts);
 	
+	auto[mx,my] = ImGui::GetMousePos();
+	mx -= m_ViewportBounds[0].x;
+	my -= m_ViewportBounds[0].y;
+	glm::vec2 viewportsize = m_ViewportBounds[1] - m_ViewportBounds[0];
+
+	int mouseX = (int)mx;
+	int mouseY = (int)my;
+
+	if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportsize.x && mouseY < (int)viewportsize.y){
+		uint32_t id = m_Renderer->ReadPixel(mouseX,mouseY);
+		SG_INFO("Pixel: {0}",id);
+	}
+
 }
 
 void EditorLayer::OnImGuiRender(){
@@ -176,7 +198,13 @@ void EditorLayer::OnImGuiRender(){
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 	ImGui::Begin("Viewport");
-	
+	auto viewportoffset = ImGui::GetCursorPos(); //Include tab bar
+
+	//MousePick
+	//ImVec2 cursor_screen_pos = ImGui::GetCursorScreenPos();
+	//uint32_t mouse_x = static_cast<uint32_t>(ImGui::GetMousePos().x - cursor_screen_pos.x);
+	//uint32_t mouse_y = static_cast<uint32_t>(ImGui::GetMousePos().y - cursor_screen_pos.y);	
+
 	m_ViewportFocused = ImGui::IsWindowFocused();
 	m_ViewportHovered = ImGui::IsWindowHovered();
 	SegEngine::Instance().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
@@ -189,6 +217,15 @@ void EditorLayer::OnImGuiRender(){
 		m_viewportsize = {ViewportPanelSize.x,ViewportPanelSize.y};
 	}
 	ImGui::Image(m_color_texture_set,ViewportPanelSize);
+
+	auto windowSize = ImGui::GetWindowSize();
+	ImVec2 minBound = ImGui::GetWindowPos();
+	minBound.x += viewportoffset.x;
+	minBound.y += viewportoffset.y;
+
+	ImVec2 maxBound = {minBound.x + windowSize.x,minBound.y + windowSize.y};
+	m_ViewportBounds[0] = {minBound.x,minBound.y};
+	m_ViewportBounds[1] = {maxBound.x,maxBound.y};
 
 	// Gizmos
 	Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
@@ -248,26 +285,36 @@ void EditorLayer::OnImGuiRender(){
 	ImGui::End();
 
 
+
 }
 
 void EditorLayer::FramBufferResize(float w,float h){
-	m_Renderer->resizeframbuffer(w,h);
-	m_ActiveScene->OnViewportResize(w,h);
+	uint32_t new_width = static_cast<uint32_t>(w);
+	uint32_t new_height = static_cast<uint32_t>(h);
+
+	m_Renderer->resizeframbuffer(new_width,new_height);
+	m_ActiveScene->OnViewportResize(new_width,new_height);
 	m_EditorCamera.SetViewportSize(w,h);
 
-
+	//Color
 	if (m_color_texture_set != VK_NULL_HANDLE)
 		ImGui_ImplVulkan_RemoveTexture(m_color_texture_set); //remove old texture
 	
 	m_color_texture_set = ImGui_ImplVulkan_AddTexture(m_Cts,m_Renderer->GetColorImageView(),
 	VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
+	//Depth
+	if (m_depth_texture_set != VK_NULL_HANDLE)
+	ImGui_ImplVulkan_RemoveTexture(m_depth_texture_set); //remove old texture
+
+	m_depth_texture_set = ImGui_ImplVulkan_AddTexture(m_Dts,m_Renderer->GetDepthImageView(),
+	VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+
 }
 
 void EditorLayer::OnEvent(Event &e){
 
 	m_EditorCamera.OnEvent(e); //EditorCamera Pull Events
-
 
 	EventDispatcher dispatcher(e);
 	dispatcher.Dispatch<KeyPressedEvent>(SG_BIND_EVENT_FN(EditorLayer::OnKeyPressed));

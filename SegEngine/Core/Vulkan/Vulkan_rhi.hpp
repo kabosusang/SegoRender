@@ -3,6 +3,7 @@
 #include "context.hpp"
 #include "framework/Render/pass/main_pass.hpp"
 #include "framework/Render/pass/ui_pass.hpp"
+#include "framework/Render/pass/pick_pass.hpp"
 
 namespace Sego{
 
@@ -33,9 +34,12 @@ namespace Sego{
         inline uint32_t getImageIndex() { return currentImageIndex_; }
         PFN_vkCmdPushDescriptorSetKHR getCmdPushDescriptorSet() { return vkCmdPushDescriptorSet_; }
         vk::ImageView getColorImageView();
+        vk::ImageView getDepthImageView();
+
+        uint32_t ReadPixel(uint32_t x, uint32_t y) { return pickPass_->ReadPixelInt(x, y);}
+        
+        inline std::vector<VmaBuffer>& getUniformBuffer() { return uniformBuffers_;}
         inline VmaBuffer getCurrentUniformBuffer() { return uniformBuffers_[currentFrame_];}
-
-
         //Render Output Function
         void setClearColor(const glm::vec4& color);
         void setProjection(const glm::mat4& projection);
@@ -43,6 +47,7 @@ namespace Sego{
 
         void SetRenderDatas(std::vector<std::shared_ptr<RenderData>>& render_Datas){
             mainPass_->setRenderDatas(render_Datas);
+            pickPass_->setRenderDatas(render_Datas);
         }
     private:
         glm::mat4 CameraView_ = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -75,13 +80,12 @@ namespace Sego{
         void loadExtensionFuncs();
         void createUniformBuffers();
         //Test RenderPass
+        std::unique_ptr<class UiPass> uiPass_;
         std::unique_ptr<class MainPass> mainPass_;
-        std::unique_ptr<class RenderPass> uiPass_;
+        std::unique_ptr<class PickPass> pickPass_;
 
         //All Render mvp UniformBuffer
         std::vector<VmaBuffer> uniformBuffers_;
-
-
         bool framebufferResized = false;
     };
 

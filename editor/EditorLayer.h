@@ -32,8 +32,13 @@ private:
     std::shared_ptr<Sego::Renderer> m_Renderer;
 
     vk::Sampler m_Cts;
+    vk::Sampler m_Dts;
     vk::DescriptorSet m_color_texture_set;
-    glm::vec2 m_viewportsize;
+    vk::DescriptorSet m_depth_texture_set;
+
+    glm::vec2 m_viewportsize  = {0.0f,0.0f};
+    glm::vec2 m_ViewportBounds[2];
+
     bool m_ViewportFocused = false, m_ViewportHovered = false;
     
     std::shared_ptr<Scene> m_ActiveScene;

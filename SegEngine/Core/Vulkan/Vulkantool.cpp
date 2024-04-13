@@ -213,6 +213,8 @@ uint32_t Vulkantool::calcFormatSize(vk::Format format){
         case vk::Format::eR8G8B8A8Unorm:
         case vk::Format::eR32Sfloat:
         case vk::Format::eD32Sfloat:
+        case vk::Format::eR32Sint:
+        case vk::Format::eR32Uint:
         case vk::Format::eR16G16Sfloat:
             return 4;
         case vk::Format::eR16G16B16A16Sfloat:
@@ -516,6 +518,47 @@ vk::Filter mag_filter, vk::SamplerAddressMode address_mode, vk::ImageUsageFlags 
 
     return vma_image_view_sampler;
 }
+
+void Vulkantool::readImagePixel(vk::Image image, uint32_t width, uint32_t height, vk::Format format, std::vector<uint8_t> &imagedata, vk::ImageLayout initial_layout, uint32_t mip_levels, uint32_t layers, vk::ImageLayout final_layout){
+    // create a staging buffer to copy image data to
+    VmaBuffer staging_buffer;
+    size_t image_size = width * height * calcFormatSize(format) * layers;
+	createBuffer(image_size, vk::BufferUsageFlagBits::eTransferDst, VMA_MEMORY_USAGE_AUTO_PREFER_HOST, staging_buffer);
+    // copy to staging buffer
+    vk::BufferImageCopy region = {};
+    region.setBufferOffset(0)
+          .setBufferRowLength(0)
+          .setBufferImageHeight(0)
+          .setImageSubresource({calcImageAspectFlags(format), mip_levels - 1, 0, layers})
+          .setImageOffset({0, 0, 0})
+          .setImageExtent({width, height, 1});
+    // transition image layout
+    transitionImageLayout(image, initial_layout, vk::ImageLayout::eTransferSrcOptimal, format, mip_levels, layers);
+
+    vk::CommandBuffer cmdbuffer = beginSingleCommands();
+
+    //coyt image to buffer
+    cmdbuffer.copyImageToBuffer(image,vk::ImageLayout::eTransferSrcOptimal,staging_buffer.buffer,1,&region);
+
+    endInstantCommands(cmdbuffer);
+
+    // reset image layouts
+    if (final_layout != vk::ImageLayout::eUndefined)
+    {
+        transitionImageLayout(image, vk::ImageLayout::eTransferSrcOptimal, final_layout, format, mip_levels, layers);
+    }
+
+    // mapping data
+    void* mapped_data = nullptr;
+    vmaMapMemory(Context::Instance().getAllocator(), staging_buffer.allocation, &mapped_data);
+    imagedata.resize(image_size);
+    memcpy(imagedata.data(), mapped_data, image_size);
+    vmaUnmapMemory(Context::Instance().getAllocator(), staging_buffer.allocation);
+    staging_buffer.destroy();
+}
+
+
+
 
 
 

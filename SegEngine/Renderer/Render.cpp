@@ -49,8 +49,15 @@ void Renderer::resizeframbuffer(uint32_t w, uint32_t h)
     VulkanRhi::Instance().resizeframbuffer(w,h);
 }
 
+uint32_t Renderer::ReadPixel(uint32_t x, uint32_t y){
+    return VulkanRhi::Instance().ReadPixel(x,y);
+}
+
 vk::ImageView Renderer::GetColorImageView(){
     return VulkanRhi::Instance().getColorImageView();
+}
+vk::ImageView Renderer::GetDepthImageView(){
+    return VulkanRhi::Instance().getDepthImageView();
 }
 
 const std::vector<uint32_t> Squardindices = {
@@ -59,6 +66,7 @@ const std::vector<uint32_t> Squardindices = {
 
 void Renderer::Render(Scene* scene){
     auto& VCtx =  VulkanRhi::Instance();
+    std::vector<uint32_t> mesh_entity_ids;
 
     //Render 2D
     std::vector<std::shared_ptr<RenderData>> SpriteRenderDatas;
@@ -90,6 +98,7 @@ void Renderer::Render(Scene* scene){
 
     VulkanRhi::Instance().render();
 }
+
 
 
 

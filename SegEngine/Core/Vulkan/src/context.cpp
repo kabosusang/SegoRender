@@ -111,6 +111,8 @@ vk::Device Context::createDevice(vk::SurfaceKHR surface) {
 
     vk::PhysicalDeviceFeatures features;
     features.setSamplerAnisotropy(true);
+    features.setIndependentBlend(true); //independent blend
+  
 
     deviceCreateInfo.setPEnabledFeatures(&features);
     std::vector<vk::DeviceQueueCreateInfo> queueInfos;

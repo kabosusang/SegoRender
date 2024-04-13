@@ -30,6 +30,10 @@ VulkanRhi::VulkanRhi(uint32_t windowWidth, uint32_t windowHeight){
 
     mainPass_ = std::make_unique<MainPass>();
     mainPass_->Init();
+
+    pickPass_ = std::make_unique<PickPass>();
+    pickPass_->Init();
+
 }
 void VulkanRhi::Init(std::vector<const char*>& extensions, 
 Context::GetSurfaceCallback cb, int windowWidth, int windowHeight) {
@@ -122,6 +126,10 @@ void VulkanRhi::loadExtensionFuncs(){
 vk::ImageView VulkanRhi::getColorImageView(){
     return mainPass_->getColorTexture().image_view;
 }
+vk::ImageView VulkanRhi::getDepthImageView(){
+    return mainPass_->getDepthTexture().image_view;
+}
+
 
 void VulkanRhi::render(){
     waitFrame();
@@ -159,6 +167,7 @@ void VulkanRhi::recordFrame(){
     cmdBuffer.begin(beginInfo);
     //record all renderpass
     mainPass_->Render();
+    pickPass_->Render();
     uiPass_->Render();
 
     cmdBuffer.end();
@@ -206,6 +215,8 @@ void VulkanRhi::recreateSwapchain(){
 
 void VulkanRhi::resizeframbuffer(uint32_t w,uint32_t h){
     mainPass_->recreateframbuffer(w,h);
+    pickPass_->recreateframbuffer(w,h);
+  
 }
 
 void VulkanRhi::setClearColor(const glm::vec4& color){

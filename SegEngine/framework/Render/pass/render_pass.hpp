@@ -35,6 +35,7 @@ public:
 
     //Output Function
     virtual void recreateframbuffer();
+    
     virtual void setClearColor(const glm::vec4& color);
     void setRenderDatas(std::vector<std::shared_ptr<RenderData>>& renderDatas){
         renderDatas_ = renderDatas;
@@ -66,7 +67,7 @@ protected:
     std::vector<vk::PipelineLayout> pipelineLayouts_;
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts_;
     vk::DescriptorPool descriptorPool_ = nullptr;
-
+    std::vector<vk::WriteDescriptorSet> desc_writes;
     
     //Renderer Needs---------------------------------------------------------------
     std::vector<vk::Pipeline> pipelines_;

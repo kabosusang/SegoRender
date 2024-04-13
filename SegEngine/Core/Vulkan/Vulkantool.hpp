@@ -93,6 +93,15 @@ public:
         vk::Filter min_filter = vk::Filter::eLinear, vk::Filter mag_filter = vk::Filter::eLinear,
         vk::SamplerAddressMode address_mode = vk::SamplerAddressMode::eRepeat, vk::ImageUsageFlags ext_use_flags =  vk::ImageUsageFlags{});
 
+        static void readImagePixel(vk::Image imaghe,uint32_t width,uint32_t height,vk::Format format,
+        std::vector<uint8_t>& imagedata,vk::ImageLayout initial_layout = vk::ImageLayout::eUndefined,
+        uint32_t mip_levels = 1, uint32_t layers = 1,vk::ImageLayout final_layout = vk::ImageLayout::eUndefined);
+
+
+
+
+
+
 };
 
 }

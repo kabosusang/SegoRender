@@ -19,6 +19,10 @@ public:
     void SetClearColor(const glm::vec4& color);
     void resizeframbuffer(uint32_t w,uint32_t h);
     vk::ImageView GetColorImageView();
+    vk::ImageView GetDepthImageView();
+
+    uint32_t ReadPixel(uint32_t x, uint32_t y);
+
 private:
     glm::mat4 m_ViewProj;
  

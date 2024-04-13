@@ -1,4 +1,5 @@
-#include "main_pass.hpp"
+#include "pch.h"
+#include "pick_pass.hpp"
 #include "Core/Vulkan/Vulkan_rhi.hpp"
 #include "Core/Vulkan/Vulkantool.hpp"
 #include "resource/asset/base/Vertex.hpp"
@@ -6,24 +7,20 @@
 #include "resource/asset/Import/gltf_import.hpp"
 
 namespace Sego{
-
-MainPass::MainPass(){
+PickPass::PickPass(){
 auto& ctx = Context::Instance();
-m_formats ={
-    vk::Format::eR8G8B8A8Srgb,
-    ctx.swapchain->GetDepthFormat()
-    
+    m_formats = {
+        vk::Format::eR8G8B8A8Unorm,
+        ctx.swapchain->GetDepthFormat()
     };
 }
-
-void MainPass::destroy(){
+void PickPass::destroy(){
     RenderPass::destroy();
-    colorIVs_.destroy();
-    depthIVs_.destroy();
+    EntityIV_.destroy();
+    DepthIV_.destroy();
 }
 
-
-void MainPass::createDescriptorSetLayout(){
+void PickPass::createDescriptorSetLayout(){
     descriptorSetLayouts_.resize(2);
     vk::DescriptorSetLayoutCreateInfo desc_set_layout_ci{};
    
@@ -56,7 +53,7 @@ void MainPass::createDescriptorSetLayout(){
     descriptorSetLayouts_[1]= Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci);
 }
 
-void MainPass::createPipelineLayouts(){
+void PickPass::createPipelineLayouts(){
     pipelineLayouts_.resize(2);
     push_constant_ranges_ = {
         {vk::ShaderStageFlagBits::eVertex,0,sizeof(glm::mat4)}
@@ -71,7 +68,7 @@ void MainPass::createPipelineLayouts(){
     //1 Normal GLTF Model Renderer
     pipelineLayouts_[0] = Context::Instance().device.createPipelineLayout(pipeline_layout_ci);
 
-    pipeline_layout_ci.setSetLayoutCount(1)
+     pipeline_layout_ci.setSetLayoutCount(1)
                       .setPSetLayouts(&descriptorSetLayouts_[1])
                       .setPushConstantRangeCount(static_cast<uint32_t>(push_constant_ranges_.size()))
                       .setPPushConstantRanges(push_constant_ranges_.data());
@@ -80,7 +77,7 @@ void MainPass::createPipelineLayouts(){
 
 }
 
-void MainPass::CreatePiepline(){
+void PickPass::CreatePiepline(){
     auto& ctx = Context::Instance();
     pipelines_.resize(2);
     
@@ -205,7 +202,7 @@ void MainPass::CreatePiepline(){
     shader_stage_cis.clear();
     shader_stage_cis  ={
         ctx.shaderManager->LoadShader("resources/shaders/Sprite/Spritevert.spv", vk::ShaderStageFlagBits::eVertex),
-        ctx.shaderManager->LoadShader("resources/shaders/Sprite/Spritefrag.spv", vk::ShaderStageFlagBits::eFragment)
+        ctx.shaderManager->LoadShader("resources/shaders/pick/pick.spv", vk::ShaderStageFlagBits::eFragment)
     };
 
 
@@ -229,13 +226,7 @@ void MainPass::CreatePiepline(){
                    .setVertexBindingDescriptionCount(1)
                    .setPVertexBindingDescriptions(&vertex_binding_desc);
     //color blend
-    colorblendattachment_ci.setBlendEnable(true)
-                           .setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
-                           .setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha)
-                            .setColorBlendOp(vk::BlendOp::eAdd)
-                            .setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
-                            .setDstAlphaBlendFactor(vk::BlendFactor::eZero)
-                            .setAlphaBlendOp(vk::BlendOp::eAdd);
+    colorblendattachment_ci.setBlendEnable(true);
     blend_ci.setAttachments(colorblendattachment_ci)    
             .setLogicOpEnable(false);
     
@@ -258,93 +249,84 @@ void MainPass::CreatePiepline(){
 
 }
 
-void MainPass::CreateFrameBuffer(){
+
+void PickPass::CreateFrameBuffer(){
     auto& ctx = Context::Instance();
-    //Color Image
-    Vulkantool::createImageViewSampler(width_,height_,nullptr,1,1,m_formats[0],
-    vk::Filter::eLinear, vk::Filter::eLinear,vk::SamplerAddressMode::eClampToEdge,
-    colorIVs_, vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eInputAttachment);
-
-    //Depth Image
-    Vulkantool::createImageViewSampler(width_,height_,nullptr,1,1,m_formats[1],
-    vk::Filter::eLinear, vk::Filter::eLinear,vk::SamplerAddressMode::eClampToEdge,
-    depthIVs_, vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eInputAttachment);
-
+    //EntityIV_
+    Vulkantool::createImageAndView(width_,height_,1,1,vk::SampleCountFlagBits::e1,
+    m_formats[0],vk::ImageTiling::eOptimal,vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc,
+    VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,vk::ImageAspectFlagBits::eColor,EntityIV_);
+   //DepthIV_
+    Vulkantool::createImageAndView(width_,height_,1,1,vk::SampleCountFlagBits::e1,
+    m_formats[1],vk::ImageTiling::eOptimal,vk::ImageUsageFlagBits::eDepthStencilAttachment,
+    VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,vk::ImageAspectFlagBits::eDepth,DepthIV_);
+   
     std::vector<vk::ImageView> attachments = { 
-    colorIVs_.image_view ,
-    depthIVs_.image_view
+    EntityIV_.image_view ,
+    DepthIV_.image_view
     };
 
-    
-    vk::FramebufferCreateInfo createInfo;
-    createInfo.setAttachments(attachments)
-                .setLayers(1)
-                .setHeight(height_)
-                .setWidth(width_)
-                .setRenderPass(renderPass_);
-    framebuffer_ = Context::Instance().device.createFramebuffer(createInfo);
-
+    vk::FramebufferCreateInfo framebufferInfo = {};
+    framebufferInfo.setRenderPass(renderPass_)
+                    .setAttachmentCount(2)
+                    .setPAttachments(attachments.data())
+                    .setWidth(width_)
+                    .setHeight(height_)
+                    .setLayers(1);
+    framebuffer_ = Context::Instance().device.createFramebuffer(framebufferInfo);
 }
 
-void MainPass::CreateRenderPass(){
+void PickPass::CreateRenderPass(){
     vk::RenderPassCreateInfo createInfo;
-    std::array<vk::AttachmentDescription,2> Attachments; //color attachment
-    //Color Attachment
-    Attachments[0].setFormat(m_formats[0])
-                   .setSamples(vk::SampleCountFlagBits::e1)
-                   .setLoadOp(vk::AttachmentLoadOp::eClear)
-                   .setStoreOp(vk::AttachmentStoreOp::eStore)
-                   .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-                   .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-                   .setInitialLayout(vk::ImageLayout::eUndefined)
-                   .setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-    //Depth Attachment
-  
-    Attachments[1].setFormat(m_formats[1])
+    std::array<vk::AttachmentDescription, 2> attachments{};
+    attachments[0].setFormat(m_formats[0])
                   .setSamples(vk::SampleCountFlagBits::e1)
                   .setLoadOp(vk::AttachmentLoadOp::eClear)
-                  .setStoreOp(vk::AttachmentStoreOp::eDontCare)
+                  .setStoreOp(vk::AttachmentStoreOp::eStore)
                   .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
                   .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
                   .setInitialLayout(vk::ImageLayout::eUndefined)
-                  .setFinalLayout(vk::ImageLayout::eDepthStencilReadOnlyOptimal);
+                  .setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);
+    attachments[1].setFormat(m_formats[1])
+                  .setSamples(vk::SampleCountFlagBits::e1)
+                  .setLoadOp(vk::AttachmentLoadOp::eClear)
+                  .setStoreOp(vk::AttachmentStoreOp::eStore)
+                  .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+                  .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+                  .setInitialLayout(vk::ImageLayout::eUndefined)
+                  .setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
-    std::array<vk::AttachmentReference,2> AttachmentRef;//color attachment reference
+   std::array<vk::AttachmentReference,2> AttachmentRef;//color attachment reference
     //Color Ref
     AttachmentRef[0].setAttachment(0)
                      .setLayout(vk::ImageLayout::eColorAttachmentOptimal);
     AttachmentRef[1].setAttachment(1)
                      .setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
- 
-    //subpass
-    vk::SubpassDescription subpass; //subpass
-    vk::SubpassDependency dependency; //subpass dependency
-    
-    subpass.setColorAttachmentCount(1)
+
+    vk::SubpassDescription subpass{};
+    subpass.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
+            .setColorAttachmentCount(1)
             .setPColorAttachments(&AttachmentRef[0])
-            .setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
             .setPDepthStencilAttachment(&AttachmentRef[1]);
+    
+    createInfo.setAttachmentCount(attachments.size())
+              .setPAttachments(attachments.data())
+              .setSubpassCount(1)
+              .setPSubpasses(&subpass)
+              .setDependencyCount(0)
+              .setPDependencies(nullptr);
 
-    dependency.setSrcSubpass(VK_SUBPASS_EXTERNAL)
-              .setDstSubpass(0)
-              .setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests )
-              .setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests )
-              .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite);
-
-    createInfo.setAttachments(Attachments)
-              .setSubpasses(subpass)
-              .setDependencies(dependency);
-            
     renderPass_ = Context::Instance().device.createRenderPass(createInfo);
 }
 
-void MainPass::Render(){
+void PickPass::Render(){
     auto& ctx = Context::Instance();
-    auto& VulkanRhi = VulkanRhi::Instance();
-    auto cmdBuffer = VulkanRhi.getCommandBuffer();
-    
+    auto& Vctx = VulkanRhi::Instance();
+
+    auto cmdBuffer =Vctx.getCommandBuffer();
+   
     std::array<vk::ClearValue,2> clearValues{};
-    clearValues[0].setColor(vk::ClearColorValue(reinterpret_cast<vk::ClearColorValue&>(clearColor_)));
+    clearValues[0].setColor({0.0f,0.0f,0.0f,1.0f});
     clearValues[1].setDepthStencil({1.0f,0});
 
     vk::RenderPassBeginInfo renderPassBegin{};
@@ -355,9 +337,7 @@ void MainPass::Render(){
    
     cmdBuffer.beginRenderPass(&renderPassBegin, vk::SubpassContents::eInline);
     vk::Viewport viewport{};
-    viewport.setX(0.0f)
-            .setY(0.0f)
-            .setWidth(static_cast<float>(width_))
+    viewport.setWidth(static_cast<float>(width_))
             .setHeight(static_cast<float>(height_))
             .setMinDepth(0.0f)
             .setMaxDepth(1.0f);
@@ -368,17 +348,62 @@ void MainPass::Render(){
     cmdBuffer.setScissor(0, 1, &scissor);
 
     //pipelines_[0] Normal GLTF Model Renderer
+   uint32_t entity_index = 0;
     for(const auto& Rendata : renderDatas_){
+      
        if (Rendata->type == RenderDataType::Sprite){
             std::shared_ptr<SpriteRenderData> spritedata = std::static_pointer_cast<SpriteRenderData>(Rendata);
             render_sprite(cmdBuffer,spritedata);
        }
     }
-
     cmdBuffer.endRenderPass();
+
+    std::vector<uint8_t> image_data;
+    Vulkantool::readImagePixel(EntityIV_.image(),width_,height_,m_formats[0],image_data);
+    
+    SelectEntity = decodeEntityID(&image_data[(m_mouse_y * width_ + m_mouse_x) * 4]);
+ 
+}
+ 
+uint32_t PickPass::ReadPixelInt(uint32_t mouse_x, uint32_t mouse_y)
+{
+    m_mouse_x = (uint32_t)(mouse_x * scale_ratio_);
+    m_mouse_y = (uint32_t)(mouse_y * scale_ratio_);
+    m_mouse_x > width_ ? width_ : m_mouse_x;
+    m_mouse_y > height_ ? height_ : m_mouse_y;
+
+    return SelectEntity;
 }
 
-void MainPass::render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<MeshRenderData> Rendata){
+
+uint32_t PickPass::decodeEntityID(const uint8_t *color)
+{   
+    uint32_t id;
+    id = color[0] + (color[1] << 8) + (color[2] << 16) - 1;
+    return id;
+}
+
+#define MAX_SIZE 124u
+void PickPass::recreateframbuffer(uint32_t width, uint32_t height){
+   
+   if (width > height)
+		{
+			width_ = std::min(width, MAX_SIZE);
+			height_ = width_ * height / width;
+			scale_ratio_ = (float)width_ / width;
+		}
+		else
+		{
+			height_ = std::min(height, MAX_SIZE);
+			width_ = height_ * width / height;
+			scale_ratio_ = (float)height_ / height;
+		}
+	CreateFrameBuffer();
+}
+
+
+
+void PickPass::render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<MeshRenderData> Rendata){
     auto& VulkanRhi = VulkanRhi::Instance();
     
     //pipelines_[0] Normal GLTF Model Renderer
@@ -407,7 +432,7 @@ void MainPass::render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<MeshRende
 }
 
 //2. Sprite Renderer
-void MainPass::render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteRenderData> Rendata){
+void PickPass::render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteRenderData> Rendata){
     auto& VulkanRhi = VulkanRhi::Instance();
     
     //pipelines_[1] Sprite Renderer
@@ -434,7 +459,7 @@ void MainPass::render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteR
 }
 
 
-void MainPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelineLayout, Node* node){
+void PickPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelineLayout, Node* node){
      auto& VulkanRhi = VulkanRhi::Instance();
 
     if(node->mesh.primitives.size() > 0){
@@ -465,27 +490,7 @@ void MainPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelin
 		}
 }
 
-void MainPass::recreateframbuffer(uint32_t width,uint32_t height){
-    auto& ctx = Context::Instance();
-    ctx.device.waitIdle();
-    ctx.device.destroyFramebuffer(framebuffer_);
-    depthIVs_.destroy();
-    colorIVs_.destroy();
 
-    width_ = width;
-    height_= height;
-    CreateFrameBuffer();
-    
+
+
 }
-
-
-
-
-
-
-
-   
-}
-
-
-
