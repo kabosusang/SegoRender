@@ -3,6 +3,7 @@
 #include "Core/Vulkan/VulkanTool.hpp"
 #include "Core/Scene/Scene.hpp"
 #include "Panels/SceneHierarchyPanel.hpp"
+#include "Panels/ContentBrowsPanel.hpp"
 
 #include "Renderer/EditorCamera.hpp"
 
@@ -50,7 +51,7 @@ private:
     int m_GizmoType = -1;
     //Panels
     SceneHierarchyPanel m_SceneHierarchyPanel;
-    
+    ContentBrowsPanel m_ContentBrowsPanel;
 };
 
 

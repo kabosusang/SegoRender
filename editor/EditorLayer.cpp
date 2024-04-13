@@ -194,6 +194,7 @@ void EditorLayer::OnImGuiRender(){
 		}
 	//Scene Hierarchy
 	m_SceneHierarchyPanel.OnImGuiRender();
+	m_ContentBrowsPanel.OnImGuiRender();
 
 	ImGui::Begin("Stats");
 	std::string name = "None";
@@ -205,35 +206,31 @@ void EditorLayer::OnImGuiRender(){
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 	ImGui::Begin("Viewport");
-	ImVec2 minBound = ImGui::GetWindowContentRegionMin();
-	ImVec2 maxBound = ImGui::GetWindowContentRegionMax();
-
-	minBound.x += ImGui::GetWindowPos().x;
-	minBound.y += ImGui::GetWindowPos().y;
-	maxBound.x += ImGui::GetWindowPos().x;
-	maxBound.y += ImGui::GetWindowPos().y;
-
-	m_ViewportBounds[0] = { minBound.x, minBound.y };
-	m_ViewportBounds[1] = { maxBound.x, maxBound.y };
-
-	//MousePick
-	//ImVec2 cursor_screen_pos = ImGui::GetCursorScreenPos();
-	//uint32_t mouse_x = static_cast<uint32_t>(ImGui::GetMousePos().x - cursor_screen_pos.x);
-	//uint32_t mouse_y = static_cast<uint32_t>(ImGui::GetMousePos().y - cursor_screen_pos.y);	
+	auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
+	auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
+	auto viewportOffset = ImGui::GetWindowPos();
+	m_ViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
+	m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
 
 	m_ViewportFocused = ImGui::IsWindowFocused();
 	m_ViewportHovered = ImGui::IsWindowHovered();
+
 	SegEngine::Instance().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
 	
 	ImVec2 ViewportPanelSize = ImGui::GetContentRegionAvail();
 
+	static int firstResieze = 1;
+	if (firstResieze){
+		FramBufferResize(ViewportPanelSize.x,ViewportPanelSize.y);
+		firstResieze = 0;
+	}
+
 	if(m_viewportsize != *((glm::vec2*)&ViewportPanelSize) && 
-	ViewportPanelSize.x > 0 && ViewportPanelSize.y > 0){
+		ViewportPanelSize.x > 0 && ViewportPanelSize.y > 0){
 		FramBufferResize(ViewportPanelSize.x,ViewportPanelSize.y);
 		m_viewportsize = {ViewportPanelSize.x,ViewportPanelSize.y};
 	}
 	ImGui::Image(m_color_texture_set,ViewportPanelSize);
-
 
 	// Gizmos
 	Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
@@ -242,7 +239,7 @@ void EditorLayer::OnImGuiRender(){
 		ImGuizmo::SetDrawlist();
 		float windowWidth = (float)ImGui::GetWindowWidth();
 		float windowHeight = (float)ImGui::GetWindowHeight();
-		ImGuizmo::SetRect(minBound.x, minBound.y, maxBound.x - minBound.x, maxBound.y - minBound.y);
+		ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y, m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y);
 		
 		//Camera
 		//Runtime camera from entity

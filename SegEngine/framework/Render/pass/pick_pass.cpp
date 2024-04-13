@@ -386,7 +386,7 @@ uint32_t PickPass::decodeEntityID(const uint8_t *color)
 
 #define MAX_SIZE 124u
 void PickPass::recreateframbuffer(uint32_t width, uint32_t height){
-   
+    
    if (width > height)
 		{
 			width_ = std::min(width, MAX_SIZE);
