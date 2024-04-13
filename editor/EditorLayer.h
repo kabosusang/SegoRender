@@ -23,6 +23,7 @@ public:
     void OnEvent(Event& e) override;
 private:
     bool OnKeyPressed(KeyPressedEvent& e);
+    bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
 
     void NewScene();
     void OpenScene();
@@ -43,6 +44,7 @@ private:
     
     std::shared_ptr<Scene> m_ActiveScene;
     Entity m_CameraEntity;
+    Entity m_HoveredEntity;
 
     EditorCamera m_EditorCamera;
     int m_GizmoType = -1;

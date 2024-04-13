@@ -39,6 +39,9 @@ namespace Sego{
         VmaBuffer indexBuffer_;
         uint32_t indexCount_;
         glm::mat4 Spritemodel;
+        // Editor-only
+        uint32_t EntityID = -1;
+
 
         void destory(){
             vertexBuffer_.destroy();

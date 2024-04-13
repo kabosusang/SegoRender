@@ -1,9 +1,14 @@
 #pragma once
 #include "Core/Vulkan/Vulkan_rhi.hpp"
 #include "EditorCamera.hpp"
+#include "framework/Render/Render_data.hpp"
+#include "Core/Scene/Component.hpp"
+
 
 namespace Sego{
 class Scene;
+
+
 class Renderer{
 public:
     void Init();
@@ -14,6 +19,7 @@ public:
 
     void EndScene();
     void Render(Scene* scene);
+    void DrawSprite(const glm::mat4& transform,SpriteRendererComponent& src,int entityID, std::vector<std::shared_ptr<RenderData>>& SpriteRenderDatas);
 
     // Output Function
     void SetClearColor(const glm::vec4& color);

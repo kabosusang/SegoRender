@@ -46,7 +46,12 @@ void SceneHierarchyPanel::OnImGuiRender(){
     ImGui::End();
 }
 
-void SceneHierarchyPanel::DrawEnityNode(Entity entity){
+void SceneHierarchyPanel::SetSelectedEntity(Entity entity){
+    m_SelectionContext = entity;
+}
+
+void SceneHierarchyPanel::DrawEnityNode(Entity entity)
+{
 
     auto& tag = entity.GetComponent<TagComponent>().Tag;
     
@@ -78,7 +83,6 @@ void SceneHierarchyPanel::DrawEnityNode(Entity entity){
         if(m_SelectionContext == entity)
             m_SelectionContext = {};
     }
-    
 }
 
 static void DrawVec3Control(const std::string& label,glm::vec3& valuesm,

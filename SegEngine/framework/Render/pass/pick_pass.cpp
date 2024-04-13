@@ -10,7 +10,7 @@ namespace Sego{
 PickPass::PickPass(){
 auto& ctx = Context::Instance();
     m_formats = {
-        vk::Format::eR8G8B8A8Unorm,
+        vk::Format::eR32Sint,
         ctx.swapchain->GetDepthFormat()
     };
 }
@@ -56,7 +56,8 @@ void PickPass::createDescriptorSetLayout(){
 void PickPass::createPipelineLayouts(){
     pipelineLayouts_.resize(2);
     push_constant_ranges_ = {
-        {vk::ShaderStageFlagBits::eVertex,0,sizeof(glm::mat4)}
+        {vk::ShaderStageFlagBits::eVertex,0,sizeof(glm::mat4)},
+        {vk::ShaderStageFlagBits::eFragment, sizeof(glm::mat4), sizeof(int)}
     };
     
     vk::PipelineLayoutCreateInfo pipeline_layout_ci{};
@@ -161,7 +162,7 @@ void PickPass::CreatePiepline(){
                     .setMaxDepthBounds(1.0f);
 
     //7. color blending
-    colorblendattachment_ci.setBlendEnable(true)
+    colorblendattachment_ci.setBlendEnable(false)
                  .setColorWriteMask(vk::ColorComponentFlagBits::eA|
                                     vk::ColorComponentFlagBits::eB|
                                     vk::ColorComponentFlagBits::eG|
@@ -226,7 +227,7 @@ void PickPass::CreatePiepline(){
                    .setVertexBindingDescriptionCount(1)
                    .setPVertexBindingDescriptions(&vertex_binding_desc);
     //color blend
-    colorblendattachment_ci.setBlendEnable(true);
+    colorblendattachment_ci.setBlendEnable(false);
     blend_ci.setAttachments(colorblendattachment_ci)    
             .setLogicOpEnable(false);
     
@@ -448,7 +449,7 @@ void PickPass::render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteR
     addBufferDescriptorSet(desc_writes, desc_buffer_infos[0], 
     VulkanRhi.getCurrentUniformBuffer(), 0);
 
-    updatePushConstants(cmdBuffer,pipelineLayouts_[1],{&Rendata->Spritemodel});
+    updatePushConstants(cmdBuffer,pipelineLayouts_[1],{&Rendata->Spritemodel,&Rendata->EntityID});
     //2. Image Sample TODO: SpriteRendererComponent
     
     VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,

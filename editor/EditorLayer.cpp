@@ -12,8 +12,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "Math/Math.h"
 
-namespace Sego{
 
+namespace Sego{
 
 void EditorLayer::OnAttach(){
 	
@@ -111,8 +111,8 @@ void EditorLayer::OnUpdate(Timestep ts){
 	int mouseY = (int)my;
 
 	if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportsize.x && mouseY < (int)viewportsize.y){
-		uint32_t id = m_Renderer->ReadPixel(mouseX,mouseY);
-		SG_INFO("Pixel: {0}",id);
+		int id = static_cast<int>(m_Renderer->ReadPixel(mouseX,mouseY));
+		m_HoveredEntity = id == -1 ? Entity() : Entity{(entt::entity)id,m_ActiveScene.get()};
 	}
 
 }
@@ -195,10 +195,26 @@ void EditorLayer::OnImGuiRender(){
 	//Scene Hierarchy
 	m_SceneHierarchyPanel.OnImGuiRender();
 
+	ImGui::Begin("Stats");
+	std::string name = "None";
+	if (m_HoveredEntity){
+		name = m_HoveredEntity.GetComponent<TagComponent>().Tag;
+	}
+	ImGui::Text("Hovered Entity: %s",name.c_str());
+	ImGui::End();
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 	ImGui::Begin("Viewport");
-	auto viewportoffset = ImGui::GetCursorPos(); //Include tab bar
+	ImVec2 minBound = ImGui::GetWindowContentRegionMin();
+	ImVec2 maxBound = ImGui::GetWindowContentRegionMax();
+
+	minBound.x += ImGui::GetWindowPos().x;
+	minBound.y += ImGui::GetWindowPos().y;
+	maxBound.x += ImGui::GetWindowPos().x;
+	maxBound.y += ImGui::GetWindowPos().y;
+
+	m_ViewportBounds[0] = { minBound.x, minBound.y };
+	m_ViewportBounds[1] = { maxBound.x, maxBound.y };
 
 	//MousePick
 	//ImVec2 cursor_screen_pos = ImGui::GetCursorScreenPos();
@@ -218,14 +234,6 @@ void EditorLayer::OnImGuiRender(){
 	}
 	ImGui::Image(m_color_texture_set,ViewportPanelSize);
 
-	auto windowSize = ImGui::GetWindowSize();
-	ImVec2 minBound = ImGui::GetWindowPos();
-	minBound.x += viewportoffset.x;
-	minBound.y += viewportoffset.y;
-
-	ImVec2 maxBound = {minBound.x + windowSize.x,minBound.y + windowSize.y};
-	m_ViewportBounds[0] = {minBound.x,minBound.y};
-	m_ViewportBounds[1] = {maxBound.x,maxBound.y};
 
 	// Gizmos
 	Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
@@ -234,7 +242,7 @@ void EditorLayer::OnImGuiRender(){
 		ImGuizmo::SetDrawlist();
 		float windowWidth = (float)ImGui::GetWindowWidth();
 		float windowHeight = (float)ImGui::GetWindowHeight();
-		ImGuizmo::SetRect(ImGui::GetWindowPos().x,ImGui::GetWindowPos().y,windowWidth,windowHeight);
+		ImGuizmo::SetRect(minBound.x, minBound.y, maxBound.x - minBound.x, maxBound.y - minBound.y);
 		
 		//Camera
 		//Runtime camera from entity
@@ -313,11 +321,21 @@ void EditorLayer::FramBufferResize(float w,float h){
 }
 
 void EditorLayer::OnEvent(Event &e){
-
 	m_EditorCamera.OnEvent(e); //EditorCamera Pull Events
 
 	EventDispatcher dispatcher(e);
 	dispatcher.Dispatch<KeyPressedEvent>(SG_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
+	dispatcher.Dispatch<MouseButtonPressedEvent>(SG_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed));
+}
+
+bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e){
+	if (e.GetMouseButton() == Mouse::ButtonLeft && !ImGuizmo::IsOver() && !Input::ISKeyPressed(KeySanCode::LALT)){
+
+		if (m_ViewportHovered){
+			m_SceneHierarchyPanel.SetSelectedEntity(m_HoveredEntity);
+		}
+	}
+	return false;
 }
 
 bool EditorLayer::OnKeyPressed(KeyPressedEvent& e){

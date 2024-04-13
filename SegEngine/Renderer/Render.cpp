@@ -1,8 +1,7 @@
 #include "Render.hpp"
-#include "framework/Render/Render_data.hpp"
 #include "Core/Vulkan/Vulkantool.hpp"
 #include "Core/Scene/Scene.hpp"
-#include "Core/Scene/Component.hpp"
+
 
 namespace Sego{
 
@@ -56,7 +55,9 @@ uint32_t Renderer::ReadPixel(uint32_t x, uint32_t y){
 vk::ImageView Renderer::GetColorImageView(){
     return VulkanRhi::Instance().getColorImageView();
 }
-vk::ImageView Renderer::GetDepthImageView(){
+
+vk::ImageView Renderer::GetDepthImageView()
+{
     return VulkanRhi::Instance().getDepthImageView();
 }
 
@@ -64,34 +65,37 @@ const std::vector<uint32_t> Squardindices = {
     0, 1, 2, 2, 3, 0
 };
 
+void Renderer::DrawSprite(const glm::mat4& transform,SpriteRendererComponent& src,int entityID, std::vector<std::shared_ptr<RenderData>>& SpriteRenderDatas){
+
+std::shared_ptr<SpriteRenderData> Rendata = std::make_shared<SpriteRenderData>();
+    std::vector<SpriteVertex> squard = {
+    {{-0.5f, -0.5f,0.0f}, src.Color},
+    {{0.5f, -0.5f,0.0f}, src.Color},
+    {{0.5f, 0.5f,0.0f}, src.Color},
+    {{-0.5f, 0.5f,0.0f}, src.Color}
+    };
+
+    Vulkantool::createVertexBuffer(sizeof(squard[0])* squard.size(),
+    (void*)squard.data(), Rendata->vertexBuffer_);
+
+    Vulkantool::createIndexBuffer(sizeof(Squardindices[0]) * Squardindices.size(),
+    (void*)Squardindices.data(), Rendata->indexBuffer_);
+    Rendata->Spritemodel= transform;
+    Rendata->indexCount_ = Squardindices.size();
+    Rendata->EntityID = entityID + 1; //why plus 1 
+    SpriteRenderDatas.push_back(Rendata);
+}
+
 void Renderer::Render(Scene* scene){
     auto& VCtx =  VulkanRhi::Instance();
-    std::vector<uint32_t> mesh_entity_ids;
 
     //Render 2D
     std::vector<std::shared_ptr<RenderData>> SpriteRenderDatas;
     auto view = scene->m_Registry.view<TransformComponent,SpriteRendererComponent>();
     for(auto entity : view){
         auto [transform,spriteRenderer] = view.get<TransformComponent,SpriteRendererComponent>(entity);
-        std::shared_ptr<SpriteRenderData> Rendata = std::make_shared<SpriteRenderData>();
-        std::vector<SpriteVertex> squard = {
-        {{-0.5f, -0.5f,0.0f}, spriteRenderer.Color},
-        {{0.5f, -0.5f,0.0f}, spriteRenderer.Color},
-        {{0.5f, 0.5f,0.0f}, spriteRenderer.Color},
-        {{-0.5f, 0.5f,0.0f}, spriteRenderer.Color}
-        };
-
-        Vulkantool::createVertexBuffer(sizeof(squard[0])* squard.size(),
-        (void*)squard.data(), Rendata->vertexBuffer_);
-
-        Vulkantool::createIndexBuffer(sizeof(Squardindices[0]) * Squardindices.size(),
-        (void*)Squardindices.data(), Rendata->indexBuffer_);
-        Rendata->Spritemodel= transform.GetTransform();
-
-        Rendata->indexCount_ = Squardindices.size();
-        SpriteRenderDatas.push_back(Rendata);
+        DrawSprite(transform.GetTransform(),spriteRenderer,(int)entity,SpriteRenderDatas);
     }
-
     //Push Renderer
     VCtx.SetRenderDatas(SpriteRenderDatas);
     
