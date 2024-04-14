@@ -11,6 +11,12 @@ namespace Sego{
         void destory();
     };
 
+    class EditorUI{
+    public:
+        static std::shared_ptr<ImGuiImage> LoadFormFile(const std::string& path);
+
+    };
+
 
 
 

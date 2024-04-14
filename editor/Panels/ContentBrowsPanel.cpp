@@ -2,23 +2,67 @@
 #include "ContentBrowsPanel.hpp"
 #include <imgui.h>
 
+
 namespace Sego{
     //once we have projects,change this to the project directory
-    constexpr char* s_AsstsDirectory = "resources/assets";
+    static const std::filesystem::path s_AssetPath = "resources";
 
+ContentBrowsPanel::ContentBrowsPanel():m_CurrentDirectory(s_AssetPath){
+    m_DirectoryIcon = EditorUI::LoadFormFile("resources/Settings/icons/ContentBrowser/DirectoryIcon.png");
+    m_FileIcon = EditorUI::LoadFormFile("resources/Settings/icons/ContentBrowser/FileIcon.png");
+
+}
+//resources/Settings/icons/ContentBrowser
 void ContentBrowsPanel::OnImGuiRender(){
     ImGui::Begin("Content Browser");
-
-
-    for (auto& p :  std::filesystem::directory_iterator(s_AsstsDirectory)){
-        std::string path = p.path().string();
-        ImGui::Text("%s", path.c_str());
+    if (m_CurrentDirectory != std::filesystem::path(s_AssetPath)){
+        if (ImGui::Button("<-")){
+            m_CurrentDirectory = m_CurrentDirectory.parent_path();
+        }
     }
+
+    static float padding = 16.0f;
+    static float thumbnailSize = 128;
+    float cellSize = thumbnailSize + padding;
+
+    float panelWidth = ImGui::GetContentRegionAvail().x;
+    int columnCount = (int)(panelWidth / cellSize);
+    if (columnCount < 1) columnCount = 1;
+
+    ImGui::Columns(columnCount, 0, false);
+
+    for (auto& directoryEntry :  std::filesystem::directory_iterator(m_CurrentDirectory)){
+        const auto& path = directoryEntry.path();
+        auto relativePath = std::filesystem::relative(path,s_AssetPath);
+        std::string filenameString = relativePath.filename().string();
+
+        std::shared_ptr<ImGuiImage> icon = directoryEntry.is_directory() ? m_DirectoryIcon : m_FileIcon;
+        ImGui::ImageButton((ImTextureID)icon->tex_id, {thumbnailSize,thumbnailSize},{0,1},{1,0});
+        
+        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)){
+            
+            if (directoryEntry.is_directory()){
+                m_CurrentDirectory /= path.filename();
+            }
+        }
+        ImGui::TextWrapped(filenameString.c_str());
+        ImGui::NextColumn();
+
+    }
+    ImGui::Columns(1);
+
+    ImGui::SliderFloat("Thumbnail Size", &thumbnailSize, 16, 512);
+    ImGui::SliderFloat("Padding", &padding, 0, 32);
 
     ImGui::End();
 
-
 }
+
+
+
+
+
+
 
 }
 

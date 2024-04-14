@@ -20,17 +20,18 @@ namespace Sego{
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-
+       
         //Load imgui setting 
         ImGui::LoadIniSettingsFromDisk("resources/Settings/imgui.ini");
         ImGui::SaveIniSettingsToDisk("resources/Settings/imgui.ini");
 		// setup Dear ImGui style
         float scale = 1.50f;
         ImGuiStyle& style = ImGui::GetStyle();
-
+        
+        float fontSize = 18.0f;
         //style.ScaleAllSizes(scale);
-        io.Fonts->AddFontFromFileTTF("resources/Fonts/open-sans/OpenSans-Bold.ttf",18.0f);
-        io.FontDefault = io.Fonts->AddFontFromFileTTF("resources/Fonts/open-sans/OpenSans-Regular.ttf",18.0f);
+        io.Fonts->AddFontFromFileTTF("resources/Fonts/open-sans/OpenSans-Bold.ttf",fontSize);
+        io.FontDefault = io.Fonts->AddFontFromFileTTF("resources/Fonts/open-sans/OpenSans-Regular.ttf",fontSize);
         //io.FontDefault = io.Fonts->AddFontFromFileTTF("resources/Fonts/SourceHansTtf/SourceHanSerifCN-Regular.ttf",18.0f);
     
 		ImGui::StyleColorsDark();

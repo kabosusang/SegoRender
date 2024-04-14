@@ -112,7 +112,7 @@ void EditorLayer::OnUpdate(Timestep ts){
 
 	if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportsize.x && mouseY < (int)viewportsize.y){
 		int id = static_cast<int>(m_Renderer->ReadPixel(mouseX,mouseY));
-		SG_CORE_ERROR("Pixel ID: {0}",id);
+		
 		if (id < static_cast<int>(m_ActiveScene->GetRegistry().view<entt::entity>().size_hint())){
 			m_HoveredEntity = id == -1 ? Entity() : Entity{(entt::entity)id,m_ActiveScene.get()};
 		}
