@@ -349,7 +349,7 @@ void PickPass::Render(){
     cmdBuffer.setScissor(0, 1, &scissor);
 
     //pipelines_[0] Normal GLTF Model Renderer
-   uint32_t entity_index = 0;
+
     for(const auto& Rendata : renderDatas_){
       
        if (Rendata->type == RenderDataType::Sprite){
@@ -363,15 +363,12 @@ void PickPass::Render(){
     Vulkantool::readImagePixel(EntityIV_.image(),width_,height_,m_formats[0],image_data);
     
     SelectEntity = decodeEntityID(&image_data[(m_mouse_y * width_ + m_mouse_x) * 4]);
- 
 }
  
 uint32_t PickPass::ReadPixelInt(uint32_t mouse_x, uint32_t mouse_y)
 {
     m_mouse_x = (uint32_t)(mouse_x * scale_ratio_);
     m_mouse_y = (uint32_t)(mouse_y * scale_ratio_);
-    m_mouse_x > width_ ? width_ : m_mouse_x;
-    m_mouse_y > height_ ? height_ : m_mouse_y;
 
     return SelectEntity;
 }

@@ -20,6 +20,10 @@ namespace Sego{
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
+
+        //Load imgui setting 
+        ImGui::LoadIniSettingsFromDisk("resources/Settings/imgui.ini");
+        ImGui::SaveIniSettingsToDisk("resources/Settings/imgui.ini");
 		// setup Dear ImGui style
         float scale = 1.50f;
         ImGuiStyle& style = ImGui::GetStyle();
@@ -92,6 +96,8 @@ void UiPass::destroy(){
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
     RenderPass::destroy();
+    //Save imgui setting
+  
 }
 
 void UiPass::createDescriptorPool(){

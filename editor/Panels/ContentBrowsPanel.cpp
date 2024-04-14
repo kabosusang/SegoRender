@@ -2,11 +2,9 @@
 #include "ContentBrowsPanel.hpp"
 #include <imgui.h>
 
-#include <filesystem>
-
 namespace Sego{
     //once we have projects,change this to the project directory
-    constexpr char* s_AsstsDirectory = "resources";
+    constexpr char* s_AsstsDirectory = "resources/assets";
 
 void ContentBrowsPanel::OnImGuiRender(){
     ImGui::Begin("Content Browser");
