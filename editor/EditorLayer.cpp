@@ -221,11 +221,6 @@ void EditorLayer::OnImGuiRender(){
 	
 	ImVec2 ViewportPanelSize = ImGui::GetContentRegionAvail();
 
-	static int firstResieze = 1;
-	if (firstResieze){
-		FramBufferResize(ViewportPanelSize.x,ViewportPanelSize.y);
-		firstResieze = 0;
-	}
 
 	if(m_viewportsize != *((glm::vec2*)&ViewportPanelSize) && 
 		ViewportPanelSize.x > 0 && ViewportPanelSize.y > 0){
@@ -290,9 +285,6 @@ void EditorLayer::OnImGuiRender(){
 	ImGui::End();
 	ImGui::PopStyleVar();
 	ImGui::End();
-
-
-
 }
 
 void EditorLayer::FramBufferResize(float w,float h){

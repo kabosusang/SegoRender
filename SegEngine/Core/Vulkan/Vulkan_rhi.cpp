@@ -216,7 +216,6 @@ void VulkanRhi::recreateSwapchain(){
 void VulkanRhi::resizeframbuffer(uint32_t w,uint32_t h){
     mainPass_->recreateframbuffer(w,h);
     pickPass_->recreateframbuffer(w,h);
-  
 }
 
 void VulkanRhi::setClearColor(const glm::vec4& color){

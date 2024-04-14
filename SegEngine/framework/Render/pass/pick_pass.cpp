@@ -361,15 +361,18 @@ void PickPass::Render(){
 
     std::vector<uint8_t> image_data;
     Vulkantool::readImagePixel(EntityIV_.image(),width_,height_,m_formats[0],image_data);
-    
-    SelectEntity = decodeEntityID(&image_data[(m_mouse_y * width_ + m_mouse_x) * 4]);
+    if (m_mouse_x < width_ && m_mouse_y < height_) //缝缝补补
+    { 
+        SelectEntity = decodeEntityID(&image_data[(m_mouse_y * width_ + m_mouse_x) * 4]);
+    }
+
 }
  
 uint32_t PickPass::ReadPixelInt(uint32_t mouse_x, uint32_t mouse_y)
 {
     m_mouse_x = (uint32_t)(mouse_x * scale_ratio_);
     m_mouse_y = (uint32_t)(mouse_y * scale_ratio_);
-
+  
     return SelectEntity;
 }
 
@@ -381,21 +384,26 @@ uint32_t PickPass::decodeEntityID(const uint8_t *color)
     return id;
 }
 
-#define MAX_SIZE 124u
+#define MAX_SIZE 512u
 void PickPass::recreateframbuffer(uint32_t width, uint32_t height){
-    
+    auto& ctx = Context::Instance();
+    ctx.device.waitIdle();
+    ctx.device.destroyFramebuffer(framebuffer_);
+    EntityIV_.destroy();
+    DepthIV_.destroy();
+
    if (width > height)
-		{
-			width_ = std::min(width, MAX_SIZE);
-			height_ = width_ * height / width;
-			scale_ratio_ = (float)width_ / width;
-		}
-		else
-		{
-			height_ = std::min(height, MAX_SIZE);
-			width_ = height_ * width / height;
-			scale_ratio_ = (float)height_ / height;
-		}
+    {
+        width_ = std::min(width, MAX_SIZE);
+        height_ = width_ * height / width;
+        scale_ratio_ = (float)width_ / width;
+    }
+    else
+    {
+        height_ = std::min(height, MAX_SIZE);
+        width_ = height_ * width / height;
+        scale_ratio_ = (float)height_ / height;
+    }
 	CreateFrameBuffer();
 }
 
