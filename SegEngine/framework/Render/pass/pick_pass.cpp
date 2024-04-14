@@ -384,7 +384,7 @@ uint32_t PickPass::decodeEntityID(const uint8_t *color)
     return id;
 }
 
-#define MAX_SIZE 512u
+#define MAX_SIZE 124u  //why 124?
 void PickPass::recreateframbuffer(uint32_t width, uint32_t height){
     auto& ctx = Context::Instance();
     ctx.device.waitIdle();
