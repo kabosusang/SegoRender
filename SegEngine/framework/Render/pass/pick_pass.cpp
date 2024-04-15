@@ -247,7 +247,7 @@ void PickPass::CreatePiepline(){
                .setRenderPass(renderPass_);
     Result = ctx.device.createGraphicsPipeline(nullptr, pipeline_ci);
     pipelines_[1] = Result.value;
-
+ 
 }
 
 

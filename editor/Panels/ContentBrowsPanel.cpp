@@ -5,7 +5,7 @@
 
 namespace Sego{
     //once we have projects,change this to the project directory
-    static const std::filesystem::path s_AssetPath = "resources";
+    extern const std::filesystem::path s_AssetPath = "resources";
 
 ContentBrowsPanel::ContentBrowsPanel():m_CurrentDirectory(s_AssetPath){
     m_DirectoryIcon = EditorUI::LoadFormFile("resources/Settings/icons/ContentBrowser/DirectoryIcon.png");
@@ -32,9 +32,12 @@ void ContentBrowsPanel::OnImGuiRender(){
     ImGui::Columns(columnCount, 0, false);
 
     for (auto& directoryEntry :  std::filesystem::directory_iterator(m_CurrentDirectory)){
+        
         const auto& path = directoryEntry.path();
         auto relativePath = std::filesystem::relative(path,s_AssetPath);
         std::string filenameString = relativePath.filename().string();
+        //id
+        ImGui::PushID(filenameString.c_str());
 
         std::shared_ptr<ImGuiImage> icon = directoryEntry.is_directory() ? m_DirectoryIcon : m_FileIcon;
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0,0,0,0));
@@ -42,7 +45,7 @@ void ContentBrowsPanel::OnImGuiRender(){
         
         if (ImGui::BeginDragDropSource()){
             const wchar_t* itemPath = relativePath.c_str();
-            ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, wcslen(itemPath) * sizeof(wchar_t), ImGuiCond_Once);
+            ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, (wcslen(itemPath)+1) * sizeof(wchar_t), ImGuiCond_Once);
             ImGui::EndDragDropSource();
         }
         
@@ -57,6 +60,7 @@ void ContentBrowsPanel::OnImGuiRender(){
         ImGui::TextWrapped(filenameString.c_str());
         ImGui::NextColumn();
 
+        ImGui::PopID();
     }
     ImGui::Columns(1);
 

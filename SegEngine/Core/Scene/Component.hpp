@@ -8,6 +8,10 @@
 #include "SceneCamera.hpp"
 #include "ScriptEntity.hpp"
 
+//asset
+#include "resource/asset/Texture2D.hpp"
+
+
 namespace Sego{
     struct TagComponent{
         std::string Tag;
@@ -39,6 +43,8 @@ namespace Sego{
 
     struct SpriteRendererComponent{
         glm::vec4 Color{1.0f,1.0f,1.0f,1.0f};
+
+
 
         SpriteRendererComponent() = default;
         SpriteRendererComponent(const SpriteRendererComponent&) = default;

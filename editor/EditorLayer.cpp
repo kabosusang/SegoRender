@@ -119,6 +119,8 @@ void EditorLayer::OnUpdate(Timestep ts){
 	}
 }
 
+extern const std::filesystem::path s_AssetPath;
+
 void EditorLayer::OnImGuiRender(){
 // Note: Switch this to true to enable dockspace
 		static bool dockspaceOpen = true;
@@ -228,6 +230,18 @@ void EditorLayer::OnImGuiRender(){
 		m_viewportsize = {ViewportPanelSize.x,ViewportPanelSize.y};
 	}
 	ImGui::Image(m_color_texture_set,ViewportPanelSize);
+
+	//Drop Target
+	if (ImGui::BeginDragDropTarget()){
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM")){
+			const wchar_t* path = (const wchar_t*)payload->Data;
+			OpenScene(std::filesystem::path(s_AssetPath) / path);
+		}
+	
+		ImGui::EndDragDropTarget();
+	}
+
+
 
 	// Gizmos
 	Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
@@ -387,14 +401,20 @@ void EditorLayer::NewScene(){
 void EditorLayer::OpenScene(){
 	std::string filepath = FileDialogs::OpenFile("Sego Scene(*.Sego)\0*.sego\0");
 	if(!filepath.empty()){
-		m_ActiveScene = std::make_shared<Scene>();
-		m_ActiveScene->OnViewportResize(m_viewportsize.x,m_viewportsize.y);
-		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
-
-		SceneSerializer serializer(m_ActiveScene);
-		serializer.Deserialize(filepath);
+		OpenScene(filepath);
 	}
 }
+void EditorLayer::OpenScene(const std::filesystem::path& path){
+
+	m_ActiveScene = std::make_shared<Scene>();
+	m_ActiveScene->OnViewportResize((uint32_t)m_viewportsize.x,(uint32_t)m_viewportsize.y);
+	m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+
+	SceneSerializer serializer(m_ActiveScene);
+	serializer.Deserialize(path.string());
+
+}
+
 void EditorLayer::SaveSceneAs(){
 	std::string filepath = FileDialogs::SaveFile("Sego Scene(*.Sego)\0*.sego\0");
 	if(!filepath.empty()){
