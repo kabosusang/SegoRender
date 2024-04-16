@@ -4,8 +4,8 @@
 #include "Core/Scene/Scene.hpp"
 #include "Panels/SceneHierarchyPanel.hpp"
 #include "Panels/ContentBrowsPanel.hpp"
-
 #include "Renderer/EditorCamera.hpp"
+
 
 namespace Sego{
 class EditorLayer : public Layer{
@@ -30,7 +30,9 @@ private:
     void OpenScene();
     void OpenScene(const std::filesystem::path& path);
     void SaveSceneAs();
-
+    
+    void OnScenePlay();
+    void OnSceneStop();
     //UI Panels
     void UI_Toolbar(); 
 private:
@@ -56,6 +58,17 @@ private:
     //Panels
     SceneHierarchyPanel m_SceneHierarchyPanel;
     ContentBrowsPanel m_ContentBrowsPanel;
+
+    enum class SceneState
+    {
+        Edit = 0,Play = 1,Stop
+    };
+
+    SceneState m_SceneState = SceneState::Edit;
+
+    //UI Resources
+    std::shared_ptr<ImGuiImage> m_IconPlay;
+    std::shared_ptr<ImGuiImage> m_IconStop;
 };
 
 

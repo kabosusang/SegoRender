@@ -5,14 +5,9 @@
 namespace Sego{
 
 void Renderer::BeginScene(const Camera& camera, const glm::mat4& transform){
-    auto& Vctx = VulkanRhi::Instance();
-    //glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
-    glm::mat4 Proj = camera.GetProjection();
-    //glm::mat4 inverseTransform = glm::inverse(transform);
-    //glm::vec3 cameraPosition = glm::vec3(transform[3]);
-    //Right 
-    glm::mat4 view = glm::inverse(transform);
-    m_ViewProj = Proj * view;
+    glm::mat4 proj = camera.GetProjection();
+     proj[1][1] *= -1;
+    m_ViewProj = proj *  glm::inverse(transform);
 }
 
 void Renderer::BeginScene(const EditorCamera &camera){
@@ -20,7 +15,6 @@ auto& Vctx = VulkanRhi::Instance();
 //glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
 glm::mat4 view = camera.GetViewMatrix();
 glm::mat4 proj = camera.GetProjectionMatrix();
-
 
 proj[1][1] *= -1;
 m_ViewProj = proj * view;
@@ -57,6 +51,7 @@ uint32_t Renderer::ReadPixel(uint32_t x, uint32_t y){
 vk::ImageView Renderer::GetColorImageView(){
     return VulkanRhi::Instance().getColorImageView();
 }
+
 
 vk::ImageView Renderer::GetDepthImageView()
 {
@@ -132,10 +127,13 @@ void Renderer::Render(Scene* scene){
     }
     //Push Renderer
     VCtx.SetRenderDatas(SpriteRenderDatas);
-    
-    VCtx.render();
+    SpriteRenderDatas.clear();
 }
 
+void Renderer::Render(){
+    auto& VCtx =  VulkanRhi::Instance();
+    VCtx.render();
+}
 
 
 

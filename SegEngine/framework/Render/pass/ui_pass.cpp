@@ -20,10 +20,10 @@ namespace Sego{
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-       
+        io.IniFilename = "resources/Settings/imgui.ini";
         //Load imgui setting 
-        ImGui::LoadIniSettingsFromDisk("resources/Settings/imgui.ini");
-        ImGui::SaveIniSettingsToDisk("resources/Settings/imgui.ini");
+        //ImGui::LoadIniSettingsFromDisk("resources/Settings/imgui.ini");
+        //ImGui::SaveIniSettingsToDisk("resources/Settings/imgui.ini");
 		// setup Dear ImGui style
         float scale = 1.50f;
         ImGuiStyle& style = ImGui::GetStyle();

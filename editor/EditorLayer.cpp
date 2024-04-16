@@ -17,6 +17,12 @@ namespace Sego{
 
 void EditorLayer::OnAttach(){
 	
+	//Load Texture
+
+	m_IconPlay = EditorUI::LoadFormFile("resources/Settings/icons/PlayButton.png");
+	m_IconStop = EditorUI::LoadFormFile("resources/Settings/icons/StopButton.png");
+
+
 	m_Renderer = VulkanContext::Instance().GetRenderer();
 	//Color
 	m_Cts = Vulkantool::createSample(vk::Filter::eLinear,vk::Filter::eLinear,1,
@@ -96,10 +102,18 @@ void EditorLayer::OnDetach(){
 void EditorLayer::OnUpdate(Timestep ts){
 	//Render
 	m_Renderer->SetClearColor({0.1f,0.1f,0.1f,1.0f});
-	if (m_ViewportFocused){
+
+	switch (m_SceneState){
+		case SceneState::Edit:
+			m_ActiveScene->OnUpdateEditor(ts,m_EditorCamera);
+			m_EditorCamera.OnUpdate(ts);
+			break;
+		case SceneState::Play:
+			m_ActiveScene->OnUpdateRuntime(ts);
+			break;
 	}
-	m_EditorCamera.OnUpdate(ts);
-	m_ActiveScene->OnUpdateEditor(ts,m_EditorCamera);
+
+	//m_ActiveScene->OnUpdateEditor(ts,m_EditorCamera);
 	//m_ActiveScene->OnUpdateRuntime(ts);
 	
 	auto[mx,my] = ImGui::GetMousePos();
@@ -388,8 +402,6 @@ bool EditorLayer::OnKeyPressed(KeyPressedEvent& e){
 
 	}
 
-
-
 	return true;
 }
 
@@ -424,8 +436,39 @@ void EditorLayer::SaveSceneAs(){
 	}
 }
 
-void EditorLayer::UI_Toolbar(){
+void EditorLayer::OnScenePlay(){
+	m_SceneState = SceneState::Play;
+}
 
+void EditorLayer::OnSceneStop(){
+	m_SceneState = SceneState::Edit;
+}
+
+void EditorLayer::UI_Toolbar(){
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,2));
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0,2));
+	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0,0,0,0));
+	auto& colors = ImGui::GetStyle().Colors;
+	const auto& buttonHovered = colors[ImGuiCol_ButtonHovered];
+	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(buttonHovered.x,buttonHovered.y,buttonHovered.z,0.5f));
+	const auto& buttonActive = colors[ImGuiCol_ButtonActive];
+	ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(buttonActive.x,buttonActive.y,buttonActive.z,0.5f));
+
+	ImGui::Begin("##Toolbar",nullptr,ImGuiWindowFlags_NoDecoration |ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse );
+	
+	float size = ImGui::GetWindowHeight() - 4.0f;
+	std::shared_ptr<ImGuiImage> icon = m_SceneState == SceneState::Edit  ? m_IconPlay : m_IconStop;
+	ImGui::SameLine((ImGui::GetWindowWidth() - size) * 0.5f);
+	if (ImGui::ImageButton((ImTextureID)icon->tex_id,ImVec2(size,size),ImVec2(0,0),ImVec2(1,1),0)){
+		if (m_SceneState == SceneState::Edit)
+			OnScenePlay();
+		else if (m_SceneState == SceneState::Play)
+			OnSceneStop();
+	}
+	ImGui::PopStyleVar(2);
+	ImGui::PopStyleColor(3);
+
+	ImGui::End();
 
 }
 

@@ -62,14 +62,20 @@ void Scene::OnUpdateRuntime(Timestep ts)
 
         }
     }
-    
+    if (mainCamera){
+        Vctx.GetRenderer()->BeginScene(*mainCamera,CameraTransform);
+        Vctx.GetRenderer()->Render(this);
+    }
+    Vctx.GetRenderer()->Render(); //UI Render (Must Call)
 }
 
 void Scene::OnUpdateEditor(Timestep ts,EditorCamera& camera){
     auto &Vctx = VulkanContext::Instance();
     Vctx.GetRenderer()->BeginScene(camera);
 
-    Vctx.GetRenderer()->Render(this); //AllPass Render (Must Call)
+    Vctx.GetRenderer()->Render(this); //ALL Entity Render
+
+    Vctx.GetRenderer()->Render(); //UI Render (Must Call)
     Vctx.GetRenderer()->EndScene();
 }
 
