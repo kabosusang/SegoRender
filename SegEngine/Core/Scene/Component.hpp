@@ -43,7 +43,7 @@ namespace Sego{
 
     struct SpriteRendererComponent{
         glm::vec4 Color{1.0f,1.0f,1.0f,1.0f};
-
+        std::shared_ptr<Texture2D> Texture = nullptr;
 
 
         SpriteRendererComponent() = default;

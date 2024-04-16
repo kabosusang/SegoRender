@@ -21,9 +21,8 @@ void PickPass::destroy(){
 }
 
 void PickPass::createDescriptorSetLayout(){
-    descriptorSetLayouts_.resize(2);
-    vk::DescriptorSetLayoutCreateInfo desc_set_layout_ci{};
-   
+    descriptorSetLayouts_.resize(1);//spriter
+
     vk::DescriptorSetLayoutBinding uboLayoutBinding{};
     uboLayoutBinding.setBinding(0)
                     .setDescriptorType(vk::DescriptorType::eUniformBuffer)
@@ -38,85 +37,77 @@ void PickPass::createDescriptorSetLayout(){
                         .setPImmutableSamplers(nullptr);
     vk::DescriptorSetLayoutBinding bindings[] = {uboLayoutBinding, samplerLayoutBinding};
 
-    // mesh
-    desc_set_layout_ci.setBindingCount(2)
-                      .setBindings(bindings)
-                      .setFlags(vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR);
-    
-    descriptorSetLayouts_[0] = Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci);
-
-    //spritor
-    desc_set_layout_ci.setBindingCount(1)
-                      .setBindings(uboLayoutBinding)
+    vk::DescriptorSetLayoutCreateInfo desc_set_layout_ci{};
+    //spritor DescriptorSetLayout
+    desc_set_layout_ci.setBindingCount(0)
+                      .setBindings(nullptr)
                       .setFlags(vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR);
 
-    descriptorSetLayouts_[1]= Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci);
+    descriptorSetLayouts_[0]= Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci);
+    //mesh DescriptorSetLayout
+
 }
 
 void PickPass::createPipelineLayouts(){
-    pipelineLayouts_.resize(2);
+    pipelineLayouts_.resize(1); //spriter
+
+    //spriter
     push_constant_ranges_ = {
         {vk::ShaderStageFlagBits::eVertex,0,sizeof(glm::mat4)},
         {vk::ShaderStageFlagBits::eFragment, sizeof(glm::mat4), sizeof(int)}
     };
     
     vk::PipelineLayoutCreateInfo pipeline_layout_ci{};
-    pipeline_layout_ci.setSetLayoutCount(1)
+     pipeline_layout_ci.setSetLayoutCount(1)
                       .setPSetLayouts(&descriptorSetLayouts_[0])
                       .setPushConstantRangeCount(static_cast<uint32_t>(push_constant_ranges_.size()))
                       .setPPushConstantRanges(push_constant_ranges_.data());
 
-    //1 Normal GLTF Model Renderer
     pipelineLayouts_[0] = Context::Instance().device.createPipelineLayout(pipeline_layout_ci);
 
-     pipeline_layout_ci.setSetLayoutCount(1)
-                      .setPSetLayouts(&descriptorSetLayouts_[1])
-                      .setPushConstantRangeCount(static_cast<uint32_t>(push_constant_ranges_.size()))
-                      .setPPushConstantRanges(push_constant_ranges_.data());
 
-    pipelineLayouts_[1] = Context::Instance().device.createPipelineLayout(pipeline_layout_ci);
+    //static mesh
 
 }
 
 void PickPass::CreatePiepline(){
     auto& ctx = Context::Instance();
-    pipelines_.resize(2);
-    
-     // 0. shader prepare
-    std::vector<vk::PipelineShaderStageCreateInfo> shader_stage_cis  ={
-        ctx.shaderManager->LoadShader("resources/shaders/vert.spv", vk::ShaderStageFlagBits::eVertex),
-        ctx.shaderManager->LoadShader("resources/shaders/frag.spv", vk::ShaderStageFlagBits::eFragment)
-    };
+    pipelines_.resize(1); //Sprite
 
+    //-------------------------------------------------------------------------------------
+    //-------------------------------------------------------------------------------------
+    //-------------------------------------------------------------------------------------
+    //Sprite Renderer
+    // 0. shader prepare
+     std::vector<vk::PipelineShaderStageCreateInfo> shader_stage_cis  ={
+        ctx.shaderManager->LoadShader("resources/shaders/Sprite/Spritevert.spv", vk::ShaderStageFlagBits::eVertex),
+        ctx.shaderManager->LoadShader("resources/shaders/pick/pick.spv", vk::ShaderStageFlagBits::eFragment)
+    };
+     
     //1. vertex input   BindingDescription And AttributeDescription
     vk::VertexInputBindingDescription vertex_binding_desc{};
     vertex_binding_desc.setBinding(0)
-                      .setStride(sizeof(StaticVertex))
+                      .setStride(sizeof(SpriteVertex))
                       .setInputRate(vk::VertexInputRate::eVertex);
     
-    std::array<vk::VertexInputAttributeDescription, 4> vertex_attr_descs;
-    vertex_attr_descs[0].setBinding(0)
+    std::array<vk::VertexInputAttributeDescription, 3> vertex_attr_descs_Sprite;
+    vertex_attr_descs_Sprite[0].setBinding(0)
                         .setLocation(0)
                         .setFormat(vk::Format::eR32G32B32Sfloat)
-                        .setOffset(offsetof(StaticVertex, pos));
-    vertex_attr_descs[1].setBinding(0)
+                        .setOffset(offsetof(SpriteVertex, pos));
+    vertex_attr_descs_Sprite[1].setBinding(0)
                         .setLocation(1)
-                        .setFormat(vk::Format::eR32G32B32Sfloat)
-                        .setOffset(offsetof(StaticVertex, normal));
-    vertex_attr_descs[2].setBinding(0)
+                        .setFormat(vk::Format::eR32G32B32A32Sfloat)
+                        .setOffset(offsetof(SpriteVertex, color));
+    vertex_attr_descs_Sprite[2].setBinding(0)
                         .setLocation(2)
                         .setFormat(vk::Format::eR32G32Sfloat)
-                        .setOffset(offsetof(StaticVertex, uv));
-    vertex_attr_descs[3].setBinding(0)
-                        .setLocation(3)
-                        .setFormat(vk::Format::eR32G32B32Sfloat)
-                        .setOffset(offsetof(StaticVertex, color));
+                        .setOffset(offsetof(SpriteVertex, uv));
 
-    vertex_input_ci.setVertexAttributeDescriptionCount(vertex_attr_descs.size())
-                   .setPVertexAttributeDescriptions(vertex_attr_descs.data())
+    vertex_input_ci.setVertexAttributeDescriptionCount(vertex_attr_descs_Sprite.size())
+                   .setPVertexAttributeDescriptions(vertex_attr_descs_Sprite.data())
                    .setVertexBindingDescriptionCount(1)
                    .setPVertexBindingDescriptions(&vertex_binding_desc);
-
 
     //2. input assembly 
     input_assemb_ci.setTopology(vk::PrimitiveTopology::eTriangleList) //Triangle
@@ -135,7 +126,7 @@ void PickPass::CreatePiepline(){
              .setRasterizerDiscardEnable(VK_FALSE) //if true, geometry never passes through rasterization stage
              .setPolygonMode(vk::PolygonMode::eFill)
              .setLineWidth(1.0f)
-             .setCullMode(vk::CullModeFlagBits::eBack)
+             .setCullMode(vk::CullModeFlagBits::eNone)
              .setFrontFace(vk::FrontFace::eCounterClockwise)
              .setDepthBiasEnable(VK_FALSE);
     // dynamic states
@@ -194,60 +185,7 @@ void PickPass::CreatePiepline(){
     
     auto Result = ctx.device.createGraphicsPipeline(nullptr, pipeline_ci);
     pipelines_[0] = Result.value;
-
-
-    //-------------------------------------------------------------------------------------
-    //-------------------------------------------------------------------------------------
-    //-------------------------------------------------------------------------------------
-    //Sprite Renderer
-    shader_stage_cis.clear();
-    shader_stage_cis  ={
-        ctx.shaderManager->LoadShader("resources/shaders/Sprite/Spritevert.spv", vk::ShaderStageFlagBits::eVertex),
-        ctx.shaderManager->LoadShader("resources/shaders/pick/pick.spv", vk::ShaderStageFlagBits::eFragment)
-    };
-
-
-    //1. vertex input   BindingDescription And AttributeDescription
-    vertex_binding_desc.setBinding(0)
-                      .setStride(sizeof(SpriteVertex))
-                      .setInputRate(vk::VertexInputRate::eVertex);
     
-    std::array<vk::VertexInputAttributeDescription, 2> vertex_attr_descs_Sprite;
-    vertex_attr_descs_Sprite[0].setBinding(0)
-                        .setLocation(0)
-                        .setFormat(vk::Format::eR32G32B32Sfloat)
-                        .setOffset(offsetof(SpriteVertex, pos));
-    vertex_attr_descs_Sprite[1].setBinding(0)
-                        .setLocation(1)
-                        .setFormat(vk::Format::eR32G32B32A32Sfloat)
-                        .setOffset(offsetof(SpriteVertex, color));
-
-    vertex_input_ci.setVertexAttributeDescriptionCount(vertex_attr_descs_Sprite.size())
-                   .setPVertexAttributeDescriptions(vertex_attr_descs_Sprite.data())
-                   .setVertexBindingDescriptionCount(1)
-                   .setPVertexBindingDescriptions(&vertex_binding_desc);
-    //color blend
-    colorblendattachment_ci.setBlendEnable(false);
-    blend_ci.setAttachments(colorblendattachment_ci)    
-            .setLogicOpEnable(false);
-    
-
-    raster_ci.setCullMode(vk::CullModeFlagBits::eNone);
-    
-    pipeline_ci.setStages(shader_stage_cis)
-               .setPVertexInputState(&vertex_input_ci)
-               .setPInputAssemblyState(&input_assemb_ci)
-               .setPViewportState(&viewport_state_ci)
-               .setPRasterizationState(&raster_ci)
-               .setPDynamicState(&dynamicState)
-               .setPMultisampleState(&multisample_ci)
-               .setPDepthStencilState(&depth_stencil_ci)
-               .setPColorBlendState(&blend_ci)
-               .setLayout(pipelineLayouts_[1])
-               .setRenderPass(renderPass_);
-    Result = ctx.device.createGraphicsPipeline(nullptr, pipeline_ci);
-    pipelines_[1] = Result.value;
- 
 }
 
 
@@ -433,7 +371,7 @@ void PickPass::render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<MeshRende
     
     //Draw Notes
     for(auto& node : Rendata->nodes_){
-        drawNode(cmdBuffer,pipelineLayouts_[0],node);
+        //drawNode(cmdBuffer,pipelineLayouts_[1],node);
     }
 }
 
@@ -442,24 +380,15 @@ void PickPass::render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteR
     auto& VulkanRhi = VulkanRhi::Instance();
     
     //pipelines_[1] Sprite Renderer
-    cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines_[1]);
+    cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines_[0]);
     vk::Buffer vertexBuffers[] = { Rendata->vertexBuffer_.buffer };
     vk::DeviceSize offsets[] = { 0 };
     cmdBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
     cmdBuffer.bindIndexBuffer(Rendata->indexBuffer_.buffer, 0, vk::IndexType::eUint32);
 
-    desc_writes.clear();
-    //1. Uniform
-    std::array<vk::DescriptorBufferInfo, 1> desc_buffer_infos{}; //Uniform 
-    addBufferDescriptorSet(desc_writes, desc_buffer_infos[0], 
-    VulkanRhi.getCurrentUniformBuffer(), 0);
-
-    updatePushConstants(cmdBuffer,pipelineLayouts_[1],{&Rendata->Spritemodel,&Rendata->EntityID});
-    //2. Image Sample TODO: SpriteRendererComponent
-    
-    VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-    pipelineLayouts_[1], 0, static_cast<uint32_t>(desc_writes.size()), (VkWriteDescriptorSet *)desc_writes.data());
-
+    //PushConstant
+    updatePushConstants(cmdBuffer,pipelineLayouts_[0],{&Rendata->Spritemvp_,&Rendata->EntityID});
+   
     //Draw
     cmdBuffer.drawIndexed(Rendata->indexCount_,1,0,0,0);
 }

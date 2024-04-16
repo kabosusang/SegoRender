@@ -8,6 +8,8 @@
 
 namespace Sego{
 
+extern const std::filesystem::path s_AssetPath;
+
 SceneHierarchyPanel::SceneHierarchyPanel(const std::shared_ptr<Scene>& scene){
     SetContext(scene);
 }
@@ -307,6 +309,21 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
     DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](auto& component)
     {
         ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
+        //Texture
+        //ImGui::DragFloat("Tiling Factor", &component.TilingFactor,0.1f,0.0f,100.0f);
+        ImGui::Button("Texture",ImVec2(100.0f,0.0f));
+        if (ImGui::BeginDragDropTarget()){
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM")){
+			const wchar_t* path = (const wchar_t*)payload->Data;
+			std::filesystem::path texturePath = std::filesystem::path(s_AssetPath)/path;
+            component.Texture = Texture2D::Create(texturePath.string());
+		}
+	
+		ImGui::EndDragDropTarget();
+	}
+
+
+    
     });
 
 }

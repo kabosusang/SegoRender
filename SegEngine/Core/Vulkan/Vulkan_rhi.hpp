@@ -49,6 +49,9 @@ namespace Sego{
             mainPass_->setRenderDatas(render_Datas);
             pickPass_->setRenderDatas(render_Datas);
         }
+
+    public:
+        std::shared_ptr<Texture2D> defaultTexture;
     private:
         glm::mat4 CameraView_ = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         glm::mat4 projection_ = glm::mat4(1.0f);

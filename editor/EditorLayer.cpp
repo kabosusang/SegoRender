@@ -241,8 +241,6 @@ void EditorLayer::OnImGuiRender(){
 		ImGui::EndDragDropTarget();
 	}
 
-
-
 	// Gizmos
 	Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
 	if (selectedEntity && m_GizmoType != -1){
@@ -298,6 +296,9 @@ void EditorLayer::OnImGuiRender(){
 
 	ImGui::End();
 	ImGui::PopStyleVar();
+
+	UI_Toolbar();
+
 	ImGui::End();
 }
 
@@ -422,6 +423,14 @@ void EditorLayer::SaveSceneAs(){
 		serializer.Serialize(filepath);
 	}
 }
+
+void EditorLayer::UI_Toolbar(){
+
+
+}
+
+
+
 
 
 }

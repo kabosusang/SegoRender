@@ -22,8 +22,9 @@ VulkanRhi::VulkanRhi(uint32_t windowWidth, uint32_t windowHeight){
     createCmdBuffers();
     createSemaphoresAndFence();
     loadExtensionFuncs();
-
     createUniformBuffers();
+
+    defaultTexture = Texture2D::Create("resources/assets/empty.png");
 
     uiPass_ = std::make_unique<UiPass>();
     uiPass_->Init();
@@ -133,7 +134,7 @@ vk::ImageView VulkanRhi::getDepthImageView(){
 
 void VulkanRhi::render(){
     waitFrame();
-    updtaUniform();
+    //updtaUniform();
 	recordFrame();
 	submitFrame();
 	presentFrame();

@@ -30,6 +30,9 @@ private:
     void OpenScene();
     void OpenScene(const std::filesystem::path& path);
     void SaveSceneAs();
+
+    //UI Panels
+    void UI_Toolbar(); 
 private:
     //Renderer
     std::shared_ptr<Sego::Renderer> m_Renderer;

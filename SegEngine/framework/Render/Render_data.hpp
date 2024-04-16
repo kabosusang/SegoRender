@@ -9,6 +9,7 @@
 #include "resource/host_device.h"
 
 namespace Sego{
+
     struct Node{
         Node* parent;
 		std::vector<Node*> children;
@@ -38,7 +39,12 @@ namespace Sego{
         VmaBuffer vertexBuffer_;
         VmaBuffer indexBuffer_;
         uint32_t indexCount_;
-        glm::mat4 Spritemodel;
+        //push constant
+        glm::mat4 Spritemvp_;
+        int32_t UseTex;
+        //texture
+        std::shared_ptr<Texture2D> Spritetexture;
+
         // Editor-only
         uint32_t EntityID = -1;
 
