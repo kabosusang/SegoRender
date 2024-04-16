@@ -65,10 +65,10 @@ const std::vector<uint32_t> Squardindices = {
 void Renderer::DrawQuad(const glm::mat4& transform,glm::vec4& color,int entityID, std::vector<std::shared_ptr<RenderData>>& SpriteRenderDatas){
     std::shared_ptr<SpriteRenderData> Rendata = std::make_shared<SpriteRenderData>();
     std::vector<SpriteVertex> squard = {
-    {{-0.5f, -0.5f, 0.0f}, color, {1.0f, 0.0f}},
-    {{0.5f,  -0.5f, 0.0f}, color, {0.0f, 0.0f}},
-    {{0.5f,   0.5f, 0.0f}, color, {0.0f, 1.0f}},
-    {{-0.5f,  0.5f, 0.0f}, color, {1.0f, 0.0f}}
+    {{-0.5f, -0.5f,0.0f}, color,{0.0f, 0.0f}},
+    {{0.5f, -0.5f,0.0f}, color,{1.0f, 0.0f}},
+    {{0.5f, 0.5f,0.0f},color,{1.0f, 1.0f}},
+    {{-0.5f, 0.5f,0.0f}, color,{0.0f, 1.0f}}
     };
 
     Vulkantool::createVertexBuffer(sizeof(squard[0])* squard.size(),

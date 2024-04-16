@@ -22,3 +22,6 @@
 [submodule "3rdL/ImGuiZmo"]
 	path = 3rdL/ImGuiZmo
 	url = https://github.com/CedricGuillemet/ImGuizmo
+[submodule "3rdL/box2d"]
+	path = 3rdL/box2d
+	url = https://github.com/erincatto/box2d

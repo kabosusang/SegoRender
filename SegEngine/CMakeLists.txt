@@ -44,4 +44,4 @@ target_include_directories(SGengine PUBLIC ./)
 
 target_compile_features(SGengine PRIVATE cxx_std_17)
 target_link_libraries(SGengine PUBLIC Vulkan::Vulkan SDL2::SDL2main SDL2::SDL2 spdlog imgui 
-glm::glm stb_image tinygltf VulkanMemoryAllocator EnTT yaml-cpp ImGuiZmo)
+glm::glm stb_image tinygltf VulkanMemoryAllocator EnTT yaml-cpp ImGuiZmo box2d)

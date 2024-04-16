@@ -79,6 +79,36 @@ namespace Sego{
 
     };
 
+    //Physics
+    struct Rigidbody2DComponent{
+        enum class BodyType{ Static = 0,Dynamic, Kinematic};
+        BodyType Type = BodyType::Static;
+        bool FixedRotation = false;
+
+        //Store the runtime 
+        void* RuntimeBody = nullptr;
+
+        Rigidbody2DComponent() = default;
+        Rigidbody2DComponent(const Rigidbody2DComponent&) = default;
+    };
+
+    struct BoxCollider2Domponent{
+        glm::vec2 Offset = {0.0f,0.0f};
+        glm::vec2 Size = {0.5f,0.5f};
+
+        //Physics Material
+        float Density = 1.0f; // 密度 
+        float Friction = 0.2f; // 摩擦力
+        float Restitution = 0.0f; // 弹性
+        float RestitutionThreshold = 0.5f; //弹性阈值
+
+
+        //Store the runtime 
+        void* RuntimeBody = nullptr;
+
+        BoxCollider2Domponent() = default;
+        BoxCollider2Domponent(const BoxCollider2Domponent&) = default;
+    };
 
     
 
