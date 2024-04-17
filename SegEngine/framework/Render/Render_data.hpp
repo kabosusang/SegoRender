@@ -23,7 +23,7 @@ namespace Sego{
     };
 
     enum class RenderDataType{
-        Sprite,Base
+        Sprite,Base,Mesh,Skybox
     };
 
     struct RenderData{
@@ -78,6 +78,25 @@ namespace Sego{
             }
             
         }
+    };
+
+
+    struct SkyboxRenderData : public RenderData{
+         SkyboxRenderData(){
+              type = RenderDataType::Skybox;
+         }
+
+        VmaBuffer vertexBuffer_;
+		VmaBuffer indexBuffer_;
+		uint32_t index_count;
+        glm::mat4 skybox_mvp;
+		VmaImageViewSampler skybox_texture;
+
+         void destory(){
+            vertexBuffer_.destroy();
+            indexBuffer_.destroy();
+            skybox_texture.destroy();
+         }
     };
 
 }

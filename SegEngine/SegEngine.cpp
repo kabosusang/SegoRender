@@ -25,6 +25,7 @@ void SegEngine::Init(){
 }
 
 void SegEngine::destory(){
+    Log::destroy();
 
 }
 

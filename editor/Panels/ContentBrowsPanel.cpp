@@ -41,7 +41,7 @@ void ContentBrowsPanel::OnImGuiRender(){
 
         std::shared_ptr<ImGuiImage> icon = directoryEntry.is_directory() ? m_DirectoryIcon : m_FileIcon;
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0,0,0,0));
-        ImGui::ImageButton((ImTextureID)icon->tex_id, {thumbnailSize,thumbnailSize},{0,0},{1,1});
+        ImGui::ImageButton((ImTextureID)icon->tex_id, {thumbnailSize,thumbnailSize},{0,1},{1,0});
         
         if (ImGui::BeginDragDropSource()){
             const wchar_t* itemPath = relativePath.c_str();

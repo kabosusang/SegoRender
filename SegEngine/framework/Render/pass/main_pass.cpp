@@ -45,7 +45,8 @@ void MainPass::createDescriptorSetLayout(){
 }
 
 void MainPass::createPipelineLayouts(){
-    pipelineLayouts_.resize(1); //spriter
+    pipelineLayouts_.resize(1); 
+    //spriter
     push_constant_ranges_ = {
         {vk::ShaderStageFlagBits::eVertex,0,sizeof(glm::mat4)},
         {vk::ShaderStageFlagBits::eFragment,sizeof(glm::mat4),sizeof(int32_t)}
@@ -59,6 +60,8 @@ void MainPass::createPipelineLayouts(){
 
     pipelineLayouts_[0] = Context::Instance().device.createPipelineLayout(pipeline_layout_ci);
     //mesh
+
+
 
 
 }

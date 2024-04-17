@@ -4,6 +4,7 @@
 #include "Core/Scene/Scene.hpp"
 #include "Panels/SceneHierarchyPanel.hpp"
 #include "Panels/ContentBrowsPanel.hpp"
+#include "Panels/Console.hpp"
 #include "Renderer/EditorCamera.hpp"
 
 
@@ -58,6 +59,8 @@ private:
     //Panels
     SceneHierarchyPanel m_SceneHierarchyPanel;
     ContentBrowsPanel m_ContentBrowsPanel;
+    Console m_Console;
+
 
     enum class SceneState
     {

@@ -11,11 +11,15 @@ layout(push_constant) uniform PushConstant {
 } pc;
 
 void main() {
-
+    vec4 texColor = fragColor;
     if (pc.UseSampler != 0){
-        outColor =  texture(texSampler, fragUv) * fragColor ;
+        texColor =  texture(texSampler, fragUv) * fragColor ;
+        if (texColor.a < 0.1){
+            discard;
+        }
+        outColor = texColor;
     }else{
-        outColor = fragColor;
+        outColor = texColor;
     }
 
 }

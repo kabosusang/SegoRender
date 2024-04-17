@@ -3,12 +3,12 @@
 
 namespace Sego{
 
-enum class ETextureType
+enum class TextureType
 {
 	BaseColor, MetallicRoughnessOcclusion, Normal, Emissive, Cube, UI, Data
 };
 
-enum class EPixelType
+enum class PixelType
 {
 	RGBA8, RGBA16, RGBA32, RG16, R16, R32
 };
@@ -22,8 +22,8 @@ public:
     vk::Filter minfilter_,magfilter_ = vk::Filter::eLinear;
     vk::Format format_ = vk::Format::eR8G8B8A8Unorm;
     vk::SamplerAddressMode addressmode_u,addressmode_v,addressmode_w = vk::SamplerAddressMode::eRepeat;
-    ETextureType texture_type_ = ETextureType::BaseColor;
-	EPixelType pixel_type_ = EPixelType::RGBA8;
+    TextureType texture_type_ = TextureType::BaseColor;
+	PixelType pixel_type_ = PixelType::RGBA8;
     uint32_t mip_levels_ = 1;
     uint32_t layes_ = 1;
     VmaImageViewSampler image_view_sampler_ = {};

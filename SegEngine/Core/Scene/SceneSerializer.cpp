@@ -99,7 +99,7 @@ static std::string RigidBody2DBodyTypeToString(Rigidbody2DComponent::BodyType ty
         case Rigidbody2DComponent::BodyType::Dynamic: return "Dynamic";
         case Rigidbody2DComponent::BodyType::Kinematic: return "Kinematic";
     }
-    SG_CORE_WARN("Unknown BodyType");
+    SG_CORE_ERROR("Unknown BodyType");
     return {};
 }
 
@@ -109,7 +109,7 @@ static Rigidbody2DComponent::BodyType RigidBody2DBodyTypeFromString(const std::s
     if (bodyTypeString == "Dynamic")   return Rigidbody2DComponent::BodyType::Dynamic;
     if (bodyTypeString == "Kinematic") return Rigidbody2DComponent::BodyType::Kinematic;
 
-    SG_CORE_WARN("Unknown BodyType");
+    SG_CORE_ERROR("Unknown BodyType");
     return Rigidbody2DComponent::BodyType::Static;
 }
 
@@ -238,7 +238,7 @@ bool SceneSerializer::Deserialize(const std::string &filepath){
     if(!data["Scene"])
         return false;
     std::string sceneName = data["Scene"].as<std::string>();
-    SG_CORE_TRACE("Deserializing scene '{0}'",sceneName);
+    SG_CORE_INFO("Deserializing scene '{0}'",sceneName);
 
     auto entities = data["Entities"];
     if(entities){
@@ -250,7 +250,7 @@ bool SceneSerializer::Deserialize(const std::string &filepath){
             auto tagComponent = entity["TagComponent"];
             if(tagComponent) name = tagComponent["Tag"].as<std::string>();
 
-            SG_CORE_TRACE("Deserialized entity with ID = {0}, name = {1}",uuid,name);
+            SG_CORE_INFO("Deserialized entity with ID = {0}, name = {1}",uuid,name);
 
             Entity deserializedEntity = m_Scene->CreateEntityWithUUID(uuid,name);
 

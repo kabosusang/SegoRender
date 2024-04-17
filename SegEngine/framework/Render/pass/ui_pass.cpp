@@ -31,8 +31,9 @@ namespace Sego{
         float fontSize = 18.0f;
         //style.ScaleAllSizes(scale);
         io.Fonts->AddFontFromFileTTF("resources/Fonts/open-sans/OpenSans-Bold.ttf",fontSize);
-        io.FontDefault = io.Fonts->AddFontFromFileTTF("resources/Fonts/open-sans/OpenSans-Regular.ttf",fontSize);
-        //io.FontDefault = io.Fonts->AddFontFromFileTTF("resources/Fonts/SourceHansTtf/SourceHanSerifCN-Regular.ttf",18.0f);
+        io.Fonts->AddFontFromFileTTF("resources/Fonts/ARLRDBD.TTF",fontSize);
+        //io.FontDefault = io.Fonts->AddFontFromFileTTF("resources/Fonts/open-sans/OpenSans-Regular.ttf",fontSize);
+        io.FontDefault = io.Fonts->AddFontFromFileTTF("resources/Fonts/arial.ttf",fontSize);
     
 		ImGui::StyleColorsDark();
         ImVec4* colors = style.Colors; 

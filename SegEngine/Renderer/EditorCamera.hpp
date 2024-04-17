@@ -30,6 +30,8 @@ namespace Sego{
 
 		float GetPitch() const { return m_Pitch; }
 		float GetYaw() const { return m_Yaw; }
+
+		void UseSkybox() { m_UseSkybox = !m_UseSkybox; }
 	private:
 		void UpdateProjection();
 		void UpdateView();
@@ -46,12 +48,13 @@ namespace Sego{
 		float RotationSpeed() const;
 		float ZoomSpeed() const;
 	private:
+		bool m_UseSkybox = false;
+
 		float m_FOV = 45.0f, m_AspectRatio = 1.778f, m_NearClip = 0.1f, m_FarClip = 1000.0f;
 
 		glm::mat4 m_ViewMatrix;
 		glm::vec3 m_Position = { 0.0f, 0.0f, 0.0f };
 		glm::vec3 m_FocalPoint = { 0.0f, 0.0f, 0.0f };
-
 		glm::vec2 m_InitialMousePosition = { 0.0f, 0.0f };
 
 		float m_Distance = 10.0f;

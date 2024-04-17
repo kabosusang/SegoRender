@@ -152,7 +152,11 @@ void Scene::OnUpdateRuntime(Timestep ts)
     if (mainCamera){
         Vctx.GetRenderer()->BeginScene(*mainCamera,CameraTransform);
         Vctx.GetRenderer()->Render(this);
+    }else{
+        SG_CORE_WARN("No Primary Camera");
     }
+
+
     Vctx.GetRenderer()->Render(); //UI Render (Must Call)
 }
 

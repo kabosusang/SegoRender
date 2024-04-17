@@ -187,6 +187,7 @@ void EditorLayer::OnImGuiRender(){
 
 		if (ImGui::BeginMenuBar())
 		{
+			//File Settings
 			if (ImGui::BeginMenu("File"))
 			{
 				// Disabling fullscreen would allow the window to be moved to the front of other windows, 
@@ -208,11 +209,37 @@ void EditorLayer::OnImGuiRender(){
 				ImGui::EndMenu();
 			}
 
+			//Light Settings
+			if (ImGui::BeginMenu("Lighting")) {
+				if (ImGui::MenuItem("Skybox")) {
+					if (ImGui::BeginMenu("Skybox Options")) {
+						if (ImGui::MenuItem("Cubemap")) {
+							// Do something when Cubemap is clicked
+							m_EditorCamera.UseSkybox();
+						}
+						if (ImGui::MenuItem("HDR")) {
+							// Do something when HDR is clicked
+						}
+						ImGui::EndMenu();
+					}
+				}
+				if (ImGui::MenuItem("Ambient Light")) {
+					// Do something when Ambient Light is clicked
+				}
+				if (ImGui::MenuItem("Directional Light")) {
+					// Do something when Directional Light is clicked
+				}
+				ImGui::EndMenu();
+			}
+
 			ImGui::EndMenuBar();
 		}
-	//Scene Hierarchy
+
+	//Panels
 	m_SceneHierarchyPanel.OnImGuiRender();
 	m_ContentBrowsPanel.OnImGuiRender();
+	m_Console.OnImGuiRender();
+
 
 	ImGui::Begin("Stats");
 	std::string name = "None";
