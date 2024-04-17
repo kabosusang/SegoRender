@@ -119,8 +119,10 @@ SceneSerializer::SceneSerializer(const std::shared_ptr<Scene> &scene)
 }
 
 static void SerializeEntity(YAML::Emitter& out,Entity entity){
+    SG_ASSERT(entity.HasComponent<IDComponent>(),"Entity must have IDComponent")
+
     out << YAML::BeginMap; //Entity
-    out << YAML::Key << "Entity"  << YAML::Value << "1231232145436"; // TODO: Entity ID goes here
+    out << YAML::Key << "Entity"  << YAML::Value << entity.GetUUID(); 
 
     if (entity.HasComponent<TagComponent>()){
         out << YAML::Key << "TagComponent";
@@ -250,7 +252,7 @@ bool SceneSerializer::Deserialize(const std::string &filepath){
 
             SG_CORE_TRACE("Deserialized entity with ID = {0}, name = {1}",uuid,name);
 
-            Entity deserializedEntity = m_Scene->CreateEntity(name);
+            Entity deserializedEntity = m_Scene->CreateEntityWithUUID(uuid,name);
 
             //Transform
             auto transformComponent = entity["TransformComponent"];

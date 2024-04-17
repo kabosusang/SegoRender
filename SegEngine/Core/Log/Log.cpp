@@ -1,4 +1,5 @@
 #include "Log.h"
+
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 namespace Sego{
@@ -14,6 +15,10 @@ namespace Sego{
 
 		s_ClientLogger = spdlog::stdout_color_mt("Edit");
 		s_ClientLogger->set_level(spdlog::level::trace);
+
+
+
+		
 	}
 	
 

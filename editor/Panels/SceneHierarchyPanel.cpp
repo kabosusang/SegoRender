@@ -343,8 +343,6 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
 		ImGui::EndDragDropTarget();
 	}
 
-
-    
     });
 
     DrawComponent<Rigidbody2DComponent>("Rigidbody 2D", entity, [](auto& component)

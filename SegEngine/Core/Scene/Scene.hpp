@@ -1,8 +1,11 @@
 #pragma once
 #include "Core/Base/Timestep.hpp"
-#include <entt.hpp>
+#include "Core/Base/UUID.hpp"
 #include "Renderer/EditorCamera.hpp"
 
+
+
+#include <entt.hpp>
 class b2World;
 
 namespace Sego{
@@ -13,7 +16,9 @@ public:
     Scene();
     ~Scene();
 
-    Entity CreateEntity(const std::string& name);
+    Entity CreateEntity(const std::string& name = std::string());
+    Entity CreateEntityWithUUID(UUID uuid,const std::string& name = std::string());
+
     void DestroyEntity(Entity entity);
     
     void OnRuntimeStart();

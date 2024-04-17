@@ -1,10 +1,10 @@
 Scene: Untitled
 Entities:
-  - Entity: 1231232145436
+  - Entity: 18009202423273891401
     TagComponent:
       Tag: PhysicsSprite
     TransformComponent:
-      Translation: [0, 6.48141384, 0]
+      Translation: [0, 5.97831821, 0]
       Rotation: [0.0368289798, -0.125950947, -0.908637524]
       Scale: [1.00000107, 1.00000024, 1]
     SpriteRendererComponent:
@@ -18,7 +18,7 @@ Entities:
       Density: 1
       Restitution: 0.479999989
       RestitutionThreshold: 0.5
-  - Entity: 1231232145436
+  - Entity: 12186556892743993854
     TagComponent:
       Tag: Plate
     TransformComponent:
@@ -36,7 +36,7 @@ Entities:
       Density: 1
       Restitution: 0
       RestitutionThreshold: 0.5
-  - Entity: 1231232145436
+  - Entity: 195513108834711155
     TagComponent:
       Tag: Camera
     TransformComponent:

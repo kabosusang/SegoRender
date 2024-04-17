@@ -6,13 +6,20 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include "SceneCamera.hpp"
-#include "ScriptEntity.hpp"
+#include "Core/Base/UUID.hpp"
 
 //asset
 #include "resource/asset/Texture2D.hpp"
 
 
 namespace Sego{
+    struct IDComponent{
+        UUID ID;
+
+        IDComponent() = default;
+        IDComponent(const IDComponent&) = default;
+    };
+
     struct TagComponent{
         std::string Tag;
 
@@ -62,7 +69,8 @@ namespace Sego{
         CameraComponent(const CameraComponent&) = default;
     };
 
-    
+    //ForWard 
+    class ScriptableEntity;
     struct NativeScriptComponent{
         ScriptableEntity* Instance = nullptr;
 

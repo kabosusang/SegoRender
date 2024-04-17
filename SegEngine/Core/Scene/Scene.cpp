@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Scene.hpp"
 #include "Component.hpp"
-#include "Entity.hpp" 
+#include "ScriptEntity.hpp"
 #include "Core/Vulkan/VulkanContext.hpp"
 
 //Box2D
@@ -32,14 +32,22 @@ Scene::~Scene(){
 }
 
 Entity Scene::CreateEntity(const std::string& name){
+
+    return CreateEntityWithUUID(UUID(),name);
+}
+
+Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string &name)
+{
     Entity entity = {m_Registry.create(),this};
+    entity.AddComponent<IDComponent>(uuid);
     entity.AddComponent<TransformComponent>();
     auto& tag = entity.AddComponent<TagComponent>(name);
     tag.Tag = name.empty() ? "Entity" : name;
     return entity;
 }
 
-void Scene::DestroyEntity(Entity entity){
+void Scene::DestroyEntity(Entity entity)
+{
     m_Registry.destroy(entity);
 }
 
@@ -189,6 +197,11 @@ Entity Scene::GetPrimaryCameraEntity(){
 template<typename T>
 void Scene::OnComponentAdded(Entity entity, T& component){
     SG_CORE_WARN("UnKnown Component Added");
+}
+
+template<>
+void Scene::OnComponentAdded<IDComponent>(Entity entity, IDComponent& component){
+
 }
 
 template<>
