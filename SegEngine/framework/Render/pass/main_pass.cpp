@@ -304,6 +304,8 @@ void MainPass::Render(){
             std::shared_ptr<SpriteRenderData> spritedata = std::static_pointer_cast<SpriteRenderData>(Rendata);
             render_sprite(cmdBuffer,spritedata);
        }
+
+       
     }
 
     cmdBuffer.endRenderPass();

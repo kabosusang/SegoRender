@@ -56,14 +56,13 @@ public:
         static void createIndexBuffer(uint32_t buffer_size, void* data, VmaBuffer& buffer);
         
 
-
+        static void transitionImageLayout(vk::Image image, vk::ImageLayout old_layout, vk::ImageLayout new_layout, vk::Format format, uint32_t mip_levels, uint32_t layers);
 private:
         //image related
         static bool hasStencilComponent(vk::Format format);
         static bool hasDepthComponent(vk::Format format);
         static vk::ImageAspectFlags calcImageAspectFlags(vk::Format format);
         static uint32_t calcFormatSize(vk::Format format);
-        static void transitionImageLayout(vk::Image image, vk::ImageLayout old_layout, vk::ImageLayout new_layout, vk::Format format, uint32_t mip_levels, uint32_t layers);
         static vk::PipelineStageFlags pipelineStageForLayout(vk::ImageLayout layout);
         static vk::AccessFlags accessFlagsForImageLayout(vk::ImageLayout layout);
         static void copyBufferToImage(vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height);

@@ -14,7 +14,6 @@
 
 namespace Sego{
 
-
 void GlTFImporter::LoadNodes(const tinygltf::Node& inputNode, 
 const tinygltf::Model& input, Node* parent, 
 std::vector<uint32_t>& indexBuffer, std::vector<StaticVertex>& vertexBuffer,

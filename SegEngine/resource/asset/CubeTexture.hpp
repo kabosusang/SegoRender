@@ -7,7 +7,7 @@ namespace Sego{
     public:
         TextureCube();
         ~TextureCube();
-        static std::shared_ptr<TextureCube> Create(const std::string& path);
+        void Create(const std::string& path);
         void loadFromMemory();
     };
 

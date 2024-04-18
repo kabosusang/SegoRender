@@ -18,8 +18,10 @@ glm::mat4 proj = camera.GetProjectionMatrix();
 
 proj[1][1] *= -1;
 m_ViewProj = proj * view;
-//Vctx.setView(view);
-//Vctx.setProjection(proj);
+
+
+
+
 
 }
 
@@ -125,6 +127,8 @@ void Renderer::Render(Scene* scene){
         auto [transform,spriteRenderer] = view.get<TransformComponent,SpriteRendererComponent>(entity);
         DrawSprite(transform.GetTransform(),spriteRenderer,(int)entity,SpriteRenderDatas);
     }
+
+
     //Push Renderer
     VCtx.SetRenderDatas(SpriteRenderDatas);
     SpriteRenderDatas.clear();

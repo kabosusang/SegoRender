@@ -1,6 +1,6 @@
 #pragma once
-
 #include <glm/glm.hpp>
+#include <resource/asset/CubeTexture.hpp>
 
 namespace Sego{
     class Camera{
@@ -14,6 +14,7 @@ namespace Sego{
         const glm::mat4& GetProjection() const { return m_Projection; }
     protected:
         glm::mat4 m_Projection;
+        std::shared_ptr<TextureCube> m_Skybox;
     };
 
 }

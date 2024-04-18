@@ -49,7 +49,9 @@ namespace Sego{
             mainPass_->setRenderDatas(render_Datas);
             pickPass_->setRenderDatas(render_Datas);
         }
+        
 
+        
     public:
         std::shared_ptr<Texture2D> defaultTexture;
     private:

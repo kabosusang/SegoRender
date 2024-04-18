@@ -9,10 +9,17 @@ namespace Sego{
 		uint32_t baseColorTextureIndex;
 	};
 
-
 struct imageIndex{
 	int32_t imageIndex;
 };
+
+
+
+
+
+
+
+
 
 
 /// PBRMaterial

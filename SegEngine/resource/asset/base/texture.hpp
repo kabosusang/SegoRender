@@ -28,9 +28,12 @@ public:
     uint32_t layes_ = 1;
     VmaImageViewSampler image_view_sampler_ = {};
 
+    void loadKtxTexture(void* p_ktx_texture,vk::Format format = vk::Format::eUndefined);
+
     void destory(){
        image_view_sampler_.destroy();
     }
+
 };
 
 

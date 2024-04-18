@@ -25,3 +25,6 @@
 [submodule "3rdL/box2d"]
 	path = 3rdL/box2d
 	url = https://github.com/erincatto/box2d
+[submodule "3rdL/ktx"]
+	path = 3rdL/ktx
+	url = https://github.com/KhronosGroup/KTX-Software

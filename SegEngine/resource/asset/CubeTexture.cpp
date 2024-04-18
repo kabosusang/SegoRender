@@ -1,18 +1,17 @@
 #include "pch.h"
 #include "CubeTexture.hpp"
 #include "Core/Vulkan/Vulkantool.hpp"
+#include <ktx.h>
 
 namespace Sego{
     
     void TextureCube::loadFromMemory(){
-        Vulkantool::createImageViewSampler(
-        width_,height_,image_data_.data(),mip_levels_,layes_,format_,
-        minfilter_,magfilter_,addressmode_u,image_view_sampler_);
+        
     }
 
     TextureCube::TextureCube(){
-        texture_type_ = ETextureType::Cube;
-        layes = 6;
+        texture_type_ = TextureType::Cube;
+        layes_ = 6;
     }
 
     TextureCube::~TextureCube()
@@ -20,15 +19,18 @@ namespace Sego{
         image_view_sampler_.destroy();
     }
 
-    std::shared_ptr<TextureCube> TextureCube::Create(const std::string &path){   
-        std::shared_ptr<TextureCube> texture = std::make_shared<TextureCube>();
-      
-        
+    void TextureCube::Create(const std::string &path){   
+        ktxTexture* ktxTexture;
+        auto result = ktxTexture_CreateFromNamedFile(path.c_str(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &ktxTexture);
+        if (result != KTX_SUCCESS) {
+            SG_CORE_ERROR("Failed to load Cubetexture: {0}", path);
+        }
 
-
-
-
-        return std::shared_ptr<TextureCube>();
+        width_ = ktxTexture->baseWidth;
+        height_ = ktxTexture->baseHeight;
+        mip_levels_ = ktxTexture->numLevels;
+        addressmode_u = addressmode_v = addressmode_w = vk::SamplerAddressMode::eClampToEdge;
+        loadKtxTexture(ktxTexture,vk::Format::eR8G8B8A8Unorm);
     }
 
 }

@@ -1,6 +1,6 @@
 #pragma once
 #include "render_pass.hpp"
-
+#include "resource/asset/CubeTexture.hpp"
 
 namespace Sego{
     class MainPass : public RenderPass
@@ -26,9 +26,6 @@ namespace Sego{
         void drawNode(vk::CommandBuffer cmd,vk::PipelineLayout pipelineLayout, Node* node);
         void render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<MeshRenderData> Rendata);
         void render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteRenderData> sprite);
-    
-    public:
-       
     private:
         std::vector<vk::Format> m_formats;
         //Color Texture
@@ -36,7 +33,9 @@ namespace Sego{
         //Depth Texture
         VmaImageViewSampler depthIVs_;
 
-       
+        //Skybox
+        std::shared_ptr<TextureCube> skyboxs_;
+        
     };
 
 

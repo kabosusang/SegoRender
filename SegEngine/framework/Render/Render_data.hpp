@@ -23,7 +23,7 @@ namespace Sego{
     };
 
     enum class RenderDataType{
-        Sprite,Base,Mesh,Skybox
+        Sprite,Base,StaticMesh,Skybox
     };
 
     struct RenderData{
@@ -48,7 +48,6 @@ namespace Sego{
         // Editor-only
         uint32_t EntityID = -1;
 
-
         void destory(){
             vertexBuffer_.destroy();
             indexBuffer_.destroy();
@@ -56,29 +55,28 @@ namespace Sego{
 
     };
 
-    struct MeshRenderData : public RenderData{
-       
+    struct MeshRenderData : public RenderData{ 
         VmaBuffer vertexBuffer_;
         VmaBuffer indexBuffer_;
-        std::vector<imageIndex> textureindex_;
-        std::vector<Texture2D> textures_;
-        std::vector<Material> materials_;
-        std::vector<Node*> nodes_;
+        std::vector<uint32_t> indexCounts_;
+        std::vector<uint32_t> indexOffsets_;
+        //push Constant
+        glm::mat4 Meshmvp_;
 
-        glm::mat4 Meshmodel_;
-
-        void destory(){
-            for(auto& node : nodes_){
-                delete node;
-            }
-            vertexBuffer_.destroy();
-            indexBuffer_.destroy();
-            for(auto& texture : textures_){
-                texture.destory();
-            }
-            
-        }
     };
+
+    struct StaticMeshRenderData : public MeshRenderData{
+        StaticMeshRenderData() {type = RenderDataType::StaticMesh;}
+
+        
+
+    };
+
+
+
+
+
+
 
 
     struct SkyboxRenderData : public RenderData{
