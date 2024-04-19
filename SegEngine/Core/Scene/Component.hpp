@@ -9,7 +9,9 @@
 #include "Core/Base/UUID.hpp"
 
 //asset
+
 #include "resource/asset/Texture2D.hpp"
+#include "framework/Render/Render_data.hpp"
 
 
 namespace Sego{
@@ -117,6 +119,18 @@ namespace Sego{
         BoxCollider2Domponent() = default;
         BoxCollider2Domponent(const BoxCollider2Domponent&) = default;
     };
+
+    //Mesh
+    struct MeshComponent{
+        std::string name = "nullmesh";
+        std::string path = "nullpath";
+        std::shared_ptr<StaticMeshRenderData> MeshData = nullptr;
+        
+        MeshComponent() = default;
+        MeshComponent(const MeshComponent&) = default;
+    };
+
+    
 
     
 

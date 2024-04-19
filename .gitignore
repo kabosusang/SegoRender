@@ -2,7 +2,8 @@
 .cache
 cmake-build
 *.json
-*.spv
+*.bat
+*.ktx
 compile_flags.txt
 
 # Ignore those directories

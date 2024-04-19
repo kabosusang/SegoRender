@@ -20,9 +20,9 @@ namespace Sego{
         uint32_t ReadPixelInt(uint32_t x, uint32_t y);
       
   private:
-        void drawNode(vk::CommandBuffer cmd,vk::PipelineLayout pipelineLayout, Node* node);
-        void render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<MeshRenderData> Rendata);
-        void render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteRenderData> sprite);
+        void drawNode(vk::CommandBuffer cmd,vk::PipelineLayout pipelineLayout, Node* node,glm::mat4& transform,int id);
+        void render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<StaticMeshRenderData>& Rendata);
+        void render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteRenderData>& sprite);
     
     private:
         float scale_ratio_ = 0;

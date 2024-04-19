@@ -5,9 +5,6 @@
 #include "resource/asset/Texture2D.hpp"
 #include "resource/asset/Material.hpp"
 
-
-#include "resource/host_device.h"
-
 namespace Sego{
 
     struct Node{
@@ -25,6 +22,7 @@ namespace Sego{
     enum class RenderDataType{
         Sprite,Base,StaticMesh,Skybox
     };
+
 
     struct RenderData{
         RenderDataType type ;
@@ -58,8 +56,7 @@ namespace Sego{
     struct MeshRenderData : public RenderData{ 
         VmaBuffer vertexBuffer_;
         VmaBuffer indexBuffer_;
-        std::vector<uint32_t> indexCounts_;
-        std::vector<uint32_t> indexOffsets_;
+
         //push Constant
         glm::mat4 Meshmvp_;
 
@@ -68,16 +65,12 @@ namespace Sego{
     struct StaticMeshRenderData : public MeshRenderData{
         StaticMeshRenderData() {type = RenderDataType::StaticMesh;}
 
-        
-
+        std::vector<imageIndex> textureindex_;
+        std::vector<Node*> nodes_; //nodes
+        std::vector<Material> materials_;
+        std::vector<Texture2D> textures_;
+        uint32_t EntityID = -1;
     };
-
-
-
-
-
-
-
 
     struct SkyboxRenderData : public RenderData{
          SkyboxRenderData(){

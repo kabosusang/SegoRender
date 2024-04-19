@@ -5,6 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Core/Scene/Component.hpp"
+#include "resource/asset/Import/gltf_import.hpp"
 
 namespace Sego{
 
@@ -43,7 +44,6 @@ void SceneHierarchyPanel::OnImGuiRender(){
     ImGui::Begin("Inspector");
     if(m_SelectionContext){
         DrawComponents(m_SelectionContext);
-
     }
     ImGui::End();
 }
@@ -253,6 +253,13 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
             }
         }
 
+         if (!m_SelectionContext.HasComponent<MeshComponent>()){
+            if (ImGui::MenuItem("MeshComponent"))
+            {
+                m_SelectionContext.AddComponent<MeshComponent>();
+                ImGui::CloseCurrentPopup();
+            }
+        }
 
         ImGui::EndPopup();
     }
@@ -337,7 +344,12 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
 		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM")){
 			const wchar_t* path = (const wchar_t*)payload->Data;
 			std::filesystem::path texturePath = std::filesystem::path(s_AssetPath)/path;
-            component.Texture = Texture2D::Create(texturePath.string());
+            if (texturePath.extension() == ".png" || texturePath.extension() == ".jpg" || texturePath.extension() == ".jpeg" || texturePath.extension() == ".bmp")
+            {
+                component.Texture = Texture2D::Create(texturePath.string());
+            }else{
+                SG_CORE_ERROR("Texture format not supported");
+            }        
 		}
 	
 		ImGui::EndDragDropTarget();
@@ -380,6 +392,31 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
         ImGui::DragFloat("Restitution", &component.Restitution, 0.01f,0.0f, 1.0f);
         ImGui::DragFloat("Restitution Threshold", &component.RestitutionThreshold, 0.01f,0.0f);
     });
+
+    DrawComponent<MeshComponent>("MeshComponent", entity, [](auto& component)
+    {
+        ImGui::Text("Mesh");
+        ImGui::SameLine();
+        ImGui::Button(component.name.c_str(),ImVec2(300.0f,0.0f));
+        if (ImGui::BeginDragDropTarget()){
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM")){
+			const wchar_t* path = (const wchar_t*)payload->Data;
+			std::filesystem::path modelPath = std::filesystem::path(s_AssetPath)/path;
+            if (modelPath.extension() == ".gltf" || modelPath.extension() == ".glb")
+            {
+                component.name = modelPath.filename().replace_extension().string();
+                component.path = modelPath.string();
+                component.MeshData = GlTFImporter::LoadglTFFile(modelPath.string());
+            }else{
+                SG_CORE_ERROR("Model format not supported");
+            }
+        }
+	
+		ImGui::EndDragDropTarget();
+    }
+
+    });
+
 
 }
 

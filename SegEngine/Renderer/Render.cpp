@@ -121,17 +121,26 @@ void Renderer::Render(Scene* scene){
     auto& VCtx =  VulkanRhi::Instance();
 
     //Render 2D
-    std::vector<std::shared_ptr<RenderData>> SpriteRenderDatas;
+    std::vector<std::shared_ptr<RenderData>> RenderDatas;
     auto view = scene->m_Registry.view<TransformComponent,SpriteRendererComponent>();
     for(auto entity : view){
         auto [transform,spriteRenderer] = view.get<TransformComponent,SpriteRendererComponent>(entity);
-        DrawSprite(transform.GetTransform(),spriteRenderer,(int)entity,SpriteRenderDatas);
+        DrawSprite(transform.GetTransform(),spriteRenderer,(int)entity,RenderDatas);
     }
 
+    //Render 3D Static Mesh
+    auto view2 = scene->m_Registry.view<TransformComponent,MeshComponent>();
+    for(auto entity : view2){
+        auto [transform,meshRenderer] = view2.get<TransformComponent,MeshComponent>(entity);
+        if (meshRenderer.MeshData == nullptr)
+            continue;
+        meshRenderer.MeshData->Meshmvp_ = m_ViewProj * transform.GetTransform();
+        meshRenderer.MeshData->EntityID = (int)entity + 1;
+        RenderDatas.push_back(meshRenderer.MeshData);
+    }
 
     //Push Renderer
-    VCtx.SetRenderDatas(SpriteRenderDatas);
-    SpriteRenderDatas.clear();
+    VCtx.SetRenderDatas(RenderDatas);
 }
 
 void Renderer::Render(){

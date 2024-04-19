@@ -21,7 +21,7 @@ void PickPass::destroy(){
 }
 
 void PickPass::createDescriptorSetLayout(){
-    descriptorSetLayouts_.resize(1);//spriter
+    descriptorSetLayouts_.resize(1);
 
     vk::DescriptorSetLayoutBinding uboLayoutBinding{};
     uboLayoutBinding.setBinding(0)
@@ -45,11 +45,12 @@ void PickPass::createDescriptorSetLayout(){
 
     descriptorSetLayouts_[0]= Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci);
     //mesh DescriptorSetLayout
+     //mesh DescriptorSetLayout
 
 }
 
 void PickPass::createPipelineLayouts(){
-    pipelineLayouts_.resize(1); //spriter
+    pipelineLayouts_.resize(1); //spriter mesh
 
     //spriter
     push_constant_ranges_ = {
@@ -65,14 +66,11 @@ void PickPass::createPipelineLayouts(){
 
     pipelineLayouts_[0] = Context::Instance().device.createPipelineLayout(pipeline_layout_ci);
 
-
-    //static mesh
-
 }
 
 void PickPass::CreatePiepline(){
-    auto& ctx = Context::Instance();
-    pipelines_.resize(1); //Sprite
+    auto& ctx = Context::Instance(); 
+    pipelines_.resize(2); //Sprite and Mesh
 
     //-------------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------
@@ -186,6 +184,60 @@ void PickPass::CreatePiepline(){
     auto Result = ctx.device.createGraphicsPipeline(nullptr, pipeline_ci);
     pipelines_[0] = Result.value;
     
+    //Mesh Renderer
+    shader_stage_cis.clear();
+    shader_stage_cis = {
+        ctx.shaderManager->LoadShader("resources/shaders/Mesh/meshvert.spv", vk::ShaderStageFlagBits::eVertex),
+        ctx.shaderManager->LoadShader("resources/shaders/pick/meshpick.spv", vk::ShaderStageFlagBits::eFragment)
+    };
+
+    //1. vertex input   BindingDescription And AttributeDescription
+    vk::VertexInputBindingDescription Meshvertex_binding_desc{};
+    Meshvertex_binding_desc.setBinding(0)
+                      .setStride(sizeof(StaticVertex))
+                      .setInputRate(vk::VertexInputRate::eVertex);
+    
+    std::array<vk::VertexInputAttributeDescription, 4> vertex_attr_descs_Mesh;
+    vertex_attr_descs_Mesh[0].setBinding(0)
+                            .setLocation(0)
+                            .setFormat(vk::Format::eR32G32B32Sfloat)
+                            .setOffset(offsetof(StaticVertex, pos));
+    vertex_attr_descs_Mesh[1].setBinding(0)
+                            .setLocation(1)
+                            .setFormat(vk::Format::eR32G32B32Sfloat)
+                            .setOffset(offsetof(StaticVertex, normal));
+    vertex_attr_descs_Mesh[2].setBinding(0)
+                            .setLocation(2)
+                            .setFormat(vk::Format::eR32G32Sfloat)
+                            .setOffset(offsetof(StaticVertex, uv));
+    vertex_attr_descs_Mesh[3].setBinding(0)
+                        .setLocation(3)
+                        .setFormat(vk::Format::eR32G32B32Sfloat)
+                        .setOffset(offsetof(StaticVertex, color));
+
+    vertex_input_ci.setVertexAttributeDescriptionCount(vertex_attr_descs_Mesh.size())
+                   .setPVertexAttributeDescriptions(vertex_attr_descs_Mesh.data())
+                   .setVertexBindingDescriptionCount(1)
+                   .setPVertexBindingDescriptions(&Meshvertex_binding_desc);
+      
+    pipeline_ci.setStages(shader_stage_cis)
+               .setPVertexInputState(&vertex_input_ci)
+               .setPInputAssemblyState(&input_assemb_ci)
+               .setPViewportState(&viewport_state_ci)
+               .setPRasterizationState(&raster_ci)
+               .setPDynamicState(&dynamicState)
+               .setPMultisampleState(&multisample_ci)
+               .setPDepthStencilState(&depth_stencil_ci)
+               .setPColorBlendState(&blend_ci)
+               .setLayout(pipelineLayouts_[0])
+               .setRenderPass(renderPass_);
+
+    Result = ctx.device.createGraphicsPipeline(nullptr, pipeline_ci);
+    pipelines_[1] = Result.value;
+
+
+
+
 }
 
 
@@ -294,6 +346,13 @@ void PickPass::Render(){
             std::shared_ptr<SpriteRenderData> spritedata = std::static_pointer_cast<SpriteRenderData>(Rendata);
             render_sprite(cmdBuffer,spritedata);
        }
+
+        if (Rendata->type == RenderDataType::StaticMesh){
+            std::shared_ptr<StaticMeshRenderData> staticmeshdata = std::static_pointer_cast<StaticMeshRenderData>(Rendata);
+            render_mesh(cmdBuffer,staticmeshdata);
+       }
+
+
     }
     cmdBuffer.endRenderPass();
 
@@ -347,36 +406,26 @@ void PickPass::recreateframbuffer(uint32_t width, uint32_t height){
 
 
 
-void PickPass::render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<MeshRenderData> Rendata){
+void PickPass::render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<StaticMeshRenderData>& Rendata){
     auto& VulkanRhi = VulkanRhi::Instance();
     
     //pipelines_[0] Normal GLTF Model Renderer
-    cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines_[0]);
+    cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines_[1]);
     vk::Buffer vertexBuffers[] = { Rendata->vertexBuffer_.buffer };
     vk::DeviceSize offsets[] = { 0 };
     cmdBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
     cmdBuffer.bindIndexBuffer(Rendata->indexBuffer_.buffer, 0, vk::IndexType::eUint32);
 
     desc_writes.clear();
-    //1. Uniform
-    std::array<vk::DescriptorBufferInfo, 1> desc_buffer_infos{}; //Uniform 
-    addBufferDescriptorSet(desc_writes, desc_buffer_infos[0], 
-    VulkanRhi.getCurrentUniformBuffer(), 0);
-
-    //2. Image Sample
-    std::array<vk::DescriptorImageInfo,1>   desc_image_info{};   //Sample
-    
-    addImageDescriptorSet(desc_writes, desc_image_info[0], 
-    Rendata->textures_[Rendata->materials_[0].baseColorTextureIndex].image_view_sampler_,1);
-    
+   
     //Draw Notes
     for(auto& node : Rendata->nodes_){
-        //drawNode(cmdBuffer,pipelineLayouts_[1],node);
+        drawNode(cmdBuffer,pipelineLayouts_[0],node,Rendata->Meshmvp_,static_cast<int>(Rendata->EntityID));
     }
 }
 
 //2. Sprite Renderer
-void PickPass::render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteRenderData> Rendata){
+void PickPass::render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteRenderData>& Rendata){
     auto& VulkanRhi = VulkanRhi::Instance();
     
     //pipelines_[1] Sprite Renderer
@@ -394,34 +443,32 @@ void PickPass::render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteR
 }
 
 
-void PickPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelineLayout, Node* node){
+void PickPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelineLayout, Node* node,glm::mat4& transform,int Id){
      auto& VulkanRhi = VulkanRhi::Instance();
 
     if(node->mesh.primitives.size() > 0){
+        // Pass the node's matrix via push constants
+        // Traverse the node hierarchy to the top-most parent to get the final matrix of the current node
+        glm::mat4 nodeMatrix = node->matrix;
+        Node* currentParent = node->parent;
+        while (currentParent) {
+            nodeMatrix = currentParent->matrix * nodeMatrix;
+            currentParent = currentParent->parent;
+        }
+        nodeMatrix = nodeMatrix * transform;
+        updatePushConstants(cmdBuffer,pipelineLayout,{&nodeMatrix,&Id});
+       
         for ( auto& primitive : node->mesh.primitives) {
-                // Pass the node's matrix via push constants
-                // Traverse the node hierarchy to the top-most parent to get the final matrix of the current node
-                glm::mat4 nodeMatrix = node->matrix;
-                Node* currentParent = node->parent;
-                while (currentParent) {
-                    nodeMatrix = currentParent->matrix * nodeMatrix;
-                    currentParent = currentParent->parent;
-                }
-                
-                cmdBuffer.pushConstants(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(glm::mat4), &nodeMatrix);
+               
                 // Update the push constant block
 				if (primitive.indexCount > 0) {
-                
-					VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    pipelineLayouts_[0], 0, static_cast<uint32_t>(desc_writes.size()), (VkWriteDescriptorSet *)desc_writes.data());
-    
                     // Bind the descriptor for the current primitive's texture
                     cmdBuffer.drawIndexed(primitive.indexCount,1,primitive.firstIndex,0,0);
 				}
 			}
 		}
 		for (auto& child : node->children) {
-			drawNode(cmdBuffer,pipelineLayout, child);
+			drawNode(cmdBuffer,pipelineLayout, child,transform,Id);
 		}
 }
 

@@ -14,10 +14,11 @@
 
 namespace Sego{
 
+
 void GlTFImporter::LoadNodes(const tinygltf::Node& inputNode, 
 const tinygltf::Model& input, Node* parent, 
 std::vector<uint32_t>& indexBuffer, std::vector<StaticVertex>& vertexBuffer,
-std::shared_ptr<MeshRenderData>& meshRenderData)
+std::shared_ptr<StaticMeshRenderData>& meshRenderData)
 {
 		Node* node = new Node{};
 		node->matrix = glm::mat4(1.0f);
@@ -148,7 +149,7 @@ std::shared_ptr<MeshRenderData>& meshRenderData)
 }
 
 
-std::shared_ptr<MeshRenderData> GlTFImporter::LoadglTFFile(const std::string& filename){
+std::shared_ptr<StaticMeshRenderData> GlTFImporter::LoadglTFFile(const std::string& filename){
     tinygltf::Model gltf_model;
     tinygltf::TinyGLTF loader;
     std::string error,warning;
@@ -166,7 +167,7 @@ std::shared_ptr<MeshRenderData> GlTFImporter::LoadglTFFile(const std::string& fi
 		SG_CORE_ERROR("Failed to load glTF file: {0}!,error:{1},warning: {2}", filename,error,warning);
 	
 	}
-    std::shared_ptr<MeshRenderData> mesh_data = std::make_shared<MeshRenderData>();
+    std::shared_ptr<StaticMeshRenderData> mesh_data = std::make_shared<StaticMeshRenderData>();
     
     //1. Load Images
     mesh_data->textures_.resize(gltf_model.images.size());
@@ -176,7 +177,7 @@ std::shared_ptr<MeshRenderData> GlTFImporter::LoadglTFFile(const std::string& fi
         mesh_data->textures_[i].image_data_ = glTFImage.image;
         mesh_data->textures_[i].width_ = glTFImage.width;
         mesh_data->textures_[i].height_ = glTFImage.height;
-        mesh_data->textures_[i].format_ = vk::Format::eR8G8B8A8Srgb;
+        mesh_data->textures_[i].format_ = vk::Format::eR8G8B8A8Unorm;
         mesh_data->textures_[i].loadFromMemory();
     }
 
@@ -191,8 +192,9 @@ std::shared_ptr<MeshRenderData> GlTFImporter::LoadglTFFile(const std::string& fi
         }
         //Get the color texture index
         if(glTFMaterial.values.find("baseColorTexture") != glTFMaterial.values.end()){
-           mesh_data->materials_[i].baseColorTextureIndex = glTFMaterial.values["baseColorTexture"].TextureIndex();
-        }
+           	mesh_data->materials_[i].baseColorTextureIndex = glTFMaterial.values["baseColorTexture"].TextureIndex();
+			mesh_data->materials_[i].has_baseColorTexture = 1;
+		}
 
     }
 

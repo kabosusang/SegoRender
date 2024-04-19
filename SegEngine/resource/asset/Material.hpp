@@ -4,22 +4,24 @@
 
 namespace Sego{
 
- struct Material {
-		glm::vec4 baseColorFactor = glm::vec4(1.0f);
-		uint32_t baseColorTextureIndex;
-	};
+struct Material {
+	glm::vec4 baseColorFactor = glm::vec4(1.0f);
+
+	/*
+	glm::vec4 emissiveFactor = glm::vec4(0.0f);
+	float metallicFactor = 1.0f;
+	float roughnessFactor = 1.0f;
+	float occlusionStrength = 1.0f;
+	float alphaCutoff = 0.5f;*/
+
+	int32_t has_baseColorTexture = 0;
+	uint32_t baseColorTextureIndex; // index in textures array
+};
+
 
 struct imageIndex{
 	int32_t imageIndex;
 };
-
-
-
-
-
-
-
-
 
 
 /// PBRMaterial
