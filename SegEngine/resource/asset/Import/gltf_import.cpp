@@ -91,6 +91,7 @@ std::shared_ptr<StaticMeshRenderData>& meshRenderData)
 						vert.pos = glm::vec4(glm::make_vec3(&positionBuffer[v * 3]), 1.0f);
 						vert.normal = glm::normalize(glm::vec3(normalsBuffer ? glm::make_vec3(&normalsBuffer[v * 3]) : glm::vec3(0.0f)));
 						vert.uv = texCoordsBuffer ? glm::make_vec2(&texCoordsBuffer[v * 2]) : glm::vec3(0.0f);
+						vert.uv.y = 1.0f - vert.uv.y; // Vulkan has a Y axis starting at the bottom of the image for textures
 						vert.color = glm::vec3(1.0f);
 						vertexBuffer.push_back(vert);
 					}

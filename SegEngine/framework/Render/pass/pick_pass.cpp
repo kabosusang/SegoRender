@@ -21,7 +21,7 @@ void PickPass::destroy(){
 }
 
 void PickPass::createDescriptorSetLayout(){
-    descriptorSetLayouts_.resize(1);
+    descriptorSetLayouts_.resize(2);
 
     vk::DescriptorSetLayoutBinding uboLayoutBinding{};
     uboLayoutBinding.setBinding(0)
@@ -45,13 +45,17 @@ void PickPass::createDescriptorSetLayout(){
 
     descriptorSetLayouts_[0]= Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci);
     //mesh DescriptorSetLayout
-     //mesh DescriptorSetLayout
+     vk::DescriptorSetLayoutCreateInfo desc_set_layout_ci_mesh{};
+    desc_set_layout_ci_mesh.setBindingCount(0)
+                      .setBindings(nullptr)
+                      .setFlags(vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR);
+
+    descriptorSetLayouts_[1] = Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci_mesh);
 
 }
 
 void PickPass::createPipelineLayouts(){
-    pipelineLayouts_.resize(1); //spriter mesh
-
+    pipelineLayouts_.resize(2); //spriter mesh
     //spriter
     push_constant_ranges_ = {
         {vk::ShaderStageFlagBits::eVertex,0,sizeof(glm::mat4)},
@@ -65,6 +69,17 @@ void PickPass::createPipelineLayouts(){
                       .setPPushConstantRanges(push_constant_ranges_.data());
 
     pipelineLayouts_[0] = Context::Instance().device.createPipelineLayout(pipeline_layout_ci);
+
+    //mesh
+     vk::PipelineLayoutCreateInfo pipeline_layout_ci_mesh{};
+     pipeline_layout_ci_mesh.setSetLayoutCount(1)
+                      .setPSetLayouts(&descriptorSetLayouts_[1])
+                      .setPushConstantRangeCount(static_cast<uint32_t>(push_constant_ranges_.size()))
+                      .setPPushConstantRanges(push_constant_ranges_.data());
+
+    pipelineLayouts_[1] = Context::Instance().device.createPipelineLayout(pipeline_layout_ci_mesh);
+
+
 
 }
 
@@ -184,6 +199,11 @@ void PickPass::CreatePiepline(){
     auto Result = ctx.device.createGraphicsPipeline(nullptr, pipeline_ci);
     pipelines_[0] = Result.value;
     
+    //10. destroy shader module
+    for(auto& shader_stage_ci : shader_stage_cis){
+        ctx.device.destroyShaderModule(shader_stage_ci.module);
+    }
+
     //Mesh Renderer
     shader_stage_cis.clear();
     shader_stage_cis = {
@@ -219,7 +239,8 @@ void PickPass::CreatePiepline(){
                    .setPVertexAttributeDescriptions(vertex_attr_descs_Mesh.data())
                    .setVertexBindingDescriptionCount(1)
                    .setPVertexBindingDescriptions(&Meshvertex_binding_desc);
-      
+    raster_ci.setCullMode(vk::CullModeFlagBits::eBack);
+
     pipeline_ci.setStages(shader_stage_cis)
                .setPVertexInputState(&vertex_input_ci)
                .setPInputAssemblyState(&input_assemb_ci)
@@ -229,14 +250,16 @@ void PickPass::CreatePiepline(){
                .setPMultisampleState(&multisample_ci)
                .setPDepthStencilState(&depth_stencil_ci)
                .setPColorBlendState(&blend_ci)
-               .setLayout(pipelineLayouts_[0])
+               .setLayout(pipelineLayouts_[1])
                .setRenderPass(renderPass_);
 
     Result = ctx.device.createGraphicsPipeline(nullptr, pipeline_ci);
     pipelines_[1] = Result.value;
 
-
-
+    //10. destroy shader module
+    for(auto& shader_stage_ci : shader_stage_cis){
+        ctx.device.destroyShaderModule(shader_stage_ci.module);
+    }
 
 }
 
@@ -338,8 +361,6 @@ void PickPass::Render(){
            .setExtent({width_,height_});
     cmdBuffer.setScissor(0, 1, &scissor);
 
-    //pipelines_[0] Normal GLTF Model Renderer
-
     for(const auto& Rendata : renderDatas_){
       
        if (Rendata->type == RenderDataType::Sprite){
@@ -381,7 +402,7 @@ uint32_t PickPass::decodeEntityID(const uint8_t *color)
     return id;
 }
 
-#define MAX_SIZE 124u  //why 124?
+#define MAX_SIZE 200u  //why 124?
 void PickPass::recreateframbuffer(uint32_t width, uint32_t height){
     auto& ctx = Context::Instance();
     ctx.device.waitIdle();
@@ -417,10 +438,9 @@ void PickPass::render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<StaticMes
     cmdBuffer.bindIndexBuffer(Rendata->indexBuffer_.buffer, 0, vk::IndexType::eUint32);
 
     desc_writes.clear();
-   
     //Draw Notes
     for(auto& node : Rendata->nodes_){
-        drawNode(cmdBuffer,pipelineLayouts_[0],node,Rendata->Meshmvp_,static_cast<int>(Rendata->EntityID));
+        drawNode(cmdBuffer,pipelineLayouts_[1],node,Rendata);
     }
 }
 
@@ -443,23 +463,24 @@ void PickPass::render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteR
 }
 
 
-void PickPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelineLayout, Node* node,glm::mat4& transform,int Id){
+void PickPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelineLayout, Node* node,std::shared_ptr<StaticMeshRenderData>& Rendata){
      auto& VulkanRhi = VulkanRhi::Instance();
 
     if(node->mesh.primitives.size() > 0){
         // Pass the node's matrix via push constants
         // Traverse the node hierarchy to the top-most parent to get the final matrix of the current node
+       
         glm::mat4 nodeMatrix = node->matrix;
         Node* currentParent = node->parent;
         while (currentParent) {
             nodeMatrix = currentParent->matrix * nodeMatrix;
             currentParent = currentParent->parent;
         }
-        nodeMatrix = nodeMatrix * transform;
-        updatePushConstants(cmdBuffer,pipelineLayout,{&nodeMatrix,&Id});
+        desc_writes.clear();
+        nodeMatrix = Rendata->Meshmvp_ * nodeMatrix;
        
-        for ( auto& primitive : node->mesh.primitives) {
-               
+         for ( auto& primitive : node->mesh.primitives) {
+            updatePushConstants(cmdBuffer,pipelineLayout,{&nodeMatrix,&Rendata->EntityID});
                 // Update the push constant block
 				if (primitive.indexCount > 0) {
                     // Bind the descriptor for the current primitive's texture
@@ -468,7 +489,7 @@ void PickPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelin
 			}
 		}
 		for (auto& child : node->children) {
-			drawNode(cmdBuffer,pipelineLayout, child,transform,Id);
+			drawNode(cmdBuffer,pipelineLayout, child,Rendata);
 		}
 }
 

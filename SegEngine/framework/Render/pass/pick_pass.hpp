@@ -20,7 +20,7 @@ namespace Sego{
         uint32_t ReadPixelInt(uint32_t x, uint32_t y);
       
   private:
-        void drawNode(vk::CommandBuffer cmd,vk::PipelineLayout pipelineLayout, Node* node,glm::mat4& transform,int id);
+        void drawNode(vk::CommandBuffer cmd,vk::PipelineLayout pipelineLayout, Node* node,std::shared_ptr<StaticMeshRenderData>& Rendata);
         void render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<StaticMeshRenderData>& Rendata);
         void render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteRenderData>& sprite);
     

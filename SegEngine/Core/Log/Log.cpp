@@ -51,8 +51,6 @@ namespace Sego{
 
 void Log::destroy()
 {
-	s_ClientLogger->flush();
-	s_CoreLogger->flush();
     spdlog::drop_all();
 }
 

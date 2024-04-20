@@ -12,9 +12,8 @@ layout(Push_constant) uniform PushConstant{
     mat4 mvp;
 } pc;
 
-
 void main(){
+    gl_Position = pc.mvp * vec4(inPosition, 1.0);
     fragNormal = inNormal;
     fragUv = inTexCoord;
-    gl_Position = pc.mvp * vec4(inPosition.xyz , 1.0);
 }

@@ -203,6 +203,10 @@ void MainPass::CreatePiepline(){
     auto Result = ctx.device.createGraphicsPipeline(nullptr, pipeline_ci);
     pipelines_[0] = Result.value;
     
+    //10. destroy shader module
+    for(auto& shader_stage_ci : shader_stage_cis){
+        ctx.device.destroyShaderModule(shader_stage_ci.module);
+    }
 
     //-------------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------
@@ -259,6 +263,12 @@ void MainPass::CreatePiepline(){
 
     Result = ctx.device.createGraphicsPipeline(nullptr, pipeline_ci);
     pipelines_[1] = Result.value;
+
+    //10. destroy shader module
+    for(auto& shader_stage_ci : shader_stage_cis){
+        ctx.device.destroyShaderModule(shader_stage_ci.module);
+    }
+
 
     // Skybox Renderer
 
@@ -444,22 +454,24 @@ void MainPass::render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteR
 
 void MainPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelineLayout, Node* node,std::shared_ptr<StaticMeshRenderData>& Rendata){
     auto& VulkanRhi = VulkanRhi::Instance();
-
     if(node->mesh.primitives.size() > 0){
+        
+        glm::mat4 nodeMatrix = node->matrix;
+        Node* currentParent = node->parent;
+        while (currentParent) {
+            nodeMatrix = currentParent->matrix * nodeMatrix;
+            currentParent = currentParent->parent;
+        }
+        
+        // Pass the final matrix to the vertex shader using push constants
+        nodeMatrix = Rendata->Meshmvp_ * nodeMatrix ;
+        
         for ( auto& primitive : node->mesh.primitives) {
-                glm::mat4 nodeMatrix = node->matrix;
-                Node* currentParent = node->parent;
-                while (currentParent) {
-                    nodeMatrix = currentParent->matrix * nodeMatrix;
-                    currentParent = currentParent->parent;
-                }
-                    // Pass the final matrix to the vertex shader using push constants
-                    nodeMatrix = Rendata->Meshmvp_ * nodeMatrix ;
-                    
-                    updatePushConstants(cmdBuffer,pipelineLayout,{&nodeMatrix,
-                    &Rendata->materials_[primitive.materialIndex]},mesh_push_constant_ranges_);
-
+            updatePushConstants(cmdBuffer,pipelineLayout,{&nodeMatrix,
+            &Rendata->materials_[primitive.materialIndex]},mesh_push_constant_ranges_);
+            desc_writes.clear();
 				if (primitive.indexCount > 0) {
+
 
                     std::array<vk::DescriptorImageInfo,1>   desc_image_info{};  
                     if (Rendata->materials_[primitive.materialIndex].has_baseColorTexture){

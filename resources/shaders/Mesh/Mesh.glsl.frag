@@ -1,7 +1,7 @@
 #version 450
 
 #extension GL_GOOGLE_include_directive : enable
-#include "../host_device.h"
+#include "../device.h"
 
 layout(binding = 0) uniform sampler2D texSampler;
 
