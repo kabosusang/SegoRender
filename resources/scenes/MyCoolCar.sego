@@ -1,0 +1,12 @@
+Scene: Untitled
+Entities:
+  - Entity: 7942717793973855930
+    TagComponent:
+      Tag: Cool Car
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [30, 30, 30]
+    MeshComponent:
+      Name: ToyCar
+      Path: resources\assets\gltf\Car\ToyCar.gltf

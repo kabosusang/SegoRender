@@ -18,5 +18,11 @@
 #include <filesystem>
 #include <stack>
 #include <map>
+
+//thread
+#include <thread>
+#include <mutex>
+#include <future>
+
 //Core
 #include "Core/Log/Log.h"

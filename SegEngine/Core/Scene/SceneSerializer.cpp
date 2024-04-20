@@ -4,7 +4,8 @@
 #include "Component.hpp"
 
 #include <yaml-cpp/yaml.h>
-
+//asset
+#include "resource/asset/Import/gltf_import.hpp"
 
 namespace YAML{
 
@@ -206,6 +207,17 @@ static void SerializeEntity(YAML::Emitter& out,Entity entity){
         out << YAML::EndMap; //BoxCollider2Domponent
     }
 
+    if(entity.HasComponent<MeshComponent>()){
+        out << YAML::Key << "MeshComponent";
+        out << YAML::BeginMap; //BoxCollider2Domponent
+
+        auto& bc2dComponent = entity.GetComponent<MeshComponent>();
+        out << YAML::Key << "Name" << YAML::Value << bc2dComponent.name;
+        out << YAML::Key << "Path" << YAML::Value << bc2dComponent.path;
+        out << YAML::EndMap; //BoxCollider2Domponent
+    }
+
+
         out << YAML::EndMap; //Entity
 
 }
@@ -307,15 +319,27 @@ bool SceneSerializer::Deserialize(const std::string &filepath){
                 bc2d.Density = bc2dComponent["Density"].as<float>();
                 bc2d.Restitution = bc2dComponent["Restitution"].as<float>();
                 bc2d.RestitutionThreshold = bc2dComponent["RestitutionThreshold"].as<float>();
-         }
+            }
+            //Mesh Component
+            auto meshComponent = entity["MeshComponent"];
+            if (meshComponent){
+                auto& mc = deserializedEntity.AddComponent<MeshComponent>();
+                mc.name = meshComponent["Name"].as<std::string>();
+                mc.path = meshComponent["Path"].as<std::string>();
+                auto mesh_async = std::async(std::launch::async,[&](){
+                   mc.MeshData = GlTFImporter::LoadglTFFile(mc.path);
+                });
+            }
 
 
+
+
+        
         }
    
-   
     }
+
     return true;
-    
 }
 
 

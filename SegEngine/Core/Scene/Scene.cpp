@@ -4,6 +4,8 @@
 #include "ScriptEntity.hpp"
 #include "Core/Vulkan/VulkanContext.hpp"
 
+
+
 //Box2D
 #include "box2d/b2_world.h"
 #include "box2d/b2_body.h"
@@ -245,6 +247,7 @@ void Scene::OnComponentAdded<BoxCollider2Domponent>(Entity entity, BoxCollider2D
 
 template<>
 void Scene::OnComponentAdded<MeshComponent>(Entity entity, MeshComponent& component){
+    
 
 }
 

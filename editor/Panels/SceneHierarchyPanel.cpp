@@ -7,6 +7,8 @@
 #include "Core/Scene/Component.hpp"
 #include "resource/asset/Import/gltf_import.hpp"
 
+#include <future>
+
 namespace Sego{
 
 extern const std::filesystem::path s_AssetPath;
@@ -404,14 +406,15 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
 			std::filesystem::path modelPath = std::filesystem::path(s_AssetPath)/path;
             if (modelPath.extension() == ".gltf" || modelPath.extension() == ".glb")
             {
-                component.name = modelPath.filename().replace_extension().string();
-                component.path = modelPath.string();
-                component.MeshData = GlTFImporter::LoadglTFFile(modelPath.string());
+                std::future<void> async_result = std::async(std::launch::async,[&](){
+                    component.name = modelPath.filename().replace_extension().string();
+                    component.path = modelPath.string();
+                    component.MeshData = GlTFImporter::LoadglTFFile(modelPath.string());
+                });
             }else{
                 SG_CORE_ERROR("Model format not supported");
             }
         }
-	
 		ImGui::EndDragDropTarget();
     }
 
