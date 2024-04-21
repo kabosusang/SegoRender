@@ -126,7 +126,10 @@ namespace Sego{
         std::shared_ptr<StaticMeshRenderData> MeshData = nullptr;
         
         MeshComponent() = default;
-        MeshComponent(const MeshComponent&) = default;
+        MeshComponent(const MeshComponent& other) :
+        name(other.name),
+        path(other.path),
+        MeshData(std::make_shared<StaticMeshRenderData>(*other.MeshData)){}
     };
 
     

@@ -21,7 +21,8 @@ namespace Sego{
         VmaImageViewSampler getDepthTexture() { return depthIVs_;}
         //Output Function
         void recreateframbuffer(uint32_t width,uint32_t height);
-        
+        void SetSkybox(std::shared_ptr<SkyboxRenderData>& sky){skybox_ = sky;}
+
     private:
         void drawNode(vk::CommandBuffer cmd,vk::PipelineLayout pipelineLayout, Node* node,std::shared_ptr<StaticMeshRenderData>& Rendata);
         void render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<StaticMeshRenderData>& Rendata);
@@ -33,14 +34,10 @@ namespace Sego{
         //Depth Texture
         VmaImageViewSampler depthIVs_;
 
-
-        //
         std::vector<vk::PushConstantRange> mesh_push_constant_ranges_;
 
-
         //Skybox
-        std::shared_ptr<TextureCube> skyboxs_;
-        
+        std::shared_ptr<SkyboxRenderData> skybox_;
     };
 
 

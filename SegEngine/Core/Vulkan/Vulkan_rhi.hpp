@@ -50,8 +50,10 @@ namespace Sego{
             pickPass_->setRenderDatas(render_Datas);
         }
         
+        void SetSkybox(std::shared_ptr<SkyboxRenderData>& skybox){
+            mainPass_->SetSkybox(skybox);
+        }
 
-        
     public:
         std::shared_ptr<Texture2D> defaultTexture;
     private:

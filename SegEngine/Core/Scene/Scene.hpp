@@ -16,6 +16,8 @@ public:
     Scene();
     ~Scene();
 
+    static std::shared_ptr<Scene> Copy(const std::shared_ptr<Scene>& other);
+
     Entity CreateEntity(const std::string& name = std::string());
     Entity CreateEntityWithUUID(UUID uuid,const std::string& name = std::string());
 
@@ -28,8 +30,9 @@ public:
     void OnUpdateRuntime(Timestep ts);
     void OnViewportResize(uint32_t width, uint32_t height);
 
+    void DuplicateEntity(Entity entity);
+
     Entity GetPrimaryCameraEntity();
-    
     entt::registry &GetRegistry() { return m_Registry; }
 private:
     template<typename T>

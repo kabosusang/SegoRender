@@ -32,8 +32,7 @@ namespace Sego{
 		float GetYaw() const { return m_Yaw; }
 
 		void UseSkybox() { m_UseSkybox = !m_UseSkybox; }
-		
-
+		void BindSkybox(std::shared_ptr<TextureCube> texture) { m_SkyboxTexture = texture; }
 	private:
 		void UpdateProjection();
 		void UpdateView();
@@ -49,6 +48,9 @@ namespace Sego{
 		std::pair<float, float> PanSpeed() const;
 		float RotationSpeed() const;
 		float ZoomSpeed() const;
+
+		//skybox
+		std::shared_ptr<TextureCube> m_SkyboxTexture;
 	private:
 		bool m_UseSkybox = false;
 

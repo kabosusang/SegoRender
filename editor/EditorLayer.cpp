@@ -42,6 +42,9 @@ void EditorLayer::OnAttach(){
 	m_ActiveScene = std::make_shared<Scene>();
 	
 	m_EditorCamera = EditorCamera(30.0f,1.778f,0.1f,1000.0f);
+	m_EditorCamera.BindSkybox(std::make_shared<TextureCube>("resources/Settings/skybox/Storforsen.ktx"));
+
+
 
 #if 0
 	//Entity
@@ -90,9 +93,9 @@ void EditorLayer::OnAttach(){
 
 	m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
 #endif
-
-	m_SceneHierarchyPanel.SetContext(m_ActiveScene);
-	
+	//NewScene
+	m_SceneState = SceneState::Edit;
+	NewScene();
 }
 
 void EditorLayer::OnDetach(){
@@ -126,7 +129,6 @@ void EditorLayer::OnUpdate(Timestep ts){
 
 	if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportsize.x && mouseY < (int)viewportsize.y){
 		int id = static_cast<int>(m_Renderer->ReadPixel(mouseX,mouseY));
-		
 		if (id < static_cast<int>(m_ActiveScene->GetRegistry().view<entt::entity>().size_hint())){
 			m_HoveredEntity = id == -1 ? Entity() : Entity{(entt::entity)id,m_ActiveScene.get()};
 		}
@@ -198,7 +200,7 @@ void EditorLayer::OnImGuiRender(){
 				}
 
 				if (ImGui::MenuItem("Open...","Ctrl+O")){
-						OpenScene();
+					OpenScene();
 
 				}
 				if (ImGui::MenuItem("Save AS...","Ctrl+Shift+S")){
@@ -406,12 +408,21 @@ bool EditorLayer::OnKeyPressed(KeyPressedEvent& e){
 			break;
 		}
 		case KeySanCode::S:{
-			if (control && shit)
-				SaveSceneAs();
+			if (control){
+				if (shit)
+					SaveSceneAs();
+				else
+					SaveScene();
+			}
 
 			break;
 		}
-
+		// Scene Commands
+		case KeySanCode::D:{
+			if (control)
+				OnDuplicateEntity();
+			break;
+		}
 
 		//Gizmos
 		case KeySanCode::Q :
@@ -436,7 +447,7 @@ void EditorLayer::NewScene(){
 	m_ActiveScene = std::make_shared<Scene>();
 	m_ActiveScene->OnViewportResize(m_viewportsize.x,m_viewportsize.y);
 	m_SceneHierarchyPanel.SetContext(m_ActiveScene);
-
+	m_EditorScenePath = std::filesystem::path();
 }
 void EditorLayer::OpenScene(){
 	std::string filepath = FileDialogs::OpenFile("Sego Scene(*.Sego)\0*.sego\0");
@@ -445,32 +456,77 @@ void EditorLayer::OpenScene(){
 	}
 }
 void EditorLayer::OpenScene(const std::filesystem::path& path){
+	if (m_SceneState != SceneState::Edit)
+		OnSceneStop();
+	if (path.extension().string() != ".sego"){
+		SG_WARN("Could not load {0} - not a scene file",path.filename().string());
+		return ;
+	}
 
-	m_ActiveScene = std::make_shared<Scene>();
-	m_ActiveScene->OnViewportResize((uint32_t)m_viewportsize.x,(uint32_t)m_viewportsize.y);
-	m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+	std::shared_ptr<Scene> newScene = std::make_shared<Scene>();
+	SceneSerializer serializer(newScene);
+	if (serializer.Deserialize(path.string())){
+		m_EditorScene = newScene;
+		m_EditorScene->OnViewportResize((uint32_t)m_viewportsize.x,(uint32_t)m_viewportsize.y);
+		m_SceneHierarchyPanel.SetContext(m_EditorScene);	
 
-	SceneSerializer serializer(m_ActiveScene);
-	serializer.Deserialize(path.string());
+		m_ActiveScene = m_EditorScene;
+		m_EditorScenePath = path;
+	}
 
 }
 
 void EditorLayer::SaveSceneAs(){
 	std::string filepath = FileDialogs::SaveFile("Sego Scene(*.Sego)\0*.sego\0");
 	if(!filepath.empty()){
-		SceneSerializer serializer(m_ActiveScene);
-		serializer.Serialize(filepath);
+		SerializeScene(m_ActiveScene,filepath);
+		m_EditorScenePath = filepath;
+	}
+}
+
+void EditorLayer::SerializeScene(std::shared_ptr<Scene> scene, const std::filesystem::path &path)
+{
+	SceneSerializer serializer(scene);
+	serializer.Serialize(path.string());
+}
+
+void EditorLayer::SaveScene(){
+	if (!m_EditorScenePath.empty()){
+		SerializeScene(m_ActiveScene,m_EditorScenePath);
+	}else{
+		SaveSceneAs();
 	}
 }
 
 void EditorLayer::OnScenePlay(){
+
 	m_SceneState = SceneState::Play;
+	m_ActiveScene = Scene::Copy(m_EditorScene);
 	m_ActiveScene->OnRuntimeStart();
+
+	m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+
 }
 
 void EditorLayer::OnSceneStop(){
 	m_SceneState = SceneState::Edit;
 	m_ActiveScene->OnRuntimeStop();
+	m_ActiveScene = m_EditorScene;
+
+	m_SceneHierarchyPanel.SetContext(m_EditorScene);
+}
+
+void EditorLayer::OnDuplicateEntity()
+{
+	if (m_SceneState != SceneState::Edit)
+		return;
+
+	Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+	if (selectedEntity)
+	{
+		m_EditorScene->DuplicateEntity(selectedEntity);
+	}
+
 }
 
 void EditorLayer::UI_Toolbar(){

@@ -72,15 +72,13 @@ namespace Sego{
         uint32_t EntityID = -1;
     };
 
-    struct SkyboxRenderData : public RenderData{
-         SkyboxRenderData(){
-              type = RenderDataType::Skybox;
-         }
 
-        VmaBuffer vertexBuffer_;
-		VmaBuffer indexBuffer_;
-		uint32_t index_count;
-        glm::mat4 skybox_mvp;
+    struct SkyboxRenderData : public StaticMeshRenderData{
+        SkyboxRenderData(){
+              type = RenderDataType::Skybox;
+        }
+        void SkyboxInitUseBox();
+        
 		VmaImageViewSampler skybox_texture;
 
          void destory(){

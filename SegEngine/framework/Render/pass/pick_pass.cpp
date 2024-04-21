@@ -425,8 +425,6 @@ void PickPass::recreateframbuffer(uint32_t width, uint32_t height){
 	CreateFrameBuffer();
 }
 
-
-
 void PickPass::render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<StaticMeshRenderData>& Rendata){
     auto& VulkanRhi = VulkanRhi::Instance();
     

@@ -30,10 +30,15 @@ private:
     void NewScene();
     void OpenScene();
     void OpenScene(const std::filesystem::path& path);
+    void SaveScene();
     void SaveSceneAs();
     
+    void SerializeScene(std::shared_ptr<Scene> scene,const std::filesystem::path& path);
+
     void OnScenePlay();
     void OnSceneStop();
+
+    void OnDuplicateEntity();
     //UI Panels
     void UI_Toolbar(); 
 private:
@@ -51,6 +56,9 @@ private:
     bool m_ViewportFocused = false, m_ViewportHovered = false;
     
     std::shared_ptr<Scene> m_ActiveScene;
+    std::shared_ptr<Scene> m_EditorScene;
+    std::filesystem::path m_EditorScenePath;
+
     Entity m_CameraEntity;
     Entity m_HoveredEntity;
 

@@ -1,0 +1,137 @@
+Scene: Untitled
+Entities:
+  - Entity: 18009202423273891401
+    TagComponent:
+      Tag: PhysicsSprite
+    TransformComponent:
+      Translation: [0, 5.97831821, 0]
+      Rotation: [0.0368289798, -0.125950947, -0.908637524]
+      Scale: [1.00000107, 1.00000024, 1]
+    SpriteRendererComponent:
+      Color: [0.99613899, 0.96973604, 0.0192304533, 1]
+    Rigidbody2DComponent:
+      BodyType: Dynamic
+      FixedRotation: false
+    BoxCollider2Domponent:
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      Density: 1
+      Restitution: 0.479999989
+      RestitutionThreshold: 0.5
+  - Entity: 12186556892743993854
+    TagComponent:
+      Tag: PlatereeBB
+    TransformComponent:
+      Translation: [-17.5859756, 3.64155507, 0]
+      Rotation: [0, 0, -2.6701684]
+      Scale: [20.1928673, 0.999999881, 1]
+    SpriteRendererComponent:
+      Color: [0.179845139, 0.482625484, 0.0130439242, 1]
+    Rigidbody2DComponent:
+      BodyType: Static
+      FixedRotation: false
+    BoxCollider2Domponent:
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      Density: 1
+      Restitution: 0
+      RestitutionThreshold: 0.5
+  - Entity: 195513108834711155
+    TagComponent:
+      Tag: Camera
+    TransformComponent:
+      Translation: [1.55644321, 7.77876186, 20.4262047]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFOV: 0.785398185
+        PerspectiveNear: 0.00999999978
+        PerspectiveFar: 1000
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 1
+      Primary: true
+      FixedAspectRatio: false
+    Rigidbody2DComponent:
+      BodyType: Dynamic
+      FixedRotation: true
+    BoxCollider2Domponent:
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      Density: 1
+      Restitution: 0
+      RestitutionThreshold: 0.5
+  - Entity: 14970297300582890374
+    TagComponent:
+      Tag: Plate
+    TransformComponent:
+      Translation: [7.19484711, 0.0428264886, 0]
+      Rotation: [0, 0, -2.17089534]
+      Scale: [20.1928539, 1, 1]
+    SpriteRendererComponent:
+      Color: [0.179845139, 0.482625484, 0.0130439242, 1]
+    Rigidbody2DComponent:
+      BodyType: Static
+      FixedRotation: false
+    BoxCollider2Domponent:
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      Density: 1
+      Restitution: 0
+      RestitutionThreshold: 0.5
+  - Entity: 45583020181151610
+    TagComponent:
+      Tag: Plate
+    TransformComponent:
+      Translation: [-5.78157425, -8.73647118, 0]
+      Rotation: [0, 0, -0.472877741]
+      Scale: [20.1928654, 1.00000012, 1]
+    SpriteRendererComponent:
+      Color: [0.179845139, 0.482625484, 0.0130439242, 1]
+    Rigidbody2DComponent:
+      BodyType: Static
+      FixedRotation: false
+    BoxCollider2Domponent:
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      Density: 1
+      Restitution: 0
+      RestitutionThreshold: 0.5
+  - Entity: 2816587676191154821
+    TagComponent:
+      Tag: Plate
+    TransformComponent:
+      Translation: [5.16571236, -19.1567078, 0]
+      Rotation: [0, 0, 0.0751916915]
+      Scale: [20.1928673, 1.00000012, 1]
+    SpriteRendererComponent:
+      Color: [0.179845139, 0.482625484, 0.0130439242, 1]
+    Rigidbody2DComponent:
+      BodyType: Static
+      FixedRotation: false
+    BoxCollider2Domponent:
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      Density: 1
+      Restitution: 0
+      RestitutionThreshold: 0.5
+  - Entity: 10520923978445096031
+    TagComponent:
+      Tag: Plate
+    TransformComponent:
+      Translation: [-5.35330868, 6.20974827, 0]
+      Rotation: [0, 0, -0.461972147]
+      Scale: [20.1928654, 0.999999821, 1]
+    SpriteRendererComponent:
+      Color: [0.179845139, 0.482625484, 0.0130439242, 1]
+    Rigidbody2DComponent:
+      BodyType: Static
+      FixedRotation: false
+    BoxCollider2Domponent:
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      Density: 1
+      Restitution: 0
+      RestitutionThreshold: 0.5

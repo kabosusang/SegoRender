@@ -6,7 +6,7 @@ namespace Sego{
 
 void Renderer::BeginScene(const Camera& camera, const glm::mat4& transform){
     glm::mat4 proj = camera.GetProjection();
-     proj[1][1] *= -1;
+    proj[1][1] *= -1;
     m_ViewProj = proj *  glm::inverse(transform);
 }
 
@@ -18,10 +18,6 @@ glm::mat4 proj = camera.GetProjectionMatrix();
 
 proj[1][1] *= -1;
 m_ViewProj = proj * view;
-
-
-
-
 
 }
 
@@ -138,6 +134,9 @@ void Renderer::Render(Scene* scene){
         meshRenderer.MeshData->EntityID = (int)entity + 1;
         RenderDatas.push_back(meshRenderer.MeshData);
     }
+
+
+
 
     //Push Renderer
     VCtx.SetRenderDatas(RenderDatas);

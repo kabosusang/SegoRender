@@ -25,22 +25,23 @@ void SceneHierarchyPanel::SetContext(const std::shared_ptr<Scene>& scene){
 void SceneHierarchyPanel::OnImGuiRender(){
     ImGui::Begin("Scene Hierarchy");
 
-    auto view = m_Context->m_Registry.view<TagComponent>();
-    for (auto entityID : view) {
-        Entity entity = {entityID, m_Context.get()};
-        DrawEnityNode(entity);
+    if (m_Context){
+        auto view = m_Context->m_Registry.view<TagComponent>();
+        for (auto entityID : view) {
+            Entity entity = {entityID, m_Context.get()};
+            DrawEnityNode(entity);
+        }
+        if(ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
+            m_SelectionContext = {};
+        
+        //Right click on the window
+        if (ImGui::BeginPopupContextWindow(0,ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+        {
+            if (ImGui::MenuItem("Create Empty Entity"))
+                m_Context->CreateEntity("Empty Entity");
+            ImGui::EndPopup();
+        }
     }
-    if(ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
-        m_SelectionContext = {};
-    
-    //Right click on the window
-    if (ImGui::BeginPopupContextWindow(0,ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
-    {
-        if (ImGui::MenuItem("Create Empty Entity"))
-            m_Context->CreateEntity("Empty Entity");
-        ImGui::EndPopup();
-    }
-
     ImGui::End();
 
     ImGui::Begin("Inspector");

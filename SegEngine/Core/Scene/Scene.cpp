@@ -4,8 +4,6 @@
 #include "ScriptEntity.hpp"
 #include "Core/Vulkan/VulkanContext.hpp"
 
-
-
 //Box2D
 #include "box2d/b2_world.h"
 #include "box2d/b2_body.h"
@@ -31,6 +29,59 @@ Scene::Scene(){
 
 Scene::~Scene(){
     
+}
+
+template<typename Component>
+static void CopyComponent(entt::registry& dst,entt::registry& src,const std::unordered_map<UUID,entt::entity>& enttMap){
+    auto view = src.view<Component>();
+    for (auto e : view){
+        UUID uuid = src.get<IDComponent>(e).ID;
+        SG_ASSERT(enttMap.find(uuid) != enttMap.end(),"Entity UUID not found in map")
+        entt::entity dstEntity = enttMap.at(uuid);
+
+        auto& component = src.get<Component>(e);
+        dst.emplace_or_replace<Component>(dstEntity,component);
+    }
+    
+}
+
+template<typename Component>
+static void CopyComponentIfExists(Entity dst,Entity src){
+    if (src.HasComponent<Component>()){
+        dst.AddOrReplaceComponent<Component>(src.GetComponent<Component>());
+    }
+
+}
+
+
+std::shared_ptr<Scene> Scene::Copy(const std::shared_ptr<Scene> &other)
+{
+    std::shared_ptr<Scene> newScene = std::make_shared<Scene>();
+    newScene->m_ViewportWidth = other->m_ViewportWidth;
+    newScene->m_ViewportHeight = other->m_ViewportHeight;
+
+    auto& srcSceneRegistry = other->m_Registry;
+    auto& dstSceneRegistry = newScene->m_Registry;
+    //Copy Entities
+    std::unordered_map<UUID,entt::entity> enttMap;
+    
+    auto idView = srcSceneRegistry.view<IDComponent>();
+    for (auto e : idView){
+        UUID uuid = srcSceneRegistry.get<IDComponent>(e).ID;
+        const auto& name = srcSceneRegistry.get<TagComponent>(e).Tag;
+        Entity newEntity = newScene->CreateEntityWithUUID(uuid,name);
+        enttMap[uuid] = (entt::entity)newEntity;
+    }
+
+    //Copy Components
+    CopyComponent<TransformComponent>(dstSceneRegistry,srcSceneRegistry,enttMap);
+    CopyComponent<SpriteRendererComponent>(dstSceneRegistry,srcSceneRegistry,enttMap);
+    CopyComponent<CameraComponent>(dstSceneRegistry,srcSceneRegistry,enttMap);
+    CopyComponent<NativeScriptComponent>(dstSceneRegistry,srcSceneRegistry,enttMap);
+    CopyComponent<Rigidbody2DComponent>(dstSceneRegistry,srcSceneRegistry,enttMap);
+    CopyComponent<BoxCollider2Domponent>(dstSceneRegistry,srcSceneRegistry,enttMap);
+    CopyComponent<MeshComponent>(dstSceneRegistry,srcSceneRegistry,enttMap);
+    return newScene;
 }
 
 Entity Scene::CreateEntity(const std::string& name){
@@ -167,7 +218,6 @@ void Scene::OnUpdateEditor(Timestep ts,EditorCamera& camera){
     Vctx.GetRenderer()->BeginScene(camera);
 
     Vctx.GetRenderer()->Render(this); //ALL Entity Render
-
     Vctx.GetRenderer()->Render(); //UI Render (Must Call)
     Vctx.GetRenderer()->EndScene();
 }
@@ -185,6 +235,20 @@ void Scene::OnViewportResize(uint32_t width, uint32_t height){
         }
     }
     
+}
+
+void Scene::DuplicateEntity(Entity entity)
+{
+    std::string name = entity.GetName();
+    Entity newEntity = CreateEntity(name);
+      //Copy Components
+    CopyComponentIfExists<TransformComponent>(newEntity,entity);
+    CopyComponentIfExists<SpriteRendererComponent>(newEntity,entity);
+    CopyComponentIfExists<CameraComponent>(newEntity,entity);
+    CopyComponentIfExists<NativeScriptComponent>(newEntity,entity);
+    CopyComponentIfExists<Rigidbody2DComponent>(newEntity,entity);
+    CopyComponentIfExists<BoxCollider2Domponent>(newEntity,entity);
+    CopyComponentIfExists<MeshComponent>(newEntity,entity);
 }
 
 Entity Scene::GetPrimaryCameraEntity(){
@@ -248,7 +312,7 @@ void Scene::OnComponentAdded<BoxCollider2Domponent>(Entity entity, BoxCollider2D
 template<>
 void Scene::OnComponentAdded<MeshComponent>(Entity entity, MeshComponent& component){
     
-
+    
 }
 
 

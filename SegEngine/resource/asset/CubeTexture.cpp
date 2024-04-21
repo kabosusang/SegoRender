@@ -13,6 +13,11 @@ namespace Sego{
         texture_type_ = TextureType::Cube;
         layes_ = 6;
     }
+    TextureCube::TextureCube(const std::string& path){
+        texture_type_ = TextureType::Cube;
+        layes_ = 6;
+        Create(path);
+    }
 
     TextureCube::~TextureCube()
     {
