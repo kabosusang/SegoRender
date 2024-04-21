@@ -44,7 +44,8 @@ void EditorLayer::OnAttach(){
 	m_EditorCamera = EditorCamera(30.0f,1.778f,0.1f,1000.0f);
 	m_EditorCamera.BindSkybox(std::make_shared<TextureCube>("resources/Settings/skybox/Storforsen.ktx"));
 
-
+	m_EditorScene = std::make_shared<Scene>();
+	m_ActiveScene = m_EditorScene;
 
 #if 0
 	//Entity
@@ -93,9 +94,7 @@ void EditorLayer::OnAttach(){
 
 	m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
 #endif
-	//NewScene
-	m_SceneState = SceneState::Edit;
-	NewScene();
+
 }
 
 void EditorLayer::OnDetach(){
