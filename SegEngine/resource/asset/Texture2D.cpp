@@ -4,6 +4,7 @@
 
 namespace Sego{
 
+
 void Texture2D::loadFromMemory(){
     Vulkantool::createImageViewSampler(
     width_,height_,image_data_.data(),mip_levels_,layes_,format_,

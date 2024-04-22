@@ -209,7 +209,6 @@ void Scene::OnUpdateRuntime(Timestep ts)
         SG_CORE_WARN("No Primary Camera");
     }
 
-
     Vctx.GetRenderer()->Render(); //UI Render (Must Call)
 }
 

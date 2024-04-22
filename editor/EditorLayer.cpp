@@ -92,6 +92,8 @@ void EditorLayer::OnAttach(){
 	m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
 #endif
 
+	NewScene();
+
 }
 
 void EditorLayer::OnDetach(){
@@ -506,8 +508,8 @@ void EditorLayer::OnScenePlay(){
 
 void EditorLayer::OnSceneStop(){
 	m_SceneState = SceneState::Edit;
-	m_ActiveScene->OnRuntimeStop();
 	m_ActiveScene = m_EditorScene;
+	m_ActiveScene->OnRuntimeStop();
 
 	m_SceneHierarchyPanel.SetContext(m_EditorScene);
 }

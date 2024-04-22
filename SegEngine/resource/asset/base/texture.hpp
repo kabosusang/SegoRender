@@ -34,9 +34,10 @@ public:
     void destory(){
        image_view_sampler_.destroy();
     }
-
-
-
+    //TODO: Fix Copy Bugs 
+    //memory address Same image_view_sampler_ = other.image_view_sampler_;
+   
+    
 };
 
 

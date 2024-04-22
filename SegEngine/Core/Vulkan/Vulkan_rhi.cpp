@@ -26,6 +26,7 @@ VulkanRhi::VulkanRhi(uint32_t windowWidth, uint32_t windowHeight){
 
     defaultTexture = Texture2D::Create("resources/assets/empty.png");
     defaultSkybox = TextureCube::Create("resources/Settings/skybox/sky.ktx");
+    //defaultSkybox = TextureCube::Create("resources/Settings/skybox/sky.ktx");
 
     uiPass_ = std::make_unique<UiPass>();
     uiPass_->Init();

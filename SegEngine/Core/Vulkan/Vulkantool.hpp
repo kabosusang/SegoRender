@@ -30,6 +30,7 @@ struct VmaImageView{
     vk::Image image() {return vma_image.image;}
 };
 //VMA Image and Image View and Sampler
+
 struct VmaImageViewSampler{
     VmaImage vma_image;
     vk::ImageView image_view{};
