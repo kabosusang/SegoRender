@@ -8,6 +8,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
+
 namespace Sego{
 
 EditorCamera::EditorCamera(float fov, float aspectRatio, float nearClip, float farClip)
@@ -15,6 +16,8 @@ EditorCamera::EditorCamera(float fov, float aspectRatio, float nearClip, float f
 {
     UpdateView();
 }
+
+
 
 void EditorCamera::UpdateProjection()
 {

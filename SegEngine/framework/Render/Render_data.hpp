@@ -2,8 +2,10 @@
 #include "pch.h"
 #include "resource/asset/base/Vertex.hpp"
 #include "resource/asset/base/Mesh.hpp"
-#include "resource/asset/Texture2D.hpp"
 #include "resource/asset/Material.hpp"
+
+#include "resource/asset/Texture2D.hpp"
+#include "resource/asset/CubeTexture.hpp"
 
 namespace Sego{
 
@@ -77,14 +79,10 @@ namespace Sego{
         SkyboxRenderData(){
               type = RenderDataType::Skybox;
         }
-        void SkyboxInitUseBox();
         
-		VmaImageViewSampler skybox_texture;
-
          void destory(){
             vertexBuffer_.destroy();
             indexBuffer_.destroy();
-            skybox_texture.destroy();
          }
     };
 

@@ -37,7 +37,7 @@ public:
 
 private:
     glm::mat4 m_ViewProj;
- 
+    std::shared_ptr<SkyboxRenderData> skybox_ = nullptr;
 };
 
 

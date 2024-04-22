@@ -14,9 +14,6 @@ m_formats ={
     vk::Format::eR8G8B8A8Unorm,
     ctx.swapchain->GetDepthFormat()
     };
-
-    //skybox
-    
 }
 
 void MainPass::destroy(){
@@ -25,9 +22,8 @@ void MainPass::destroy(){
     depthIVs_.destroy();
 }
 
-
 void MainPass::createDescriptorSetLayout(){
-    descriptorSetLayouts_.resize(2);//0 - spriter  1 - static mesh
+    descriptorSetLayouts_.resize(3);//0 - spriter  1 - static mesh 2 - skybox(cubemap)
     
     vk::DescriptorSetLayoutBinding samplerLayoutBinding{};
     samplerLayoutBinding.setBinding(0)
@@ -57,10 +53,23 @@ void MainPass::createDescriptorSetLayout(){
                       .setFlags(vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR);
     descriptorSetLayouts_[1]= Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci_mesh);
 
+    //skybox(cubemap) DescriptorSetLayout
+    vk::DescriptorSetLayoutBinding samplerLayoutBinding_cubemap{};
+    samplerLayoutBinding_cubemap.setBinding(0)
+                        .setDescriptorCount(1)
+                        .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+                        .setStageFlags(vk::ShaderStageFlagBits::eFragment)
+                        .setPImmutableSamplers(nullptr);
+    
+    vk::DescriptorSetLayoutCreateInfo desc_set_layout_ci_cubemap{};
+    desc_set_layout_ci_cubemap.setBindingCount(1)
+                      .setBindings(samplerLayoutBinding_cubemap)
+                      .setFlags(vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR);
+    descriptorSetLayouts_[2]= Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci_cubemap);
 }
 
 void MainPass::createPipelineLayouts(){
-    pipelineLayouts_.resize(2); 
+    pipelineLayouts_.resize(3); // 0 - spriter  1 - static mesh 2 - skybox(cubemap) 
     //spriter renderer
     push_constant_ranges_ = {
         {vk::ShaderStageFlagBits::eVertex,0,sizeof(glm::mat4)},
@@ -87,11 +96,22 @@ void MainPass::createPipelineLayouts(){
 
     pipelineLayouts_[1] = Context::Instance().device.createPipelineLayout(pipeline_layout_ci);
 
+    //skybox renderer
+    cubmap_push_constant_ranges_ = {
+        {vk::ShaderStageFlagBits::eVertex,0,sizeof(glm::mat4)}
+    };
+     pipeline_layout_ci.setSetLayoutCount(1)
+                      .setPSetLayouts(&descriptorSetLayouts_[2])
+                      .setPushConstantRangeCount(static_cast<uint32_t>(cubmap_push_constant_ranges_.size()))
+                      .setPPushConstantRanges(cubmap_push_constant_ranges_.data());
+
+    pipelineLayouts_[2] = Context::Instance().device.createPipelineLayout(pipeline_layout_ci);
+
 }
 
 void MainPass::CreatePiepline(){
     auto& ctx = Context::Instance();
-    pipelines_.resize(2); //Sprite Renderer, Mesh Renderer
+    pipelines_.resize(3); //Sprite Renderer, Mesh Renderer,cubemap Renderer
 
     //-------------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------
@@ -272,8 +292,45 @@ void MainPass::CreatePiepline(){
         ctx.device.destroyShaderModule(shader_stage_ci.module);
     }
 
-
+    //-------------------------------------------------------------------------------------
+    //-------------------------------------------------------------------------------------
+    //-------------------------------------------------------------------------------------
     // Skybox Renderer
+    shader_stage_cis.clear();
+    shader_stage_cis = {
+        ctx.shaderManager->LoadShader("resources/shaders/cubemap/Cubmapvert.spv", vk::ShaderStageFlagBits::eVertex),
+        ctx.shaderManager->LoadShader("resources/shaders/cubemap/Cubmapfrag.spv", vk::ShaderStageFlagBits::eFragment)
+    };
+
+    raster_ci.setCullMode(vk::CullModeFlagBits::eFront);
+
+    depth_stencil_ci.setDepthTestEnable(false)
+                    .setDepthWriteEnable(false);
+    
+    colorblendattachment_ci.setBlendEnable(false);
+
+    pipeline_ci.setStages(shader_stage_cis)
+               .setPVertexInputState(&vertex_input_ci)
+               .setPInputAssemblyState(&input_assemb_ci)
+               .setPViewportState(&viewport_state_ci)
+               .setPRasterizationState(&raster_ci)
+               .setPDynamicState(&dynamicState)
+               .setPMultisampleState(&multisample_ci)
+               .setPDepthStencilState(&depth_stencil_ci)
+               .setPColorBlendState(&blend_ci)
+               .setLayout(pipelineLayouts_[2])
+               .setRenderPass(renderPass_);
+    Result = ctx.device.createGraphicsPipeline(nullptr, pipeline_ci);
+    pipelines_[2] = Result.value;
+
+    //10. destroy shader module
+    for(auto& shader_stage_ci : shader_stage_cis){
+        ctx.device.destroyShaderModule(shader_stage_ci.module);
+    }
+    //-------------------------------------------------------------------------------------
+    //-------------------------------------------------------------------------------------
+    //-------------------------------------------------------------------------------------
+    // TODO: 11. create pipeline cache
 
 
 }
@@ -386,7 +443,11 @@ void MainPass::Render(){
            .setExtent({width_,height_});
     cmdBuffer.setScissor(0, 1, &scissor);
 
-    //pipelines_[0] Normal GLTF Model Renderer
+    if (skybox_){
+        render_skybox(cmdBuffer);
+    }
+
+    //Render 
     for(const auto& Rendata : renderDatas_){
         if (Rendata->type == RenderDataType::Sprite){
             std::shared_ptr<SpriteRenderData> spritedata = std::static_pointer_cast<SpriteRenderData>(Rendata);
@@ -397,12 +458,27 @@ void MainPass::Render(){
             std::shared_ptr<StaticMeshRenderData> meshdata = std::static_pointer_cast<StaticMeshRenderData>(Rendata);
             render_mesh(cmdBuffer,meshdata);
         }
-
-
     }
 
     cmdBuffer.endRenderPass();
 }
+
+void MainPass::render_skybox(vk::CommandBuffer cmdBuffer){
+    auto& VulkanRhi = VulkanRhi::Instance();
+    //pipelines_[2] Skybox Renderer
+    cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines_[2]);
+    vk::Buffer vertexBuffers[] = { skybox_->vertexBuffer_.buffer };
+    vk::DeviceSize offsets[] = { 0 };
+    cmdBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
+    cmdBuffer.bindIndexBuffer(skybox_->indexBuffer_.buffer, 0, vk::IndexType::eUint32);
+
+     //Draw Notes
+    for(auto& node : skybox_->nodes_){
+        drawNode_cubemap(cmdBuffer,pipelineLayouts_[2],node);
+    }
+
+}
+
 
 void MainPass::render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<StaticMeshRenderData>& Rendata){
     auto& VulkanRhi = VulkanRhi::Instance();
@@ -475,16 +551,57 @@ void MainPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelin
             desc_writes.clear();
 				if (primitive.indexCount > 0) {
 
-
                     std::array<vk::DescriptorImageInfo,1>   desc_image_info{};  
                     if (Rendata->materials_[primitive.materialIndex].has_baseColorTexture){
                         //Sample
                         addImageDescriptorSet(desc_writes, desc_image_info[0], 
                         Rendata->textures_[Rendata->materials_[primitive.materialIndex].baseColorTextureIndex].image_view_sampler_,0);
+                        VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    pipelineLayout, 0, static_cast<uint32_t>(desc_writes.size()), (VkWriteDescriptorSet *)desc_writes.data());
                     }else{
                         //Sample
                         addImageDescriptorSet(desc_writes, desc_image_info[0], 
                         VulkanRhi.defaultTexture->image_view_sampler_,0); //defualt image use depth image(a kidding)
+                        VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    pipelineLayout, 0, static_cast<uint32_t>(desc_writes.size()), (VkWriteDescriptorSet *)desc_writes.data());
+                    }
+                  
+                    // Bind the descriptor for the current primitive's texture
+                    cmdBuffer.drawIndexed(primitive.indexCount,1,primitive.firstIndex,0,0);
+				}
+			}
+		}
+		for (auto& child : node->children) {
+			drawNode(cmdBuffer,pipelineLayout, child,Rendata);
+		}
+}
+
+void MainPass::drawNode_cubemap(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelineLayout,Node* node){
+    auto& VulkanRhi = VulkanRhi::Instance();
+    if(node->mesh.primitives.size() > 0){
+        
+        glm::mat4 nodeMatrix = node->matrix;
+        Node* currentParent = node->parent;
+        while (currentParent) {
+            nodeMatrix = currentParent->matrix * nodeMatrix;
+            currentParent = currentParent->parent;
+        }
+        
+        // Pass the final matrix to the vertex shader using push constants
+        nodeMatrix = skybox_->Meshmvp_;
+        for ( auto& primitive : node->mesh.primitives) {
+        updatePushConstants(cmdBuffer,pipelineLayout,{&nodeMatrix},cubmap_push_constant_ranges_);
+            desc_writes.clear();
+				if (primitive.indexCount > 0) {
+                    std::array<vk::DescriptorImageInfo,1>   desc_image_info = {};  
+                    if (skybox_->materials_[primitive.materialIndex].has_baseColorTexture){
+                        //Sample
+                        addImageDescriptorSet(desc_writes, desc_image_info[0], 
+                        VulkanRhi.defaultSkybox->image_view_sampler_,0);
+                    }else{
+                        //Sample
+                        addImageDescriptorSet(desc_writes, desc_image_info[0], 
+                        VulkanRhi.defaultSkybox->image_view_sampler_,0); //defualt image use depth image(a kidding)
                     }
                   
 				    VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -496,9 +613,10 @@ void MainPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelin
 			}
 		}
 		for (auto& child : node->children) {
-			drawNode(cmdBuffer,pipelineLayout, child,Rendata);
+			drawNode_cubemap(cmdBuffer,pipelineLayout,child);
 		}
 }
+
 
 void MainPass::recreateframbuffer(uint32_t width,uint32_t height){
     auto& ctx = Context::Instance();

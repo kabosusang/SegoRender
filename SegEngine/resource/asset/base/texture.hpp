@@ -19,7 +19,8 @@ public:
     virtual ~Texture() = default;
     uint32_t width_,height_ = 0;
     std::vector<uint8_t> image_data_ = {};
-    vk::Filter minfilter_,magfilter_ = vk::Filter::eLinear;
+    vk::Filter minfilter_ = vk::Filter::eLinear;
+    vk::Filter magfilter_ = vk::Filter::eLinear;
     vk::Format format_ = vk::Format::eR8G8B8A8Unorm;
     vk::SamplerAddressMode addressmode_u,addressmode_v,addressmode_w = vk::SamplerAddressMode::eRepeat;
     TextureType texture_type_ = TextureType::BaseColor;
@@ -33,6 +34,8 @@ public:
     void destory(){
        image_view_sampler_.destroy();
     }
+
+
 
 };
 

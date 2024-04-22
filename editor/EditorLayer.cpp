@@ -18,10 +18,8 @@ namespace Sego{
 void EditorLayer::OnAttach(){
 	
 	//Load Texture
-
 	m_IconPlay = EditorUI::LoadFormFile("resources/Settings/icons/PlayButton.png");
 	m_IconStop = EditorUI::LoadFormFile("resources/Settings/icons/StopButton.png");
-
 
 	m_Renderer = VulkanContext::Instance().GetRenderer();
 	//Color
@@ -42,7 +40,6 @@ void EditorLayer::OnAttach(){
 	m_ActiveScene = std::make_shared<Scene>();
 	
 	m_EditorCamera = EditorCamera(30.0f,1.778f,0.1f,1000.0f);
-	m_EditorCamera.BindSkybox(std::make_shared<TextureCube>("resources/Settings/skybox/Storforsen.ktx"));
 
 	m_EditorScene = std::make_shared<Scene>();
 	m_ActiveScene = m_EditorScene;

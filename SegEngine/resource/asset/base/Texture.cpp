@@ -21,16 +21,21 @@ void Texture::loadKtxTexture(void* p_ktx_texture,vk::Format format){
     // create buffer image copy regions
     std::vector<vk::BufferImageCopy> buffer_copy_regions;
     for (uint32_t face = 0 ;face <  layes_; face++ ){
-        for (uint32_t mip ; mip < mip_levels_; mip++){
+        for (uint32_t mip = 0 ; mip < mip_levels_; mip++){
             ktx_size_t offset;
             KTX_error_code result = ktxTexture_GetImageOffset(ktx_texture, mip, 0, face, &offset);
             if (result != KTX_SUCCESS) {
                 SG_CORE_ERROR("Failed to get image offset");
             }
             vk::BufferImageCopy buffer_imagecopy{};
-            buffer_imagecopy.setImageSubresource(vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, mip, face, 1))
-                            .setImageExtent({std::max(width_ >> mip,1u),std::max(height_ >> mip, 1u),1})
-                            .setBufferOffset(offset);
+            buffer_imagecopy.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+            buffer_imagecopy.imageSubresource.mipLevel = mip;
+            buffer_imagecopy.imageSubresource.baseArrayLayer = face;
+            buffer_imagecopy.imageSubresource.layerCount = 1;
+            buffer_imagecopy.imageExtent.width = ktx_texture->baseWidth >> mip;
+            buffer_imagecopy.imageExtent.height = ktx_texture->baseHeight >> mip;
+            buffer_imagecopy.imageExtent.depth = 1;
+            buffer_imagecopy.bufferOffset = offset;
             buffer_copy_regions.push_back(buffer_imagecopy);
         }
     }

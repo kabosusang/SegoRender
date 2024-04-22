@@ -1,5 +1,4 @@
 #pragma once
-
 #include "Core/Event/MouseEvent.h"
 #include "Core/Base/Timestep.hpp"
 #include "Camera.hpp"
@@ -32,7 +31,8 @@ namespace Sego{
 		float GetYaw() const { return m_Yaw; }
 
 		void UseSkybox() { m_UseSkybox = !m_UseSkybox; }
-		void BindSkybox(std::shared_ptr<TextureCube> texture) { m_SkyboxTexture = texture; }
+		bool m_UseSkybox = true;
+
 	private:
 		void UpdateProjection();
 		void UpdateView();
@@ -48,12 +48,7 @@ namespace Sego{
 		std::pair<float, float> PanSpeed() const;
 		float RotationSpeed() const;
 		float ZoomSpeed() const;
-
-		//skybox
-		std::shared_ptr<TextureCube> m_SkyboxTexture;
 	private:
-		bool m_UseSkybox = false;
-
 		float m_FOV = 45.0f, m_AspectRatio = 1.778f, m_NearClip = 0.1f, m_FarClip = 1000.0f;
 
 		glm::mat4 m_ViewMatrix;

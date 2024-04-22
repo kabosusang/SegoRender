@@ -1,15 +1,11 @@
 #version 450
-layout(location = 0) in vec4 fragColor;
-layout(location = 1) in vec2 fragUv;
+layout(binding = 0) uniform samplerCube cubemap;
 
+layout (location = 0) in vec3 textureDir;
 
-layout(location = 0) out int outEntity;
+layout(location = 0) out vec4 outColor;
+// Uniforms (push_constant)
 
-layout(push_constant) uniform PushConstant {
-    layout(offset = 64) int entityID;
-} pc;
-
-
-void main() {
-    outEntity = pc.entityID;
+void main(){
+    outColor = texture(cubemap, textureDir);
 }

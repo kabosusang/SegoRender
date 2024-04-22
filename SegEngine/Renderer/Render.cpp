@@ -1,6 +1,8 @@
 #include "Render.hpp"
 #include "Core/Vulkan/Vulkantool.hpp"
 #include "Core/Scene/Scene.hpp"
+//asset
+#include "resource/asset/Import/gltf_import.hpp"
 
 namespace Sego{
 
@@ -8,6 +10,7 @@ void Renderer::BeginScene(const Camera& camera, const glm::mat4& transform){
     glm::mat4 proj = camera.GetProjection();
     proj[1][1] *= -1;
     m_ViewProj = proj *  glm::inverse(transform);
+    
 }
 
 void Renderer::BeginScene(const EditorCamera &camera){
@@ -19,10 +22,16 @@ glm::mat4 proj = camera.GetProjectionMatrix();
 proj[1][1] *= -1;
 m_ViewProj = proj * view;
 
+if (camera.m_UseSkybox){
+    skybox_->Meshmvp_ = proj * glm::mat4(glm::mat3(view));
+    Vctx.SetSkyboxRenderData(skybox_);
+}
+
 }
 
 void Renderer::Init(){
-   
+    skybox_ = std::make_shared<SkyboxRenderData>();
+    skybox_ = std::static_pointer_cast<SkyboxRenderData>(GlTFImporter::LoadglTFFile("resources/Settings/skybox/cube.gltf"));
 }
 
 void Renderer::BeginScene(){
@@ -134,7 +143,6 @@ void Renderer::Render(Scene* scene){
         meshRenderer.MeshData->EntityID = (int)entity + 1;
         RenderDatas.push_back(meshRenderer.MeshData);
     }
-
 
 
 

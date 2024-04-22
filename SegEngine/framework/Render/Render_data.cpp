@@ -4,21 +4,6 @@
 namespace Sego{
 
 
-void SkyboxRenderData::SkyboxInitUseBox(){
-
-
-
-
-}
-
-
-
-
-
-
-
-
-
 
 
 }
