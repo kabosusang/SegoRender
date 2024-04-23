@@ -201,7 +201,6 @@ void Scene::OnUpdateRuntime(Timestep ts)
                CameraTransform = transform.GetTransform();
                break;
            }
-
         }
     }
     if (mainCamera){

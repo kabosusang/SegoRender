@@ -4,6 +4,21 @@
 //asset
 #include "resource/asset/Import/gltf_import.hpp"
 
+
+struct Renderer2DData{
+
+
+
+
+
+
+};
+
+
+
+
+
+
 namespace Sego{
 
 void Renderer::BeginScene(const Camera& camera, const glm::mat4& transform){
@@ -121,6 +136,10 @@ void Renderer::DrawSprite(const glm::mat4& transform,SpriteRendererComponent& sr
         DrawQuad(transform,src.Color,entityID,SpriteRenderDatas);
 }
 
+void Renderer::DrawCircle(const glm::mat4 &transform, const glm::vec4 &color, float thickness, float fade, int entityID)
+{
+    
+}
 
 void Renderer::Render(Scene* scene){
     auto& VCtx =  VulkanRhi::Instance();

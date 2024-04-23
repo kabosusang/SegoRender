@@ -1,30 +1,66 @@
 Scene: Untitled
 Entities:
-  - Entity: 18009202423273891401
+  - Entity: 10520923978445096031
     TagComponent:
-      Tag: PhysicsSprite
+      Tag: Plate
     TransformComponent:
-      Translation: [0, 5.97831821, 0]
-      Rotation: [0.0368289798, -0.125950947, -0.908637524]
-      Scale: [1.00000107, 1.00000024, 1]
+      Translation: [-5.35330868, 6.20974827, 0]
+      Rotation: [0, 0, -0.461972147]
+      Scale: [20.1928654, 0.999999821, 1]
     SpriteRendererComponent:
-      Color: [0.99613899, 0.96973604, 0.0192304533, 1]
+      Color: [0.179845139, 0.482625484, 0.0130439242, 1]
     Rigidbody2DComponent:
-      BodyType: Dynamic
+      BodyType: Static
       FixedRotation: false
     BoxCollider2Domponent:
       Offset: [0, 0]
       Size: [0.5, 0.5]
       Density: 1
-      Restitution: 0.479999989
+      Restitution: 0
       RestitutionThreshold: 0.5
-  - Entity: 12186556892743993854
+  - Entity: 2816587676191154821
     TagComponent:
-      Tag: PlatereeBB
+      Tag: Plate
     TransformComponent:
-      Translation: [-17.5859756, 3.64155507, 0]
-      Rotation: [0, 0, -2.6701684]
-      Scale: [20.1928673, 0.999999881, 1]
+      Translation: [11.0298834, -11.2366076, 0.061958313]
+      Rotation: [-0.00294972095, -0.00885752123, 1.05766177]
+      Scale: [20.1928635, 0.999999762, 0.999999881]
+    SpriteRendererComponent:
+      Color: [0.179845139, 0.482625484, 0.0130439242, 1]
+    Rigidbody2DComponent:
+      BodyType: Static
+      FixedRotation: false
+    BoxCollider2Domponent:
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      Density: 1
+      Restitution: 0
+      RestitutionThreshold: 0.5
+  - Entity: 45583020181151610
+    TagComponent:
+      Tag: Plate
+    TransformComponent:
+      Translation: [-5.78157425, -8.73647118, 0]
+      Rotation: [0, 0, -0.472877741]
+      Scale: [20.1928654, 1.00000012, 1]
+    SpriteRendererComponent:
+      Color: [0.179845139, 0.482625484, 0.0130439242, 1]
+    Rigidbody2DComponent:
+      BodyType: Static
+      FixedRotation: false
+    BoxCollider2Domponent:
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      Density: 1
+      Restitution: 0
+      RestitutionThreshold: 0.5
+  - Entity: 14970297300582890374
+    TagComponent:
+      Tag: Plate
+    TransformComponent:
+      Translation: [7.19484711, 0.0428264886, 0]
+      Rotation: [0, 0, -2.17089534]
+      Scale: [20.1928539, 1, 1]
     SpriteRendererComponent:
       Color: [0.179845139, 0.482625484, 0.0130439242, 1]
     Rigidbody2DComponent:
@@ -63,13 +99,13 @@ Entities:
       Density: 1
       Restitution: 0
       RestitutionThreshold: 0.5
-  - Entity: 14970297300582890374
+  - Entity: 12186556892743993854
     TagComponent:
-      Tag: Plate
+      Tag: PlatereeBB
     TransformComponent:
-      Translation: [7.19484711, 0.0428264886, 0]
-      Rotation: [0, 0, -2.17089534]
-      Scale: [20.1928539, 1, 1]
+      Translation: [2.88884544, -25.1036396, -0.124290466]
+      Rotation: [-3.19208848e-05, -0.00430046301, -3.10824776]
+      Scale: [20.1922894, 0.999978006, 1]
     SpriteRendererComponent:
       Color: [0.179845139, 0.482625484, 0.0130439242, 1]
     Rigidbody2DComponent:
@@ -81,57 +117,21 @@ Entities:
       Density: 1
       Restitution: 0
       RestitutionThreshold: 0.5
-  - Entity: 45583020181151610
+  - Entity: 18009202423273891401
     TagComponent:
-      Tag: Plate
+      Tag: PhysicsSprite
     TransformComponent:
-      Translation: [-5.78157425, -8.73647118, 0]
-      Rotation: [0, 0, -0.472877741]
-      Scale: [20.1928654, 1.00000012, 1]
+      Translation: [0, 5.97831821, 0]
+      Rotation: [0.0368289798, -0.125950947, -0.908637524]
+      Scale: [1.00000107, 1.00000024, 1]
     SpriteRendererComponent:
-      Color: [0.179845139, 0.482625484, 0.0130439242, 1]
+      Color: [0.99613899, 0.96973604, 0.0192304533, 1]
     Rigidbody2DComponent:
-      BodyType: Static
+      BodyType: Dynamic
       FixedRotation: false
     BoxCollider2Domponent:
       Offset: [0, 0]
       Size: [0.5, 0.5]
       Density: 1
-      Restitution: 0
-      RestitutionThreshold: 0.5
-  - Entity: 2816587676191154821
-    TagComponent:
-      Tag: Plate
-    TransformComponent:
-      Translation: [5.16571236, -19.1567078, 0]
-      Rotation: [0, 0, 0.0751916915]
-      Scale: [20.1928673, 1.00000012, 1]
-    SpriteRendererComponent:
-      Color: [0.179845139, 0.482625484, 0.0130439242, 1]
-    Rigidbody2DComponent:
-      BodyType: Static
-      FixedRotation: false
-    BoxCollider2Domponent:
-      Offset: [0, 0]
-      Size: [0.5, 0.5]
-      Density: 1
-      Restitution: 0
-      RestitutionThreshold: 0.5
-  - Entity: 10520923978445096031
-    TagComponent:
-      Tag: Plate
-    TransformComponent:
-      Translation: [-5.35330868, 6.20974827, 0]
-      Rotation: [0, 0, -0.461972147]
-      Scale: [20.1928654, 0.999999821, 1]
-    SpriteRendererComponent:
-      Color: [0.179845139, 0.482625484, 0.0130439242, 1]
-    Rigidbody2DComponent:
-      BodyType: Static
-      FixedRotation: false
-    BoxCollider2Domponent:
-      Offset: [0, 0]
-      Size: [0.5, 0.5]
-      Density: 1
-      Restitution: 0
+      Restitution: 0.479999989
       RestitutionThreshold: 0.5

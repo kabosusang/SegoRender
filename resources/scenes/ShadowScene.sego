@@ -1,10 +1,30 @@
 Scene: Untitled
 Entities:
+  - Entity: 4852272376798019552
+    TagComponent:
+      Tag: Plane
+    TransformComponent:
+      Translation: [0, -1.57077408, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      Name: Plane
+      Path: resources/Settings/SceneObject/Plane.glb
+  - Entity: 12506927718273058249
+    TagComponent:
+      Tag: Cube
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      Name: pinkcube
+      Path: resources\Settings\SceneObject\pinkcube.glb
   - Entity: 14056070410412933757
     TagComponent:
       Tag: Camera
     TransformComponent:
-      Translation: [0, 0.899018109, -13.639101]
+      Translation: [0, 0.899018109, 8.24494934]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     CameraComponent:
@@ -18,23 +38,3 @@ Entities:
         OrthographicFar: 1
       Primary: true
       FixedAspectRatio: false
-  - Entity: 12506927718273058249
-    TagComponent:
-      Tag: Cube
-    TransformComponent:
-      Translation: [0, 0, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    MeshComponent:
-      Name: pinkcube
-      Path: resources\Settings\SceneObject\pinkcube.glb
-  - Entity: 4852272376798019552
-    TagComponent:
-      Tag: Plane
-    TransformComponent:
-      Translation: [0, -1.57077408, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    MeshComponent:
-      Name: Plane
-      Path: resources/Settings/SceneObject/Plane.glb

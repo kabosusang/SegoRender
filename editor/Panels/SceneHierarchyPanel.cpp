@@ -256,13 +256,22 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
             }
         }
         
-        if (!m_SelectionContext.HasComponent<SpriteRendererComponent>()){
+        if (!m_SelectionContext.HasComponent<SpriteRendererComponent>() && !m_SelectionContext.HasComponent<MeshComponent>()){
             if (ImGui::MenuItem("Sprite Renderer"))
             {
                 m_SelectionContext.AddComponent<SpriteRendererComponent>();
                 ImGui::CloseCurrentPopup();
             }
         }
+        /*
+          if (!m_SelectionContext.HasComponent<CircleRendererComponent>() && !m_SelectionContext.HasComponent<MeshComponent>()){
+            if (ImGui::MenuItem("Circle Renderer"))
+            {
+                m_SelectionContext.AddComponent<CircleRendererComponent>();
+                ImGui::CloseCurrentPopup();
+            }
+        }*/
+
 
         if (!m_SelectionContext.HasComponent<Rigidbody2DComponent>()){
             if (ImGui::MenuItem("Rigidbody 2D"))
@@ -280,7 +289,7 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
             }
         }
 
-         if (!m_SelectionContext.HasComponent<MeshComponent>()){
+         if (!m_SelectionContext.HasComponent<MeshComponent>() && !m_SelectionContext.HasComponent<SpriteRendererComponent>()){
             if (ImGui::MenuItem("MeshComponent"))
             {
                 m_SelectionContext.AddComponent<MeshComponent>();
@@ -383,6 +392,14 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
 	}
 
     });
+    /*
+    DrawComponent<CircleRendererComponent>("Sprite Renderer", entity, [](auto& component)
+    {
+        ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
+        ImGui::DragFloat("Thickness", &component.Thickness,0.025f,0.0f, 1.0f);
+        ImGui::DragFloat("Fade", &component.Fade,0.00025f,0.0f, 1.0f);
+	
+    });*/
 
     DrawComponent<Rigidbody2DComponent>("Rigidbody 2D", entity, [](auto& component)
     {

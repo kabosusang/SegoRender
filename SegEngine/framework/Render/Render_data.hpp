@@ -67,7 +67,6 @@ namespace Sego{
     struct StaticMeshRenderData : public MeshRenderData{
         StaticMeshRenderData() {type = RenderDataType::StaticMesh;}
         
-
         std::vector<imageIndex> textureindex_;
         std::vector<Node*> nodes_; //nodes
         std::vector<Material> materials_;

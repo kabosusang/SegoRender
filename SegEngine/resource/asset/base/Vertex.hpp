@@ -16,5 +16,15 @@ struct SpriteVertex{
     glm::vec2 uv;
 };
 
+struct CircleVertex{
+    glm::vec3 WorldPosition;
+    glm::vec3 LocalPosition;
+    glm::vec4 color;
+    float Thickness;
+    float Fade;
+
+    //Editor-only
+    int EntityID;
+};
 
 
