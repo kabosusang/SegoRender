@@ -84,6 +84,11 @@ public:
         uint32_t mip_levels, uint32_t layers, vk::Format format, vk::Filter min_filter, vk::Filter mag_filter,
         vk::SamplerAddressMode address_mode, VmaImageViewSampler& vma_image_view_sampler, vk::ImageUsageFlags ext_use_flags = vk::ImageUsageFlags{});
 
+        //MSAA
+        static void createImageViewSampler(uint32_t width, uint32_t height, uint8_t* image_data,
+        uint32_t mip_levels, uint32_t layers, vk::Format format, vk::Filter min_filter, vk::Filter mag_filter,
+        vk::SamplerAddressMode address_mode, VmaImageViewSampler& vma_image_view_sampler,vk::SampleCountFlagBits sample_count, vk::ImageUsageFlags ext_use_flags = vk::ImageUsageFlags{});
+
         static void createImageMipmaps(vk::Image image,uint32_t width,uint32_t height,uint32_t mip_levels);
 
         //loda data

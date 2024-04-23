@@ -17,7 +17,7 @@ public:
     ~Scene();
 
     static std::shared_ptr<Scene> Copy(const std::shared_ptr<Scene>& other);
-
+  
     Entity CreateEntity(const std::string& name = std::string());
     Entity CreateEntityWithUUID(UUID uuid,const std::string& name = std::string());
 

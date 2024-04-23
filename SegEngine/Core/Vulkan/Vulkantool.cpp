@@ -497,6 +497,69 @@ vk::SamplerAddressMode address_mode, VmaImageViewSampler& vma_image_view_sampler
         }
 
 }
+ //MSAA
+void Vulkantool::createImageViewSampler(uint32_t width, uint32_t height, uint8_t *image_data, uint32_t mip_levels, uint32_t layers, vk::Format format, vk::Filter min_filter, vk::Filter mag_filter, vk::SamplerAddressMode address_mode, VmaImageViewSampler &vma_image_view_sampler, 
+vk::SampleCountFlagBits sample_count, vk::ImageUsageFlags ext_use_flags)
+{
+    //create image
+        vk::ImageUsageFlags image_usage = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc;
+        if(image_data){
+            image_usage |= vk::ImageUsageFlagBits::eTransferDst;
+        }
+        if(ext_use_flags){
+            image_usage |= ext_use_flags;
+        }
+
+        createImage(width, height, mip_levels, layers, 
+        sample_count, format, vk::ImageTiling::eOptimal, 
+        image_usage, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE, vma_image_view_sampler.vma_image);
+
+        vk::Image image = vma_image_view_sampler.image();
+        vma_image_view_sampler.image_view = createImageView(
+        image, format, calcImageAspectFlags(format), mip_levels, layers);
+
+        //create sampler
+        vma_image_view_sampler.sampler = createSample(min_filter, mag_filter, mip_levels, address_mode, address_mode, address_mode);
+        //set image layout add descriptor type
+        vma_image_view_sampler.image_layout = vk::ImageLayout::eShaderReadOnlyOptimal;
+        vma_image_view_sampler.descriptor_type = vk::DescriptorType::eCombinedImageSampler;
+
+        if(ext_use_flags & vk::ImageUsageFlagBits::eDepthStencilAttachment){
+            vma_image_view_sampler.image_layout = vk::ImageLayout::eDepthStencilReadOnlyOptimal;
+        }else if(ext_use_flags & vk::ImageUsageFlagBits::eInputAttachment){
+            vma_image_view_sampler.descriptor_type = vk::DescriptorType::eInputAttachment;
+        }
+        
+        if(image_data){
+            size_t image_size = width * height * calcFormatSize(format);
+            VmaBuffer stagin_buffer;
+            createBuffer(image_size, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_AUTO_PREFER_HOST, stagin_buffer);
+
+            //Copy image pixel data to staging buffer
+            updateBuffer(stagin_buffer, image_data, image_size);
+
+            //transition image to DST_OP for copy into
+            transitionImageLayout(image, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, format, mip_levels, layers);
+            //copy staging buffer to image
+            copyBufferToImage(stagin_buffer.buffer, image, width,height);
+        
+            //clear staging buffer
+            vmaDestroyBuffer(Context::Instance().getAllocator(), stagin_buffer.buffer, stagin_buffer.allocation);
+
+            // generate image mipmaps, and transition image to READ_ONLY_OPT state for shader reading
+            createImageMipmaps(image, width, height, mip_levels);
+        }
+
+
+}
+
+
+
+
+
+
+
+
 
 VmaImageViewSampler Vulkantool::loadImageViewSampler(const std::string &filename, 
 uint32_t mip_levels, uint32_t layers, vk::Format format, vk::Filter min_filter, 

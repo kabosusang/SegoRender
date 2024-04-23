@@ -183,6 +183,7 @@ void MainPass::CreatePiepline(){
                   .setPSampleMask(nullptr)
                   .setAlphaToCoverageEnable(VK_FALSE)
                   .setAlphaToOneEnable(VK_FALSE);
+                  
     //6. depth and stencil buffer
     depth_stencil_ci.setDepthTestEnable(VK_TRUE)
                     .setDepthWriteEnable(VK_TRUE)
@@ -331,21 +332,21 @@ void MainPass::CreatePiepline(){
     //-------------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------
     // TODO: 11. create pipeline cache
-
-
 }
 
 void MainPass::CreateFrameBuffer(){
     auto& ctx = Context::Instance();
+ 
     //Color Image
     Vulkantool::createImageViewSampler(width_,height_,nullptr,1,1,m_formats[0],
     vk::Filter::eLinear, vk::Filter::eLinear,vk::SamplerAddressMode::eClampToEdge,
-    colorIVs_, vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eInputAttachment);
+    colorIVs_,vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eInputAttachment);
 
     //Depth Image
     Vulkantool::createImageViewSampler(width_,height_,nullptr,1,1,m_formats[1],
     vk::Filter::eLinear, vk::Filter::eLinear,vk::SamplerAddressMode::eClampToEdge,
-    depthIVs_, vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eInputAttachment);
+    depthIVs_,vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eInputAttachment);
+
 
     std::vector<vk::ImageView> attachments = { 
     colorIVs_.image_view ,
@@ -363,6 +364,8 @@ void MainPass::CreateFrameBuffer(){
 }
 
 void MainPass::CreateRenderPass(){
+    Context& ctx = Context::Instance();
+
     vk::RenderPassCreateInfo createInfo;
     std::array<vk::AttachmentDescription,2> Attachments; //color attachment
     //Color Attachment

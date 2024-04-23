@@ -30,7 +30,6 @@ namespace Sego{
         void drawNode(vk::CommandBuffer cmd,vk::PipelineLayout pipelineLayout, Node* node,std::shared_ptr<StaticMeshRenderData>& Rendata);
         void drawNode_cubemap(vk::CommandBuffer cmd ,vk::PipelineLayout pipelineLayout, Node* node);
         
-        
         void render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<StaticMeshRenderData>& Rendata);
         void render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteRenderData> sprite);
         void render_skybox(vk::CommandBuffer cmdBuffer);
@@ -40,7 +39,7 @@ namespace Sego{
         VmaImageViewSampler colorIVs_;
         //Depth Texture
         VmaImageViewSampler depthIVs_;
-
+    
         std::vector<vk::PushConstantRange> mesh_push_constant_ranges_; //mesh
         std::vector<vk::PushConstantRange> cubmap_push_constant_ranges_; //cubemap
         

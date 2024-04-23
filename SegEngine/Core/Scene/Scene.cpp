@@ -84,6 +84,7 @@ std::shared_ptr<Scene> Scene::Copy(const std::shared_ptr<Scene> &other)
     return newScene;
 }
 
+
 Entity Scene::CreateEntity(const std::string& name){
 
     return CreateEntityWithUUID(UUID(),name);
@@ -98,6 +99,7 @@ Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string &name)
     tag.Tag = name.empty() ? "Entity" : name;
     return entity;
 }
+
 
 void Scene::DestroyEntity(Entity entity)
 {

@@ -27,6 +27,7 @@ public:
     vk::Queue presentQueue;
     std::unique_ptr<Swapchain> swapchain;
     std::unique_ptr<ShaderManager> shaderManager;
+    vk::SampleCountFlagBits msaaSamples = vk::SampleCountFlagBits::e1;
 
     vk::PhysicalDeviceProperties getPhysicalDeviceProperties() { return physical_deviceproperties_; }
     VmaAllocator getAllocator() { return allocator_; }
@@ -41,10 +42,10 @@ private:
     ~Context();
 public:
     void initSwapchain(int windowWidth, int windowHeight);
-
 private:
     //Select
     bool isDeviceSuitable(vk::PhysicalDevice device);
+    vk::SampleCountFlagBits getMaxUsableSampleCount();
 
     vk::Instance createInstance(std::vector<const char*>& extensions);
     vk::PhysicalDevice pickupPhysicalDevice();

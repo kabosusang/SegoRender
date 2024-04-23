@@ -9,8 +9,9 @@
 #include "Core/Base/UUID.hpp"
 
 //asset
-#include "resource/asset/Texture2D.hpp"
 #include "framework/Render/Render_data.hpp"
+#include "resource/asset/Texture2D.hpp"
+#include "resource/asset/Import/gltf_import.hpp"
 
 
 namespace Sego{
@@ -126,6 +127,15 @@ namespace Sego{
         std::shared_ptr<StaticMeshRenderData> MeshData = nullptr;
         
         MeshComponent() = default;
+        MeshComponent(std::string_view meshname,std::string_view meshpath)
+        { 
+            std::future<void> async_result = std::async(std::launch::async,[&](){
+                name = meshname;
+                path = meshpath;
+                MeshData = GlTFImporter::LoadglTFFile(path);
+            });
+        
+        }
         MeshComponent(const MeshComponent& other) :
         name(other.name),
         path(other.path),

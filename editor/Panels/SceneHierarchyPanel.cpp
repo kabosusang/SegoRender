@@ -39,7 +39,31 @@ void SceneHierarchyPanel::OnImGuiRender(){
         {
             if (ImGui::MenuItem("Create Empty Entity"))
                 m_Context->CreateEntity("Empty Entity");
-            ImGui::EndPopup();
+            ImGui::SeparatorText("Object");
+            if (ImGui::BeginMenu("Create")){
+                if (ImGui::BeginMenu("2D")){
+                    if (ImGui::MenuItem("Sprite")){
+                        Entity curent = m_Context->CreateEntity("Sprite");
+                        curent.AddComponent<SpriteRendererComponent>();
+                    }
+                    ImGui::EndMenu();
+                }
+                if (ImGui::BeginMenu("3D")){
+                    if (ImGui::MenuItem("Cube")){
+                        Entity curent = m_Context->CreateEntity("Cube");
+                        curent.AddComponent<MeshComponent>("Cube","resources/Settings/SceneObject/Cube.glb");
+                    }
+
+                    if (ImGui::MenuItem("Plate")){
+                        Entity curent = m_Context->CreateEntity("Plane");
+                        curent.AddComponent<MeshComponent>("Plane","resources/Settings/SceneObject/Plane.glb");
+                    }
+                    ImGui::EndMenu();
+                }
+
+                ImGui::EndMenu();
+            } 
+            ImGui::EndPopup();    
         }
     }
     ImGui::End();
