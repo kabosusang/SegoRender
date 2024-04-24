@@ -61,7 +61,6 @@ namespace Sego{
 
         //push Constant
         glm::mat4 Meshmvp_;
-
     };
 
     struct StaticMeshRenderData : public MeshRenderData{

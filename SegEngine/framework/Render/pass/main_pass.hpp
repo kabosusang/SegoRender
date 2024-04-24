@@ -39,6 +39,8 @@ namespace Sego{
         VmaImageViewSampler colorIVs_;
         //Depth Texture
         VmaImageViewSampler depthIVs_;
+        //MSAA Texture
+        VmaImageView msaaIVs_;
     
         std::vector<vk::PushConstantRange> mesh_push_constant_ranges_; //mesh
         std::vector<vk::PushConstantRange> cubmap_push_constant_ranges_; //cubemap

@@ -12,12 +12,14 @@ MainPass::MainPass(){
 auto& ctx = Context::Instance();
 m_formats ={
     vk::Format::eR8G8B8A8Unorm,
+    vk::Format::eR8G8B8A8Unorm,
     ctx.swapchain->GetDepthFormat()
     };
 }
 
 void MainPass::destroy(){
     RenderPass::destroy();
+    msaaIVs_.destroy();
     colorIVs_.destroy();
     depthIVs_.destroy();
 }
@@ -178,11 +180,7 @@ void MainPass::CreatePiepline(){
 
     //5. multisampling
     multisample_ci.setSampleShadingEnable(VK_FALSE)
-                  .setRasterizationSamples(vk::SampleCountFlagBits::e1)
-                  .setMinSampleShading(1.0f)
-                  .setPSampleMask(nullptr)
-                  .setAlphaToCoverageEnable(VK_FALSE)
-                  .setAlphaToOneEnable(VK_FALSE);
+                  .setRasterizationSamples(ctx.msaaSamples);
                   
     //6. depth and stencil buffer
     depth_stencil_ci.setDepthTestEnable(VK_TRUE)
@@ -336,20 +334,25 @@ void MainPass::CreatePiepline(){
 
 void MainPass::CreateFrameBuffer(){
     auto& ctx = Context::Instance();
- 
+    //MSAA Imaghe
+    Vulkantool::createImageAndView(width_,height_,1,1,ctx.msaaSamples,m_formats[0],
+    vk::ImageTiling::eOptimal,vk::ImageUsageFlagBits::eColorAttachment,
+    VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY,vk::ImageAspectFlagBits::eColor,msaaIVs_);
+
     //Color Image
-    Vulkantool::createImageViewSampler(width_,height_,nullptr,1,1,m_formats[0],
+    Vulkantool::createImageViewSampler(width_,height_,nullptr,1,1,m_formats[1],
     vk::Filter::eLinear, vk::Filter::eLinear,vk::SamplerAddressMode::eClampToEdge,
     colorIVs_,vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eInputAttachment);
 
     //Depth Image
-    Vulkantool::createImageViewSampler(width_,height_,nullptr,1,1,m_formats[1],
+    Vulkantool::createImageViewSampler(width_,height_,nullptr,1,1,m_formats[2],
     vk::Filter::eLinear, vk::Filter::eLinear,vk::SamplerAddressMode::eClampToEdge,
-    depthIVs_,vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eInputAttachment);
+    depthIVs_,ctx.msaaSamples,vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eInputAttachment);
 
 
     std::vector<vk::ImageView> attachments = { 
-    colorIVs_.image_view ,
+    colorIVs_.image_view,
+    msaaIVs_.image_view,
     depthIVs_.image_view
     };
 
@@ -367,8 +370,8 @@ void MainPass::CreateRenderPass(){
     Context& ctx = Context::Instance();
 
     vk::RenderPassCreateInfo createInfo;
-    std::array<vk::AttachmentDescription,2> Attachments; //color attachment
-    //Color Attachment
+    std::array<vk::AttachmentDescription,3> Attachments; //color attachment
+    //Color Attachment (Resolve)
     Attachments[0].setFormat(m_formats[0])
                    .setSamples(vk::SampleCountFlagBits::e1)
                    .setLoadOp(vk::AttachmentLoadOp::eClear)
@@ -377,10 +380,19 @@ void MainPass::CreateRenderPass(){
                    .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
                    .setInitialLayout(vk::ImageLayout::eUndefined)
                    .setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-    //Depth Attachment
-  
+
+     //MSAA Color Attachent
     Attachments[1].setFormat(m_formats[1])
-                  .setSamples(vk::SampleCountFlagBits::e1)
+                   .setSamples(ctx.msaaSamples)
+                   .setLoadOp(vk::AttachmentLoadOp::eClear)
+                   .setStoreOp(vk::AttachmentStoreOp::eStore)
+                   .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+                   .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+                   .setInitialLayout(vk::ImageLayout::eUndefined)
+                   .setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);
+    //Depth Attachment
+    Attachments[2].setFormat(m_formats[2])
+                  .setSamples(ctx.msaaSamples)
                   .setLoadOp(vk::AttachmentLoadOp::eClear)
                   .setStoreOp(vk::AttachmentStoreOp::eDontCare)
                   .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
@@ -388,21 +400,23 @@ void MainPass::CreateRenderPass(){
                   .setInitialLayout(vk::ImageLayout::eUndefined)
                   .setFinalLayout(vk::ImageLayout::eDepthStencilReadOnlyOptimal);
 
-    std::array<vk::AttachmentReference,2> AttachmentRef;//color attachment reference
-    //Color Ref
-    AttachmentRef[0].setAttachment(0)
+    std::array<vk::AttachmentReference,3> AttachmentRef;//color attachment reference
+    AttachmentRef[0].setAttachment(0) //output color
                      .setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-    AttachmentRef[1].setAttachment(1)
+    AttachmentRef[1].setAttachment(1) //msaa color
+                     .setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+    AttachmentRef[2].setAttachment(2) //depth color
                      .setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
- 
+
     //subpass
     vk::SubpassDescription subpass; //subpass
     vk::SubpassDependency dependency; //subpass dependency
     
     subpass.setColorAttachmentCount(1)
-            .setPColorAttachments(&AttachmentRef[0])
+            .setPColorAttachments(&AttachmentRef[1]) //msaa
             .setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
-            .setPDepthStencilAttachment(&AttachmentRef[1]);
+            .setPDepthStencilAttachment(&AttachmentRef[2]) //depth color
+            .setPResolveAttachments(&AttachmentRef[0]); //output color
 
     dependency.setSrcSubpass(VK_SUBPASS_EXTERNAL)
               .setDstSubpass(0)
@@ -413,7 +427,7 @@ void MainPass::CreateRenderPass(){
     createInfo.setAttachments(Attachments)
               .setSubpasses(subpass)
               .setDependencies(dependency);
-            
+
     renderPass_ = Context::Instance().device.createRenderPass(createInfo);
 }
 
@@ -422,9 +436,10 @@ void MainPass::Render(){
     auto& VulkanRhi = VulkanRhi::Instance();
     auto cmdBuffer = VulkanRhi.getCommandBuffer();
     
-    std::array<vk::ClearValue,2> clearValues{};
+    std::array<vk::ClearValue,3> clearValues{};
     clearValues[0].setColor(vk::ClearColorValue(reinterpret_cast<vk::ClearColorValue&>(clearColor_)));
-    clearValues[1].setDepthStencil({1.0f,0});
+    clearValues[1].setColor(vk::ClearColorValue(reinterpret_cast<vk::ClearColorValue&>(clearColor_)));
+    clearValues[2].setDepthStencil({1.0f,0});
 
     vk::RenderPassBeginInfo renderPassBegin{};
     renderPassBegin.setRenderPass(renderPass_)
@@ -625,9 +640,10 @@ void MainPass::recreateframbuffer(uint32_t width,uint32_t height){
     auto& ctx = Context::Instance();
     ctx.device.waitIdle();
     ctx.device.destroyFramebuffer(framebuffer_);
-    depthIVs_.destroy();
+    msaaIVs_.destroy();
     colorIVs_.destroy();
-
+    depthIVs_.destroy();
+    
     width_ = width;
     height_= height;
     CreateFrameBuffer();

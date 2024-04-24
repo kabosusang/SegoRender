@@ -31,7 +31,7 @@ namespace Sego{
 		float GetYaw() const { return m_Yaw; }
 
 		void UseSkybox() { m_UseSkybox = !m_UseSkybox; }
-		bool m_UseSkybox = false;
+		bool m_UseSkybox = true;
 
 	private:
 		void UpdateProjection();

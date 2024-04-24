@@ -31,5 +31,21 @@ struct Material_toshader {
 	int baseColorTextureIndex; // index in textures array
 };
 
+struct CircleOutput{
+	vec3 LocalPosition;
+	vec4 color;
+	float Thickness;
+	float Fade;
+};
+
+//Temprary - Phone
+struct LightAttribute {
+	vec3 position;
+	vec3 viewPos;
+};
+
+
+
+
 
 #endif

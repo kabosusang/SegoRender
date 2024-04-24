@@ -69,12 +69,7 @@ namespace Sego{
     
         CircleRendererComponent() = default;
         CircleRendererComponent(const CircleRendererComponent&) = default;
-        
-       
     };
-
-
-
 
     struct CameraComponent{
         SceneCamera Camera;
