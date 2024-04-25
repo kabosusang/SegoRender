@@ -5,6 +5,9 @@
 #include "framework/Render/pass/ui_pass.hpp"
 #include "framework/Render/pass/pick_pass.hpp"
 
+//asste
+#include "resource/asset/base/Light.h"
+
 namespace Sego{
 
     class VulkanRhi{
@@ -45,6 +48,10 @@ namespace Sego{
         void setProjection(const glm::mat4& projection);
         void setView(const glm::mat4& view);
 
+        void SetDirLight(std::shared_ptr<LightObj>& light){
+            lightObject = light;
+        }
+
         void SetRenderDatas(std::vector<std::shared_ptr<RenderData>>& render_Datas){
             mainPass_->setRenderDatas(render_Datas);
             pickPass_->setRenderDatas(render_Datas);
@@ -55,6 +62,9 @@ namespace Sego{
         }
      
     public:
+        //LightObject
+        std::shared_ptr<LightObj> lightObject;
+
         std::shared_ptr<Texture2D> defaultTexture;
         std::shared_ptr<TextureCube> defaultSkybox;
     private:
@@ -93,7 +103,7 @@ namespace Sego{
         std::unique_ptr<class PickPass> pickPass_;
 
         //All Render mvp UniformBuffer
-        std::vector<VmaBuffer> uniformBuffers_;
+        std::vector<VmaBuffer> uniformBuffers_; //LightObjec
         bool framebufferResized = false;
     };
 

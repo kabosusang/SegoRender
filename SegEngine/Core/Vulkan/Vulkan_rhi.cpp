@@ -3,10 +3,6 @@
 #include "Core/Base/Input.hpp" 
 #include "framework/Render/Render_data.hpp"
 
-struct UniformBufferObject {
-    alignas(16) glm::mat4 view;
-    alignas(16) glm::mat4 proj;
-};
 
 namespace Sego{
 VulkanRhi* VulkanRhi::instance_ = nullptr;
@@ -112,7 +108,7 @@ void VulkanRhi::createSemaphoresAndFence() {
 }
 
 void VulkanRhi::createUniformBuffers(){
-    vk::DeviceSize bufferSize = sizeof(glm::mat4) * 2;
+    vk::DeviceSize bufferSize = sizeof(LightObj);
     uniformBuffers_.resize(maxFlightCount_);
     for(int i = 0; i < maxFlightCount_; ++i){
         Vulkantool::createBuffer(bufferSize,vk::BufferUsageFlagBits::eUniformBuffer,
@@ -136,7 +132,7 @@ vk::ImageView VulkanRhi::getDepthImageView(){
 
 void VulkanRhi::render(){
     waitFrame();
-    //updtaUniform();
+    updtaUniform();
 	recordFrame();
 	submitFrame();
 	presentFrame();
@@ -234,12 +230,8 @@ void VulkanRhi::setView(const glm::mat4& view){
 }
 
 void VulkanRhi::updtaUniform()
-{
-    UniformBufferObject ubo;
-    ubo.view = CameraView_;
-    ubo.proj = projection_;
-    ubo.proj[1][1] *= -1;
-    Vulkantool::updateBuffer(uniformBuffers_[currentFrame_], &ubo, sizeof(ubo));
+{    
+    Vulkantool::updateBuffer(uniformBuffers_[currentFrame_], lightObject.get(), sizeof(LightObj));
 }
 
  

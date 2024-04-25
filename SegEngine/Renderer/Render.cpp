@@ -9,44 +9,39 @@ struct Renderer2DData{
 
 
 
-
-
-
 };
-
-
-
-
-
 
 namespace Sego{
 
 void Renderer::BeginScene(const Camera& camera, const glm::mat4& transform){
+    m_CameraPos = glm::vec3(transform[3]);
+
     glm::mat4 proj = camera.GetProjection();
     proj[1][1] *= -1;
     m_ViewProj = proj *  glm::inverse(transform);
-    
 }
 
 void Renderer::BeginScene(const EditorCamera &camera){
-auto& Vctx = VulkanRhi::Instance();
-//glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
-glm::mat4 view = camera.GetViewMatrix();
-glm::mat4 proj = camera.GetProjectionMatrix();
+    auto& Vctx = VulkanRhi::Instance();
 
-proj[1][1] *= -1;
-m_ViewProj = proj * view;
+    m_CameraPos = camera.GetPosition();
+    glm::mat4 view = camera.GetViewMatrix();
+    glm::mat4 proj = camera.GetProjectionMatrix();
 
-if (camera.m_UseSkybox){
-    skybox_->Meshmvp_ = proj * glm::mat4(glm::mat3(view));
-    Vctx.SetSkyboxRenderData(skybox_);
-}
+    proj[1][1] *= -1;
+    m_ViewProj = proj * view;
+
+    if (camera.m_UseSkybox){
+        skybox_->Meshmvp_ = proj * glm::mat4(glm::mat3(view));
+        Vctx.SetSkyboxRenderData(skybox_);
+    }
 
 }
 
 void Renderer::Init(){
     skybox_ = std::make_shared<SkyboxRenderData>();
     skybox_ = std::static_pointer_cast<SkyboxRenderData>(GlTFImporter::LoadglTFFile("resources/Settings/skybox/cube.gltf"));
+
 }
 
 void Renderer::BeginScene(){
@@ -143,6 +138,22 @@ void Renderer::DrawCircle(const glm::mat4 &transform, const glm::vec4 &color, fl
 
 void Renderer::Render(Scene* scene){
     auto& VCtx =  VulkanRhi::Instance();
+    std::shared_ptr<LightObj> light = std::make_shared<LightObj>();
+    light->lightSetting.UseLight = 0; //No Light
+    light->lightSetting.lightCount = 0;
+    light->dirLight.direction = glm::vec3(0.0f,0.0f,0.0f);
+    light->dirLight.viewPos = m_CameraPos;
+    //Lignt Struct
+    auto DirLightview = scene->m_Registry.view<TransformComponent,DirLightComponent>();
+    for (auto entity : DirLightview){
+        auto [transform,dirLight] = DirLightview.get<TransformComponent,DirLightComponent>(entity);
+        light->dirLight.direction = dirLight.Direction;
+        light->dirLight.viewPos = m_CameraPos;
+        light->lightSetting.UseLight = 1; //Use Light
+        light->lightSetting.lightCount = 1;
+    }
+    VCtx.SetDirLight(light);
+
 
     //Render 2D
     std::vector<std::shared_ptr<RenderData>> RenderDatas;
@@ -151,6 +162,7 @@ void Renderer::Render(Scene* scene){
         auto [transform,spriteRenderer] = view.get<TransformComponent,SpriteRendererComponent>(entity);
         DrawSprite(transform.GetTransform(),spriteRenderer,(int)entity,RenderDatas);
     }
+
 
     //Render 3D Static Mesh
     auto view2 = scene->m_Registry.view<TransformComponent,MeshComponent>();
@@ -162,6 +174,7 @@ void Renderer::Render(Scene* scene){
         meshRenderer.MeshData->EntityID = (int)entity + 1;
         RenderDatas.push_back(meshRenderer.MeshData);
     }
+
 
 
 

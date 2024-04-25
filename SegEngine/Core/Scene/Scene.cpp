@@ -312,8 +312,13 @@ void Scene::OnComponentAdded<BoxCollider2Domponent>(Entity entity, BoxCollider2D
 template<>
 void Scene::OnComponentAdded<MeshComponent>(Entity entity, MeshComponent& component){
     
-    
 }
+
+template<>
+void Scene::OnComponentAdded<DirLightComponent>(Entity entity, DirLightComponent& component){
+
+}
+
 
 
 }

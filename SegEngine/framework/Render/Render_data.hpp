@@ -6,6 +6,8 @@
 
 #include "resource/asset/Texture2D.hpp"
 #include "resource/asset/CubeTexture.hpp"
+#include "resource/asset/base/Light.h"
+
 
 namespace Sego{
 
@@ -61,7 +63,9 @@ namespace Sego{
 
         //push Constant
         glm::mat4 Meshmvp_;
+        
     };
+
 
     struct StaticMeshRenderData : public MeshRenderData{
         StaticMeshRenderData() {type = RenderDataType::StaticMesh;}
@@ -70,6 +74,11 @@ namespace Sego{
         std::vector<Node*> nodes_; //nodes
         std::vector<Material> materials_;
         std::vector<Texture2D> textures_;
+        
+        void destory(){
+            vertexBuffer_.destroy();
+            indexBuffer_.destroy();
+        }
         uint32_t EntityID = -1;
     };
 
@@ -84,5 +93,7 @@ namespace Sego{
             indexBuffer_.destroy();
          }
     };
+
+    
 
 }

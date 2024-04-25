@@ -217,6 +217,16 @@ static void SerializeEntity(YAML::Emitter& out,Entity entity){
         out << YAML::EndMap; //BoxCollider2Domponent
     }
 
+    if (entity.HasComponent<DirLightComponent>()){
+        out << YAML::Key << "DirLightComponent";
+        out << YAML::BeginMap; //DirLightComponent
+
+        auto& dirLiComponent = entity.GetComponent<DirLightComponent>();
+        out << YAML::Key << "Direction" << YAML::Value << dirLiComponent.Direction;
+        out << YAML::Key << "Intensity" << YAML::Value << dirLiComponent.Intensity;
+        out << YAML::EndMap; //BoxCollider2Domponent
+    }
+
 
         out << YAML::EndMap; //Entity
 
@@ -332,10 +342,15 @@ bool SceneSerializer::Deserialize(const std::string &filepath){
                 mesh_async.get();
             }
 
+            //DirLight Component
+            auto DirComponent = entity["DirLightComponent"];
+            if (DirComponent){
+                auto& dc = deserializedEntity.AddComponent<DirLightComponent>();
+                dc.Direction = DirComponent["Direction"].as<glm::vec3>();
+                dc.Intensity = DirComponent["Intensity"].as<float>();
+            }
 
 
-
-        
         }
    
     }

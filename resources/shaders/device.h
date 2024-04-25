@@ -38,13 +38,6 @@ struct CircleOutput{
 	float Fade;
 };
 
-//Temprary - Phone
-struct LightAttribute {
-	vec3 position;
-	vec3 viewPos;
-};
-
-
 
 
 

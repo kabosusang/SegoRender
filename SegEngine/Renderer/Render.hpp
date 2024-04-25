@@ -37,6 +37,7 @@ public:
     uint32_t ReadPixel(uint32_t x, uint32_t y);
 
 private:
+    glm::vec3 m_CameraPos;
     glm::mat4 m_ViewProj;
     std::shared_ptr<SkyboxRenderData> skybox_ = nullptr;
 };

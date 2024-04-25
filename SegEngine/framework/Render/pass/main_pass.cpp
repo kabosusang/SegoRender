@@ -41,6 +41,7 @@ void MainPass::createDescriptorSetLayout(){
                       .setFlags(vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR);
 
     descriptorSetLayouts_[0]= Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci);
+    
     //mesh DescriptorSetLayout
     vk::DescriptorSetLayoutBinding samplerLayoutBinding_mesh{};
     samplerLayoutBinding_mesh.setBinding(0)
@@ -48,13 +49,21 @@ void MainPass::createDescriptorSetLayout(){
                         .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
                         .setStageFlags(vk::ShaderStageFlagBits::eFragment)
                         .setPImmutableSamplers(nullptr);
+    vk::DescriptorSetLayoutBinding UniformBinding_mesh{};
+    UniformBinding_mesh.setBinding(1)
+                        .setDescriptorCount(1)
+                        .setDescriptorType(vk::DescriptorType::eUniformBuffer)
+                        .setStageFlags(vk::ShaderStageFlagBits::eFragment)
+                        .setPImmutableSamplers(nullptr);
+    vk::DescriptorSetLayoutBinding bindings[] = {samplerLayoutBinding_mesh, UniformBinding_mesh};
 
     vk::DescriptorSetLayoutCreateInfo desc_set_layout_ci_mesh{};
-    desc_set_layout_ci_mesh.setBindingCount(1)
-                      .setBindings(samplerLayoutBinding_mesh)
+    desc_set_layout_ci_mesh.setBindingCount(2)
+                      .setBindings(bindings)
                       .setFlags(vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR);
     descriptorSetLayouts_[1]= Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci_mesh);
 
+    
     //skybox(cubemap) DescriptorSetLayout
     vk::DescriptorSetLayoutBinding samplerLayoutBinding_cubemap{};
     samplerLayoutBinding_cubemap.setBinding(0)
@@ -236,8 +245,8 @@ void MainPass::CreatePiepline(){
     //Mesh Renderer
     shader_stage_cis.clear();
     shader_stage_cis = {
-        ctx.shaderManager->LoadShader("resources/shaders/Mesh/meshvert.spv", vk::ShaderStageFlagBits::eVertex),
-        ctx.shaderManager->LoadShader("resources/shaders/Mesh/meshfrag.spv", vk::ShaderStageFlagBits::eFragment)
+        ctx.shaderManager->LoadShader("resources/shaders/Mesh/meshPhonevert.spv", vk::ShaderStageFlagBits::eVertex),
+        ctx.shaderManager->LoadShader("resources/shaders/Mesh/meshPhonefrag.spv", vk::ShaderStageFlagBits::eFragment)
     };
 
     //1. vertex input   BindingDescription And AttributeDescription
@@ -568,6 +577,9 @@ void MainPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelin
             &Rendata->materials_[primitive.materialIndex]},mesh_push_constant_ranges_);
             desc_writes.clear();
 				if (primitive.indexCount > 0) {
+                    //1. Uniform
+                    std::array<vk::DescriptorBufferInfo, 1> desc_buffer_infos{}; //Uniform 
+                    addBufferDescriptorSet(desc_writes,desc_buffer_infos[0],VulkanRhi.getCurrentUniformBuffer(),1);
 
                     std::array<vk::DescriptorImageInfo,1>   desc_image_info{};  
                     if (Rendata->materials_[primitive.materialIndex].has_baseColorTexture){

@@ -60,9 +60,16 @@ void SceneHierarchyPanel::OnImGuiRender(){
                     }
                     ImGui::EndMenu();
                 }
-
                 ImGui::EndMenu();
             } 
+            ImGui::SeparatorText("Light");
+            if (ImGui::BeginMenu("Light")){
+                if (ImGui::MenuItem("Directional Light")){
+                    Entity curent = m_Context->CreateEntity("Directional Light");
+                    curent.AddComponent<DirLightComponent>();
+                }
+                ImGui::EndMenu();
+            }
             ImGui::EndPopup();    
         }
     }
@@ -461,6 +468,12 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
     }
 
     });
+
+    DrawComponent<DirLightComponent>("DirLightComponent", entity, [](auto& component){
+        DrawVec3Control("Direction", component.Direction);
+        ImGui::DragFloat("Intensity", &component.Intensity,0.1f,0.0f, 100.0f); 
+    });
+    
 
 
 }
