@@ -151,6 +151,9 @@ void Renderer::Render(Scene* scene){
         light->dirLight.viewPos = m_CameraPos;
         light->lightSetting.UseLight = 1; //Use Light
         light->lightSetting.lightCount = 1;
+
+
+
     }
     VCtx.SetDirLight(light);
 
@@ -170,12 +173,11 @@ void Renderer::Render(Scene* scene){
         auto [transform,meshRenderer] = view2.get<TransformComponent,MeshComponent>(entity);
         if (meshRenderer.MeshData == nullptr)
             continue;
+        meshRenderer.MeshData->model_ = transform.GetTransform();
         meshRenderer.MeshData->Meshmvp_ = m_ViewProj * transform.GetTransform();
         meshRenderer.MeshData->EntityID = (int)entity + 1;
         RenderDatas.push_back(meshRenderer.MeshData);
     }
-
-
 
 
     //Push Renderer

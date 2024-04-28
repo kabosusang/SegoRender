@@ -249,6 +249,7 @@ void Scene::DuplicateEntity(Entity entity)
     CopyComponentIfExists<Rigidbody2DComponent>(newEntity,entity);
     CopyComponentIfExists<BoxCollider2Domponent>(newEntity,entity);
     CopyComponentIfExists<MeshComponent>(newEntity,entity);
+    CopyComponentIfExists<DirLightComponent>(newEntity,entity);
 }
 
 Entity Scene::GetPrimaryCameraEntity(){

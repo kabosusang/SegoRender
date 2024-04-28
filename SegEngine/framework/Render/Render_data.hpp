@@ -61,6 +61,8 @@ namespace Sego{
         VmaBuffer vertexBuffer_;
         VmaBuffer indexBuffer_;
 
+        glm::mat4 model_;
+
         //push Constant
         glm::mat4 Meshmvp_;
         

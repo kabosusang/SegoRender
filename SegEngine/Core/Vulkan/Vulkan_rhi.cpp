@@ -33,6 +33,9 @@ VulkanRhi::VulkanRhi(uint32_t windowWidth, uint32_t windowHeight){
     pickPass_ = std::make_unique<PickPass>();
     pickPass_->Init();
 
+    dirPass_ = std::make_unique<DirShadowPass>();
+    dirPass_->Init();
+
 }
 void VulkanRhi::Init(std::vector<const char*>& extensions, 
 Context::GetSurfaceCallback cb, int windowWidth, int windowHeight) {
@@ -42,7 +45,9 @@ Context::GetSurfaceCallback cb, int windowWidth, int windowHeight) {
 void VulkanRhi::destory() {
     Context::Instance().device.waitIdle();
     Context::Instance().device.destroyCommandPool(cmdPool_);
-
+    for (auto& uniform : uniformBuffers_){
+        uniform.destroy();
+    }
     for (auto& semaphore : imageAvailableSemaphores_) {
         Context::Instance().device.destroySemaphore(semaphore);
     }
@@ -165,8 +170,9 @@ void VulkanRhi::recordFrame(){
 
     cmdBuffer.begin(beginInfo);
     //record all renderpass
-    mainPass_->Render();
+    dirPass_->Render();
     pickPass_->Render();
+    mainPass_->Render();
     uiPass_->Render();
 
     cmdBuffer.end();

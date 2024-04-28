@@ -4,6 +4,7 @@
 #include "framework/Render/pass/main_pass.hpp"
 #include "framework/Render/pass/ui_pass.hpp"
 #include "framework/Render/pass/pick_pass.hpp"
+#include "framework/Render/pass/Dirshadow_pass.hpp"
 
 //asste
 #include "resource/asset/base/Light.h"
@@ -55,6 +56,7 @@ namespace Sego{
         void SetRenderDatas(std::vector<std::shared_ptr<RenderData>>& render_Datas){
             mainPass_->setRenderDatas(render_Datas);
             pickPass_->setRenderDatas(render_Datas);
+            dirPass_->setRenderDatas(render_Datas);
         }
 
         void SetSkyboxRenderData(std::shared_ptr<SkyboxRenderData>& skybox){
@@ -101,6 +103,7 @@ namespace Sego{
         std::unique_ptr<class UiPass> uiPass_;
         std::unique_ptr<class MainPass> mainPass_;
         std::unique_ptr<class PickPass> pickPass_;
+        std::unique_ptr<class DirShadowPass> dirPass_;
 
         //All Render mvp UniformBuffer
         std::vector<VmaBuffer> uniformBuffers_; //LightObjec
