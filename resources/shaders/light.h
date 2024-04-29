@@ -33,14 +33,13 @@ struct LightSetting{
 
 struct LightObj{
     DirLight dirLight;
-    alignas(16) LightSetting lightSetting;
+    LightSetting lightSetting;
     //PointLight pointLight;
 };
 
-struct LightSpace{
-    mat4 model;
-    mat4 lightSpaceMatrix;
-};
+
+
+
 
 
 #endif

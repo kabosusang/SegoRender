@@ -10,11 +10,24 @@ namespace Sego{
 
 MainPass::MainPass(){
 auto& ctx = Context::Instance();
+auto& Vctx = VulkanRhi::Instance();
+uint32_t maxFlightCount_ = Vctx.getMaxFlightCount();
+
 m_formats ={
     vk::Format::eR8G8B8A8Unorm,
     vk::Format::eR8G8B8A8Unorm,
     ctx.swapchain->GetDepthFormat()
     };
+    
+
+    //LightSpace And ModelSpace
+    vk::DeviceSize bufferSize = sizeof(glm::mat4) * 2;
+    LightSpaceUBOs_.resize(maxFlightCount_);
+    for(int i = 0; i < maxFlightCount_; ++i){
+        Vulkantool::createBuffer(bufferSize,vk::BufferUsageFlagBits::eUniformBuffer,
+        VMA_MEMORY_USAGE_CPU_TO_GPU, LightSpaceUBOs_[i]);
+    }
+
 }
 
 void MainPass::destroy(){
@@ -43,27 +56,21 @@ void MainPass::createDescriptorSetLayout(){
     descriptorSetLayouts_[0]= Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci);
     
     //mesh DescriptorSetLayout
-    vk::DescriptorSetLayoutBinding samplerLayoutBinding_mesh{};
-    samplerLayoutBinding_mesh.setBinding(0)
-                        .setDescriptorCount(1)
-                        .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-                        .setStageFlags(vk::ShaderStageFlagBits::eFragment)
-                        .setPImmutableSamplers(nullptr);
-    vk::DescriptorSetLayoutBinding UniformBinding_mesh{};
-    UniformBinding_mesh.setBinding(1)
-                        .setDescriptorCount(1)
-                        .setDescriptorType(vk::DescriptorType::eUniformBuffer)
-                        .setStageFlags(vk::ShaderStageFlagBits::eFragment)
-                        .setPImmutableSamplers(nullptr);
-    vk::DescriptorSetLayoutBinding bindings[] = {samplerLayoutBinding_mesh, UniformBinding_mesh};
+   
+    std::vector<vk::DescriptorSetLayoutBinding> bindings_mesh = {
+        vk::DescriptorSetLayoutBinding(0,vk::DescriptorType::eUniformBuffer,1,vk::ShaderStageFlagBits::eVertex),
+        vk::DescriptorSetLayoutBinding(1,vk::DescriptorType::eUniformBuffer,1,vk::ShaderStageFlagBits::eFragment),
+        vk::DescriptorSetLayoutBinding(2, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment),
+        vk::DescriptorSetLayoutBinding(3, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment),
+    };
 
+  
     vk::DescriptorSetLayoutCreateInfo desc_set_layout_ci_mesh{};
-    desc_set_layout_ci_mesh.setBindingCount(2)
-                      .setBindings(bindings)
+    desc_set_layout_ci_mesh.setBindingCount(static_cast<uint32_t>(bindings_mesh.size()))
+                      .setBindings(bindings_mesh)
                       .setFlags(vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR);
     descriptorSetLayouts_[1]= Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci_mesh);
 
-    
     //skybox(cubemap) DescriptorSetLayout
     vk::DescriptorSetLayoutBinding samplerLayoutBinding_cubemap{};
     samplerLayoutBinding_cubemap.setBinding(0)
@@ -98,7 +105,7 @@ void MainPass::createPipelineLayouts(){
     
     mesh_push_constant_ranges_ = {
         {vk::ShaderStageFlagBits::eVertex,0,sizeof(glm::mat4)},
-        {vk::ShaderStageFlagBits::eFragment,sizeof(glm::mat4),sizeof(Material)}
+         {vk::ShaderStageFlagBits::eFragment,sizeof(glm::mat4),sizeof(Material)}
     };
     pipeline_layout_ci.setSetLayoutCount(1)
                       .setPSetLayouts(&descriptorSetLayouts_[1])
@@ -560,6 +567,7 @@ void MainPass::render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteR
 
 void MainPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelineLayout, Node* node,std::shared_ptr<StaticMeshRenderData>& Rendata){
     auto& VulkanRhi = VulkanRhi::Instance();
+    int flight_Index = VulkanRhi.getFlightCount();
     if(node->mesh.primitives.size() > 0){
         
         glm::mat4 nodeMatrix = node->matrix;
@@ -570,31 +578,38 @@ void MainPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelin
         }
         
         // Pass the final matrix to the vertex shader using push constants
-        nodeMatrix = Rendata->Meshmvp_ * nodeMatrix ;
-        
+        LightSpace lps;
+        glm::mat4 nodeMvp = Rendata->Meshmvp_ * nodeMatrix ;
+        nodeMatrix = Rendata->model_ * nodeMatrix;
+        lps.model = nodeMatrix;
+        lps.lightSpaceMatrix = lightdata_->camera_view_proj;
+        Vulkantool::updateBuffer(LightSpaceUBOs_[flight_Index], &lps, sizeof(LightSpace));
+
         for ( auto& primitive : node->mesh.primitives) {
-            updatePushConstants(cmdBuffer,pipelineLayout,{&nodeMatrix,
+            updatePushConstants(cmdBuffer,pipelineLayout,{&nodeMvp,
             &Rendata->materials_[primitive.materialIndex]},mesh_push_constant_ranges_);
             desc_writes.clear();
 				if (primitive.indexCount > 0) {
                     //1. Uniform
-                    std::array<vk::DescriptorBufferInfo, 1> desc_buffer_infos{}; //Uniform 
-                    addBufferDescriptorSet(desc_writes,desc_buffer_infos[0],VulkanRhi.getCurrentUniformBuffer(),1);
-
-                    std::array<vk::DescriptorImageInfo,1>   desc_image_info{};  
+                    std::array<vk::DescriptorBufferInfo, 2> desc_buffer_infos{}; //Uniform 
+                    addBufferDescriptorSet(desc_writes,desc_buffer_infos[0],LightSpaceUBOs_[flight_Index],0);
+                    addBufferDescriptorSet(desc_writes,desc_buffer_infos[1],lightdata_->lighting_ubs[flight_Index],1);
+                   
+                    std::array<vk::DescriptorImageInfo,2>   desc_image_info{};  
                     if (Rendata->materials_[primitive.materialIndex].has_baseColorTexture){
                         //Sample
                         addImageDescriptorSet(desc_writes, desc_image_info[0], 
-                        Rendata->textures_[Rendata->materials_[primitive.materialIndex].baseColorTextureIndex].image_view_sampler_,0);
-                        VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                        pipelineLayout, 0, static_cast<uint32_t>(desc_writes.size()), (VkWriteDescriptorSet *)desc_writes.data());
+                        Rendata->textures_[Rendata->materials_[primitive.materialIndex].baseColorTextureIndex].image_view_sampler_,2);                 
                     }else{
                         //Sample
                         addImageDescriptorSet(desc_writes, desc_image_info[0], 
-                        VulkanRhi.defaultTexture->image_view_sampler_,0); //defualt image use depth image(a kidding)
-                        VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                        pipelineLayout, 0, static_cast<uint32_t>(desc_writes.size()), (VkWriteDescriptorSet *)desc_writes.data());
+                        VulkanRhi.defaultTexture->image_view_sampler_,2); //defualt image use depth image(a kidding) 
                     }
+                    addImageDescriptorSet(desc_writes, desc_image_info[1],
+                    lightdata_->directional_light_shadow_texture,3);
+
+                    VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        pipelineLayout, 0, static_cast<uint32_t>(desc_writes.size()), (VkWriteDescriptorSet *)desc_writes.data());
                   
                     // Bind the descriptor for the current primitive's texture
                     cmdBuffer.drawIndexed(primitive.indexCount,1,primitive.firstIndex,0,0);
@@ -621,7 +636,7 @@ void MainPass::drawNode_cubemap(vk::CommandBuffer cmdBuffer , vk::PipelineLayout
         nodeMatrix = skybox_->Meshmvp_;
         for ( auto& primitive : node->mesh.primitives) {
         updatePushConstants(cmdBuffer,pipelineLayout,{&nodeMatrix},cubmap_push_constant_ranges_);
-            desc_writes.clear();
+        desc_writes.clear();
 				if (primitive.indexCount > 0) {
                     std::array<vk::DescriptorImageInfo,1>   desc_image_info = {};  
                     if (skybox_->materials_[primitive.materialIndex].has_baseColorTexture){

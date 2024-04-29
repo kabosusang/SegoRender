@@ -81,6 +81,7 @@ std::shared_ptr<Scene> Scene::Copy(const std::shared_ptr<Scene> &other)
     CopyComponent<Rigidbody2DComponent>(dstSceneRegistry,srcSceneRegistry,enttMap);
     CopyComponent<BoxCollider2Domponent>(dstSceneRegistry,srcSceneRegistry,enttMap);
     CopyComponent<MeshComponent>(dstSceneRegistry,srcSceneRegistry,enttMap);
+    CopyComponent<DirLightComponent>(dstSceneRegistry,srcSceneRegistry,enttMap);
     return newScene;
 }
 

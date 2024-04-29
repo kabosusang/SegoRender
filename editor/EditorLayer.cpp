@@ -29,14 +29,7 @@ void EditorLayer::OnAttach(){
 	m_color_texture_set = ImGui_ImplVulkan_AddTexture(m_Cts,m_Renderer->GetColorImageView(),
 	VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-	//Depth
-	m_Dts = Vulkantool::createSample(vk::Filter::eLinear,vk::Filter::eLinear,1,
-	vk::SamplerAddressMode::eRepeat,vk::SamplerAddressMode::eRepeat,vk::SamplerAddressMode::eRepeat);
-
-	m_depth_texture_set = ImGui_ImplVulkan_AddTexture(m_Dts,m_Renderer->GetDepthImageView(),
-	VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
-
-
+	
 	m_ActiveScene = std::make_shared<Scene>();
 	
 	m_EditorCamera = EditorCamera(30.0f,1.778f,0.1f,1000.0f);
@@ -358,12 +351,6 @@ void EditorLayer::FramBufferResize(float w,float h){
 	m_color_texture_set = ImGui_ImplVulkan_AddTexture(m_Cts,m_Renderer->GetColorImageView(),
 	VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-	//Depth
-	if (m_depth_texture_set != VK_NULL_HANDLE)
-	ImGui_ImplVulkan_RemoveTexture(m_depth_texture_set); //remove old texture
-
-	m_depth_texture_set = ImGui_ImplVulkan_AddTexture(m_Dts,m_Renderer->GetDepthImageView(),
-	VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 
 }
 

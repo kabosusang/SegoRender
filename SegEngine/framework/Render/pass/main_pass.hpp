@@ -18,12 +18,18 @@ namespace Sego{
         virtual void createPipelineLayouts();
 
         VmaImageViewSampler getColorTexture() { return colorIVs_;}
-        VmaImageViewSampler getDepthTexture() { return depthIVs_;}
         //Output Function
         void recreateframbuffer(uint32_t width,uint32_t height);
         void setSkyboxRenderData(std::shared_ptr<SkyboxRenderData>& skybox){
             skybox_ = skybox;
         }
+        void setLightRenderData(std::shared_ptr<LightingRenderData>& light){
+            lightdata_ = light;
+        }
+    //Uniform  
+    private:
+        std::vector<VmaBuffer> LightSpaceUBOs_;
+       
 
     private:
         //Node Different Push Constant
@@ -45,8 +51,12 @@ namespace Sego{
         std::vector<vk::PushConstantRange> mesh_push_constant_ranges_; //mesh
         std::vector<vk::PushConstantRange> cubmap_push_constant_ranges_; //cubemap
         
+
         //skybox
         std::shared_ptr<SkyboxRenderData> skybox_;
+        //LightData
+        std::shared_ptr<LightingRenderData> lightdata_;
+        
     };
 
 

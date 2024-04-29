@@ -5,6 +5,8 @@
 #include "resource/asset/base/Vertex.hpp"
 #include "resource/asset/base/Mesh.hpp"
 #include "resource/asset/Import/gltf_import.hpp"
+#define MAX_SIZE 214u  //
+
 
 namespace Sego{
 PickPass::PickPass(){
@@ -402,14 +404,9 @@ uint32_t PickPass::decodeEntityID(const uint8_t *color)
     return id;
 }
 
-#define MAX_SIZE 200u  //why 124?
-void PickPass::recreateframbuffer(uint32_t width, uint32_t height){
-    auto& ctx = Context::Instance();
-    ctx.device.waitIdle();
-    ctx.device.destroyFramebuffer(framebuffer_);
-    EntityIV_.destroy();
-    DepthIV_.destroy();
 
+void PickPass::recreateframbuffer(uint32_t width, uint32_t height){
+   
    if (width > height)
     {
         width_ = std::min(width, MAX_SIZE);
@@ -476,7 +473,6 @@ void PickPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelin
         }
         desc_writes.clear();
         nodeMatrix = Rendata->Meshmvp_ * nodeMatrix;
-       
          for ( auto& primitive : node->mesh.primitives) {
             updatePushConstants(cmdBuffer,pipelineLayout,{&nodeMatrix,&Rendata->EntityID});
                 // Update the push constant block

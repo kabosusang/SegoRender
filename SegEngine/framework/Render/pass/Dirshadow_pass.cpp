@@ -292,7 +292,7 @@ void DirShadowPass::render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<Stat
     vk::DeviceSize offsets[] = { 0 };
     cmdBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
     cmdBuffer.bindIndexBuffer(Rendata->indexBuffer_.buffer, 0, vk::IndexType::eUint32);
-
+    desc_writes.clear();
     //Draw Notes
     for(auto& node : Rendata->nodes_){
         drawNode(cmdBuffer,pipelineLayouts_[0],node,Rendata);
@@ -312,11 +312,10 @@ void DirShadowPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pi
             nodeMatrix = currentParent->matrix * nodeMatrix;
             currentParent = currentParent->parent;
         }
-        desc_writes.clear();
-        nodeMatrix = Rendata->Meshmvp_ * nodeMatrix;
-       
+        nodeMatrix = lightvp_ * Rendata->model_ * nodeMatrix;
+        
          for ( auto& primitive : node->mesh.primitives) {
-            updatePushConstants(cmdBuffer,pipelineLayout,{&nodeMatrix,&Rendata->EntityID});
+            updatePushConstants(cmdBuffer,pipelineLayout,{&nodeMatrix});
                 // Update the push constant block
 				if (primitive.indexCount > 0) {
                     // Bind the descriptor for the current primitive's texture

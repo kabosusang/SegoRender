@@ -24,7 +24,7 @@ namespace Sego{
     };
 
     enum class RenderDataType{
-        Sprite,Base,StaticMesh,Skybox
+        Sprite,Base,StaticMesh,Skybox,Lighting
     };
 
 
@@ -60,7 +60,7 @@ namespace Sego{
     struct MeshRenderData : public RenderData{ 
         VmaBuffer vertexBuffer_;
         VmaBuffer indexBuffer_;
-
+    
         glm::mat4 model_;
 
         //push Constant
@@ -95,6 +95,23 @@ namespace Sego{
             indexBuffer_.destroy();
          }
     };
+
+    struct LightingRenderData : public RenderData
+	{
+		LightingRenderData() { type = RenderDataType::Lighting; }
+
+		glm::mat4 camera_view_proj;
+   
+        //LightObj
+		std::vector<VmaBuffer> lighting_ubs;
+        
+		VmaImageViewSampler directional_light_shadow_texture;
+	};
+
+
+
+
+    
 
     
 

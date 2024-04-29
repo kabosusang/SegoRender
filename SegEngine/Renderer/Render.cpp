@@ -30,7 +30,6 @@ void Renderer::BeginScene(const EditorCamera &camera){
 
     proj[1][1] *= -1;
     m_ViewProj = proj * view;
-
     if (camera.m_UseSkybox){
         skybox_->Meshmvp_ = proj * glm::mat4(glm::mat3(view));
         Vctx.SetSkyboxRenderData(skybox_);
@@ -39,8 +38,18 @@ void Renderer::BeginScene(const EditorCamera &camera){
 }
 
 void Renderer::Init(){
+    auto& Vctx = VulkanRhi::Instance();
+    uint32_t maxFlightCount_ = Vctx.getMaxFlightCount();
     skybox_ = std::make_shared<SkyboxRenderData>();
     skybox_ = std::static_pointer_cast<SkyboxRenderData>(GlTFImporter::LoadglTFFile("resources/Settings/skybox/cube.gltf"));
+
+    //lightubs
+    vk::DeviceSize bufferSize = sizeof(LightObj);
+    m_Lightubs_.resize(maxFlightCount_);
+    for(int i = 0; i < maxFlightCount_; ++i){
+        Vulkantool::createBuffer(bufferSize,vk::BufferUsageFlagBits::eUniformBuffer,
+        VMA_MEMORY_USAGE_CPU_TO_GPU, m_Lightubs_[i]);
+    }
 
 }
 
@@ -67,12 +76,6 @@ uint32_t Renderer::ReadPixel(uint32_t x, uint32_t y){
 
 vk::ImageView Renderer::GetColorImageView(){
     return VulkanRhi::Instance().getColorImageView();
-}
-
-
-vk::ImageView Renderer::GetDepthImageView()
-{
-    return VulkanRhi::Instance().getDepthImageView();
 }
 
 const std::vector<uint32_t> Squardindices = {
@@ -138,26 +141,42 @@ void Renderer::DrawCircle(const glm::mat4 &transform, const glm::vec4 &color, fl
 
 void Renderer::Render(Scene* scene){
     auto& VCtx =  VulkanRhi::Instance();
-    std::shared_ptr<LightObj> light = std::make_shared<LightObj>();
-    light->lightSetting.UseLight = 0; //No Light
-    light->lightSetting.lightCount = 0;
-    light->dirLight.direction = glm::vec3(0.0f,0.0f,0.0f);
-    light->dirLight.viewPos = m_CameraPos;
-    //Lignt Struct
+
+    //Lighting
+    LightObj light;
+    std::shared_ptr<LightingRenderData> light_data = std::make_shared<LightingRenderData>();
+    light.lightSetting.UseLight = 0; //No Light
+    light.lightSetting.lightCount = 0;
+    light.dirLight.direction = glm::vec3(0.0f,0.0f,0.0f);
+    light.dirLight.viewPos = m_CameraPos;
+    //shadowmap
+    glm::mat4 lightSpaceMatrix = glm::mat4(1.0f);
     auto DirLightview = scene->m_Registry.view<TransformComponent,DirLightComponent>();
     for (auto entity : DirLightview){
         auto [transform,dirLight] = DirLightview.get<TransformComponent,DirLightComponent>(entity);
-        light->dirLight.direction = dirLight.Direction;
-        light->dirLight.viewPos = m_CameraPos;
-        light->lightSetting.UseLight = 1; //Use Light
-        light->lightSetting.lightCount = 1;
-
-
-
+        light.dirLight.direction = dirLight.Direction;
+        light.lightSetting.UseLight = 1; //Use Light
+        light.lightSetting.lightCount = 1;
+        //shadow
+        float near_plane = 0.1f, far_plane = 1000.0f;
+        glm::vec3 lightPos = -dirLight.Direction * 10.0f;
+        glm::vec3 lightTarget = glm::vec3(0.0f);
+        glm::mat4 lightProjection = glm::perspective(glm::radians(45.0f), 1.0f, near_plane, far_plane);
+        glm::mat4 lightView = glm::lookAt(lightPos, lightTarget, glm::vec3(0.0f, 1.0f, 0.0f));
+        lightProjection[1][1] *= -1;
+        lightSpaceMatrix = lightProjection * lightView;
     }
-    VCtx.SetDirLight(light);
+    light_data->camera_view_proj = lightSpaceMatrix;
+    light_data->directional_light_shadow_texture = VCtx.getDirShadowMap();
+    
+    VCtx.updateShadowubos(lightSpaceMatrix);
 
-
+    //update light uniform buffers
+    VmaBuffer ubs = m_Lightubs_[VCtx.getFlightCount()];
+    Vulkantool::updateBuffer(ubs,&light,sizeof(LightObj));
+    light_data->lighting_ubs = m_Lightubs_;
+    VCtx.SetLightRenderData(light_data);
+      
     //Render 2D
     std::vector<std::shared_ptr<RenderData>> RenderDatas;
     auto view = scene->m_Registry.view<TransformComponent,SpriteRendererComponent>();
@@ -165,7 +184,6 @@ void Renderer::Render(Scene* scene){
         auto [transform,spriteRenderer] = view.get<TransformComponent,SpriteRendererComponent>(entity);
         DrawSprite(transform.GetTransform(),spriteRenderer,(int)entity,RenderDatas);
     }
-
 
     //Render 3D Static Mesh
     auto view2 = scene->m_Registry.view<TransformComponent,MeshComponent>();
@@ -179,8 +197,8 @@ void Renderer::Render(Scene* scene){
         RenderDatas.push_back(meshRenderer.MeshData);
     }
 
-
     //Push Renderer
+
     VCtx.SetRenderDatas(RenderDatas);
 }
 

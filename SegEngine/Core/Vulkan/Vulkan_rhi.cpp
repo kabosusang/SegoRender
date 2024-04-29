@@ -130,14 +130,15 @@ void VulkanRhi::loadExtensionFuncs(){
 vk::ImageView VulkanRhi::getColorImageView(){
     return mainPass_->getColorTexture().image_view;
 }
-vk::ImageView VulkanRhi::getDepthImageView(){
-    return mainPass_->getDepthTexture().image_view;
+
+VmaImageViewSampler VulkanRhi::getDirShadowMap(){
+    return dirPass_->getShadowMap();
 }
 
 
 void VulkanRhi::render(){
     waitFrame();
-    updtaUniform();
+    //updtaUniform(); //No Use
 	recordFrame();
 	submitFrame();
 	presentFrame();
@@ -235,10 +236,6 @@ void VulkanRhi::setView(const glm::mat4& view){
     CameraView_ = view;
 }
 
-void VulkanRhi::updtaUniform()
-{    
-    Vulkantool::updateBuffer(uniformBuffers_[currentFrame_], lightObject.get(), sizeof(LightObj));
-}
 
  
  

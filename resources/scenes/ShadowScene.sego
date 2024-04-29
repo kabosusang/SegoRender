@@ -1,15 +1,35 @@
 Scene: Untitled
 Entities:
-  - Entity: 5802141456179417616
+  - Entity: 9756673684001503948
+    TagComponent:
+      Tag: Directional Light
+    TransformComponent:
+      Translation: [14.0253229, 5.17219496, 4.95117807]
+      Rotation: [0, 0, 0]
+      Scale: [1, 2, 1]
+    DirLightComponent:
+      Direction: [-0.699999988, -0.5, -0.200000003]
+      Intensity: 1
+  - Entity: 4852272376798019552
+    TagComponent:
+      Tag: Plane
+    TransformComponent:
+      Translation: [0, -1.57077408, 0]
+      Rotation: [0, 0, 0]
+      Scale: [5.0999999, 0.400000006, 5.69999981]
+    MeshComponent:
+      Name: Plane
+      Path: resources/Settings/SceneObject/Plane.glb
+  - Entity: 12506927718273058249
     TagComponent:
       Tag: Cube
     TransformComponent:
-      Translation: [3.2885201, -0.507455707, 1.74591112]
+      Translation: [-3.07387257, -0.0244274139, -1.77918041]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:
-      Name: Wolf
-      Path: resources\assets\gltf\Wolf.gltf
+      Name: pinkcube
+      Path: resources\Settings\SceneObject\pinkcube.glb
   - Entity: 14056070410412933757
     TagComponent:
       Tag: Camera
@@ -28,33 +48,13 @@ Entities:
         OrthographicFar: 1
       Primary: true
       FixedAspectRatio: false
-  - Entity: 12506927718273058249
+  - Entity: 5802141456179417616
     TagComponent:
       Tag: Cube
     TransformComponent:
-      Translation: [-3.07387257, -0.0244274139, -1.77918041]
+      Translation: [3.2885201, -0.507455707, 1.74591112]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:
-      Name: pinkcube
-      Path: resources\Settings\SceneObject\pinkcube.glb
-  - Entity: 4852272376798019552
-    TagComponent:
-      Tag: Plane
-    TransformComponent:
-      Translation: [0, -1.57077408, 0]
-      Rotation: [0, 0, 0]
-      Scale: [2, 2, 2]
-    MeshComponent:
-      Name: Plane
-      Path: resources/Settings/SceneObject/Plane.glb
-  - Entity: 9756673684001503948
-    TagComponent:
-      Tag: Directional Light
-    TransformComponent:
-      Translation: [14.0253229, 5.17219496, 4.95117807]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    DirLightComponent:
-      Direction: [-0.699999988, -0.5, -0.200000003]
-      Intensity: 1
+      Name: Wolf
+      Path: resources\assets\gltf\Wolf.gltf

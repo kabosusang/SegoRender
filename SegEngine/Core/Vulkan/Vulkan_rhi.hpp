@@ -38,7 +38,7 @@ namespace Sego{
         inline uint32_t getImageIndex() { return currentImageIndex_; }
         PFN_vkCmdPushDescriptorSetKHR getCmdPushDescriptorSet() { return vkCmdPushDescriptorSet_; }
         vk::ImageView getColorImageView();
-        vk::ImageView getDepthImageView();
+        VmaImageViewSampler getDirShadowMap();
 
         uint32_t ReadPixel(uint32_t x, uint32_t y) { return pickPass_->ReadPixelInt(x, y);}
         
@@ -49,23 +49,26 @@ namespace Sego{
         void setProjection(const glm::mat4& projection);
         void setView(const glm::mat4& view);
 
-        void SetDirLight(std::shared_ptr<LightObj>& light){
-            lightObject = light;
-        }
 
         void SetRenderDatas(std::vector<std::shared_ptr<RenderData>>& render_Datas){
+            dirPass_->setRenderDatas(render_Datas);
             mainPass_->setRenderDatas(render_Datas);
             pickPass_->setRenderDatas(render_Datas);
-            dirPass_->setRenderDatas(render_Datas);
         }
 
         void SetSkyboxRenderData(std::shared_ptr<SkyboxRenderData>& skybox){
             mainPass_->setSkyboxRenderData(skybox);
         }
+
+        void SetLightRenderData(std::shared_ptr<LightingRenderData>& light){
+            mainPass_->setLightRenderData(light);
+        }
+
+        void updateShadowubos(glm::mat4& lightvp){
+            dirPass_->updateShadowubos(lightvp);
+        }
      
     public:
-        //LightObject
-        std::shared_ptr<LightObj> lightObject;
 
         std::shared_ptr<Texture2D> defaultTexture;
         std::shared_ptr<TextureCube> defaultSkybox;

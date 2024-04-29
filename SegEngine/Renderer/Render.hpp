@@ -32,13 +32,17 @@ public:
     void SetClearColor(const glm::vec4& color);
     void resizeframbuffer(uint32_t w,uint32_t h);
     vk::ImageView GetColorImageView();
-    vk::ImageView GetDepthImageView();
-
+   
     uint32_t ReadPixel(uint32_t x, uint32_t y);
 
 private:
     glm::vec3 m_CameraPos;
+    glm::mat4 m_ViewMatrix;
     glm::mat4 m_ViewProj;
+
+    //Uniform 
+    std::vector<VmaBuffer> m_Lightubs_;
+
     std::shared_ptr<SkyboxRenderData> skybox_ = nullptr;
 };
 
