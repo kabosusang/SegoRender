@@ -420,7 +420,7 @@ vk::Sampler Vulkantool::createSample(vk::Filter min_filter, vk::Filter mag_filte
                 .setAddressModeW(address_mode_w)
                 .setAnisotropyEnable(VK_TRUE)
                 .setMaxAnisotropy(ctx.getPhysicalDeviceProperties().limits.maxSamplerAnisotropy)
-                .setBorderColor(vk::BorderColor::eIntOpaqueBlack)
+                .setBorderColor(vk::BorderColor::eFloatOpaqueWhite)
                 .setUnnormalizedCoordinates(VK_FALSE)
                 .setCompareEnable(VK_FALSE)
                 .setCompareOp(vk::CompareOp::eAlways)

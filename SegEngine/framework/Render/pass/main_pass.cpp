@@ -580,8 +580,7 @@ void MainPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelin
         // Pass the final matrix to the vertex shader using push constants
         LightSpace lps;
         glm::mat4 nodeMvp = Rendata->Meshmvp_ * nodeMatrix ;
-        nodeMatrix = Rendata->model_ * nodeMatrix;
-        lps.model = nodeMatrix;
+        lps.model = Rendata->model_ * nodeMatrix;
         lps.lightSpaceMatrix = lightdata_->camera_view_proj;
         Vulkantool::updateBuffer(LightSpaceUBOs_[flight_Index], &lps, sizeof(LightSpace));
 

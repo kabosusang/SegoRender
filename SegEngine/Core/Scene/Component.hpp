@@ -153,6 +153,7 @@ namespace Sego{
 
     struct DirLightComponent{
         glm::vec3 Direction = {-0.2f,-1.0f,-0.3f};
+
         float Intensity = 1.0f;//TODO: add intensity
         
         DirLightComponent() = default;

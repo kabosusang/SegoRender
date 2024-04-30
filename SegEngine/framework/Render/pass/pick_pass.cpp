@@ -472,9 +472,10 @@ void PickPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelin
             currentParent = currentParent->parent;
         }
         desc_writes.clear();
-        nodeMatrix = Rendata->Meshmvp_ * nodeMatrix;
+        glm::mat4 inputmvp = Rendata->Meshmvp_ * nodeMatrix;
+
          for ( auto& primitive : node->mesh.primitives) {
-            updatePushConstants(cmdBuffer,pipelineLayout,{&nodeMatrix,&Rendata->EntityID});
+            updatePushConstants(cmdBuffer,pipelineLayout,{&inputmvp,&Rendata->EntityID});
                 // Update the push constant block
 				if (primitive.indexCount > 0) {
                     // Bind the descriptor for the current primitive's texture

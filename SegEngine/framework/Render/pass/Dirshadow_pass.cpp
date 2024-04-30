@@ -111,7 +111,7 @@ void DirShadowPass::CreatePiepline(){
              .setLineWidth(1.0f)
              .setCullMode(vk::CullModeFlagBits::eNone)
              .setFrontFace(vk::FrontFace::eCounterClockwise)
-             .setDepthBiasEnable(VK_FALSE);
+             .setDepthBiasEnable(VK_TRUE);
     // dynamic states
     std::vector<vk::DynamicState> dynamic_states = {vk::DynamicState::eViewport,
     vk::DynamicState::eScissor,vk::DynamicState::eDepthBias};
@@ -176,8 +176,7 @@ void DirShadowPass::CreateFrameBuffer(){
     //ShadowMap_
     Vulkantool::createImageViewSampler(depthSize_,depthSize_,nullptr,1,1,m_format,
     vk::Filter::eLinear, vk::Filter::eLinear,vk::SamplerAddressMode::eClampToEdge,
-    ShadowMap_,vk::ImageUsageFlagBits::eDepthStencilAttachment);
-
+    ShadowMap_,vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
 
     std::vector<vk::ImageView> attachments = { 
     ShadowMap_.image_view
@@ -245,7 +244,7 @@ void DirShadowPass::CreateRenderPass(){
 void DirShadowPass::Render(){
     auto& ctx = Context::Instance();
     auto& Vctx = VulkanRhi::Instance();
-
+    
     auto cmdBuffer =Vctx.getCommandBuffer();
    
     std::array<vk::ClearValue,1> clearValues{};
@@ -268,8 +267,7 @@ void DirShadowPass::Render(){
     scissor.setOffset({0, 0})
            .setExtent({depthSize_,depthSize_});
     cmdBuffer.setScissor(0, 1, &scissor);
-    float depthBiasConstant = 1.25f;
-    float depthBiasSlope = 15.5f;
+   
     cmdBuffer.setDepthBias(depthBiasConstant,0.0f,depthBiasSlope);
 
     for(const auto& Rendata : renderDatas_){
@@ -312,10 +310,10 @@ void DirShadowPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pi
             nodeMatrix = currentParent->matrix * nodeMatrix;
             currentParent = currentParent->parent;
         }
-        nodeMatrix = lightvp_ * Rendata->model_ * nodeMatrix;
-        
+        glm::mat4 inputmvp = lightvp_ * Rendata->model_ * nodeMatrix;
+  
          for ( auto& primitive : node->mesh.primitives) {
-            updatePushConstants(cmdBuffer,pipelineLayout,{&nodeMatrix});
+            updatePushConstants(cmdBuffer,pipelineLayout,{&inputmvp});
                 // Update the push constant block
 				if (primitive.indexCount > 0) {
                     // Bind the descriptor for the current primitive's texture

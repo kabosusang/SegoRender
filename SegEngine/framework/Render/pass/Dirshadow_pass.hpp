@@ -14,14 +14,17 @@ namespace Sego{
         virtual void destroy() override;
         virtual void createDescriptorSetLayout();
         virtual void createPipelineLayouts();
-        inline void updateShadowubos(glm::mat4& vp){lightvp_ = vp;}
+        inline void updateShadowConstans(shadowConstans& shadowubos){
+            lightvp_ = shadowubos.LightSpaceMatrix;
+        }  
         
         VmaImageViewSampler getShadowMap() { return ShadowMap_; }
     private:
         void drawNode(vk::CommandBuffer cmd,vk::PipelineLayout pipelineLayout, Node* node,std::shared_ptr<StaticMeshRenderData>& Rendata);
         void render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<StaticMeshRenderData>& Rendata);
     private:
-
+        float depthBiasConstant = 1.25f;
+        float depthBiasSlope = 7.5f;
      
     private:
         vk::Format m_format;

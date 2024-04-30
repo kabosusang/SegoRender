@@ -51,8 +51,8 @@ namespace Sego{
 
 
         void SetRenderDatas(std::vector<std::shared_ptr<RenderData>>& render_Datas){
-            dirPass_->setRenderDatas(render_Datas);
             mainPass_->setRenderDatas(render_Datas);
+            dirPass_->setRenderDatas(render_Datas);
             pickPass_->setRenderDatas(render_Datas);
         }
 
@@ -64,8 +64,8 @@ namespace Sego{
             mainPass_->setLightRenderData(light);
         }
 
-        void updateShadowubos(glm::mat4& lightvp){
-            dirPass_->updateShadowubos(lightvp);
+        void updateShadowConstans(shadowConstans& shadowubos){
+            dirPass_->updateShadowConstans(shadowubos);
         }
      
     public:

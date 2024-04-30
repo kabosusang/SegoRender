@@ -55,12 +55,7 @@ void main(){
         vec3 viewDir = normalize(LightData_st.dirLight.viewPos - fs_in.FragPosWS);
         vec3 result = CalcDirLight(color,LightData_st.dirLight,normal, viewDir);
 
-        //计算阴影
-        float ShadowFactor = 1.0;
-        vec4 ShadowCoord  = ComputeShadowCoord();
-        ShadowFactor = ComputePCF(ShadowCoord / ShadowCoord.w, 2);
-
-        outColor = vec4(result * ShadowFactor, 1.0);;
+        outColor = vec4(result, 1.0);
     }else{
         if (mt.material.UseSampler != 0){
             outColor = texture(texSampler, fs_in.uv);
@@ -73,28 +68,32 @@ void main(){
 
 vec3 CalcDirLight(vec3 color,DirLight light, vec3 normal, vec3 viewDir)
 {
-    vec3 lightColor = vec3(1.0);
+    vec3 lightColor = vec3(1.0f);
     // Ambient
     vec3 ambient = 0.15 * color;
     // Diffuse
-    vec3 lightDir = normalize(lightPos - fs_in.FragPos);
+    vec3 lightDir = normalize(-light.direction);
     float diff = max(dot(lightDir, normal), 0.0);
     vec3 diffuse = diff * lightColor;
     // Specular
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = 0.0;
     vec3 halfwayDir = normalize(lightDir + viewDir);  
-    spec = pow(max(dot(normal, halfwayDir), 0.0), 64.0);
+    spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
     vec3 specular = spec * lightColor;    
 
-    return (ambient + diffuse + specular);
+    //计算阴影
+    float ShadowFactor = 1.0;
+    vec4 ShadowCoord  = ComputeShadowCoord();
+    ShadowFactor = ComputePCF(ShadowCoord / ShadowCoord.w, 2);
+
+    return (ambient + diffuse + specular) * color * ShadowFactor;
 }
 const mat4 BiasMat = mat4( 
 	0.5, 0.0, 0.0, 0.0,
 	0.0, 0.5, 0.0, 0.0,
 	0.0, 0.0, 1.0, 0.0,
 	0.5, 0.5, 0.0, 1.0);
-
 
 vec4 ComputeShadowCoord()
 {
@@ -107,7 +106,7 @@ float ShadowDepthProject(vec4 ShadowCoord, vec2 Offset)
 	float ShadowFactor = 1.0;
 	if ( ShadowCoord.z > -1.0 && ShadowCoord.z < 1.0 ) 
 	{
-		float Dist = texture( shadowMap, ShadowCoord.st + Offset ).r;
+		float Dist = texture(shadowMap, ShadowCoord.st + Offset ).r;
 		if ( ShadowCoord.w > 0.0 && Dist < ShadowCoord.z ) 
 		{
 			ShadowFactor = 0.1;

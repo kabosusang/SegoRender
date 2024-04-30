@@ -30,9 +30,9 @@ void main(){
     gl_Position = pc.mvp * vec4(inPosition, 1.0);
 
     vs_out.outPosition = inPosition;
-    vs_out.outPositionWS = (local.model * vec4(inPosition,1.0)).rgb;
-    vs_out.OutNormal = inNormal;
+    vs_out.outPositionWS = vec3(local.model * vec4(inPosition, 1.0));
+    vs_out.OutNormal = mat3(transpose(inverse(local.model))) * inNormal; 
     vs_out.outTexCoord = inTexCoord;
-    vs_out.shadowmap_space = local.lightSpaceMatrix * vec4(vs_out.outPositionWS, 1.0);
+    vs_out.shadowmap_space = local.lightSpaceMatrix * local.model * vec4(inPosition, 1.0);
     
 }

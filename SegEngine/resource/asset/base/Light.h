@@ -42,5 +42,11 @@ struct LightSpace{
     mat4 lightSpaceMatrix;
 };
 
+struct shadowConstans{
+    mat4 LightSpaceMatrix;
+};
+
+
+
 
 #endif

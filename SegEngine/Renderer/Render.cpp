@@ -19,6 +19,7 @@ void Renderer::BeginScene(const Camera& camera, const glm::mat4& transform){
     glm::mat4 proj = camera.GetProjection();
     proj[1][1] *= -1;
     m_ViewProj = proj *  glm::inverse(transform);
+
 }
 
 void Renderer::BeginScene(const EditorCamera &camera){
@@ -34,6 +35,7 @@ void Renderer::BeginScene(const EditorCamera &camera){
         skybox_->Meshmvp_ = proj * glm::mat4(glm::mat3(view));
         Vctx.SetSkyboxRenderData(skybox_);
     }
+    m_CameraFOV = camera.GetFOV();
 
 }
 
@@ -151,25 +153,31 @@ void Renderer::Render(Scene* scene){
     light.dirLight.viewPos = m_CameraPos;
     //shadowmap
     glm::mat4 lightSpaceMatrix = glm::mat4(1.0f);
+    //shadow
+    shadowConstans shadowubos;
     auto DirLightview = scene->m_Registry.view<TransformComponent,DirLightComponent>();
     for (auto entity : DirLightview){
         auto [transform,dirLight] = DirLightview.get<TransformComponent,DirLightComponent>(entity);
         light.dirLight.direction = dirLight.Direction;
         light.lightSetting.UseLight = 1; //Use Light
         light.lightSetting.lightCount = 1;
+
         //shadow
         float near_plane = 0.1f, far_plane = 1000.0f;
         glm::vec3 lightPos = -dirLight.Direction * 30.0f;
         glm::vec3 lightTarget = glm::vec3(0.0f);
-        glm::mat4 lightProjection = glm::perspective(glm::radians(45.0f), 1.0f, near_plane, far_plane);
+        glm::mat4 lightProjection = glm::perspective(glm::radians(m_CameraFOV), 1.0f, near_plane, far_plane);
         glm::mat4 lightView = glm::lookAt(lightPos, lightTarget, glm::vec3(0.0f, 1.0f, 0.0f));
         lightProjection[1][1] *= -1;
         lightSpaceMatrix = lightProjection * lightView;
+
+        //Bias
+        shadowubos.LightSpaceMatrix = lightSpaceMatrix;
     }
     light_data->camera_view_proj = lightSpaceMatrix;
     light_data->directional_light_shadow_texture = VCtx.getDirShadowMap();
     
-    VCtx.updateShadowubos(lightSpaceMatrix);
+    VCtx.updateShadowConstans(shadowubos);
 
     //update light uniform buffers
     VmaBuffer ubs = m_Lightubs_[VCtx.getFlightCount()];
