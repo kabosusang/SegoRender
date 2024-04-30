@@ -95,6 +95,25 @@ void RenderPass::addImageDescriptorSet(std::vector<vk::WriteDescriptorSet> &desc
               .setPImageInfo(&desc_image_info);
     desc_writes.push_back(desc_write);
 }
+
+void RenderPass::addDepthImageDescriptorSet(std::vector<vk::WriteDescriptorSet> &desc_writes,
+ vk::DescriptorImageInfo &desc_image_info, VmaImageViewSampler texture, uint32_t binding){
+    desc_image_info.imageLayout = vk::ImageLayout::eDepthStencilReadOnlyOptimal;
+    desc_image_info.imageView = texture.image_view;
+    desc_image_info.sampler = texture.sampler;
+
+    vk::WriteDescriptorSet desc_write{};
+    desc_write.setDstSet(nullptr)
+              .setDstBinding(binding)
+              .setDstArrayElement(0)
+              .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+              .setDescriptorCount(1)
+              .setPImageInfo(&desc_image_info);
+    desc_writes.push_back(desc_write);
+}
+
+
+
 void RenderPass::addImagesDescriptorSet(std::vector<vk::WriteDescriptorSet> &desc_writes, 
 vk::DescriptorImageInfo *p_desc_image_info, 
 const std::vector<VmaImageViewSampler> &textures, uint32_t binding){

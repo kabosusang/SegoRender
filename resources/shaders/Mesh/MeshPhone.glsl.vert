@@ -8,10 +8,11 @@ layout(location = 2) in vec2 inTexCoord;
 layout(location = 3) in vec3 inColor;
 
 struct VS_OUT{
-    vec3 FragPos;
-    vec3 Normal;
-    vec2 uv;
-    vec4 FragPosLightSpace;
+    vec3 outPosition;
+    vec3 outPositionWS;
+    vec3 OutNormal;
+    vec2 outTexCoord;
+    vec4 shadowmap_space;
 };
 
 layout(location = 0) out VS_OUT vs_out;
@@ -28,10 +29,10 @@ layout(set = 0,binding = 0) uniform lightspace_vt{
 void main(){
     gl_Position = pc.mvp * vec4(inPosition, 1.0);
 
-    //vs_out.FragPos = inPosition;
-    //vs_out.Normal = inNormal;
-    vs_out.FragPos = vec3(local.model * vec4(inPosition, 1.0));
-    vs_out.Normal = transpose(inverse(mat3(local.model))) * inNormal;
-    vs_out.uv = inTexCoord;
-    vs_out.FragPosLightSpace = local.lightSpaceMatrix * vec4(vs_out.FragPos, 1.0);
+    vs_out.outPosition = inPosition;
+    vs_out.outPositionWS = (local.model * vec4(inPosition,1.0)).rgb;
+    vs_out.OutNormal = inNormal;
+    vs_out.outTexCoord = inTexCoord;
+    vs_out.shadowmap_space = local.lightSpaceMatrix * vec4(vs_out.outPositionWS, 1.0);
+    
 }

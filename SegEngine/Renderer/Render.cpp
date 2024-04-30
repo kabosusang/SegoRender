@@ -159,7 +159,7 @@ void Renderer::Render(Scene* scene){
         light.lightSetting.lightCount = 1;
         //shadow
         float near_plane = 0.1f, far_plane = 1000.0f;
-        glm::vec3 lightPos = -dirLight.Direction * 10.0f;
+        glm::vec3 lightPos = -dirLight.Direction * 30.0f;
         glm::vec3 lightTarget = glm::vec3(0.0f);
         glm::mat4 lightProjection = glm::perspective(glm::radians(45.0f), 1.0f, near_plane, far_plane);
         glm::mat4 lightView = glm::lookAt(lightPos, lightTarget, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -198,7 +198,7 @@ void Renderer::Render(Scene* scene){
     }
 
     //Push Renderer
-
+    
     VCtx.SetRenderDatas(RenderDatas);
 }
 

@@ -176,7 +176,7 @@ void DirShadowPass::CreateFrameBuffer(){
     //ShadowMap_
     Vulkantool::createImageViewSampler(depthSize_,depthSize_,nullptr,1,1,m_format,
     vk::Filter::eLinear, vk::Filter::eLinear,vk::SamplerAddressMode::eClampToEdge,
-    ShadowMap_,vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
+    ShadowMap_,vk::ImageUsageFlagBits::eDepthStencilAttachment);
 
 
     std::vector<vk::ImageView> attachments = { 
@@ -224,8 +224,8 @@ void DirShadowPass::CreateRenderPass(){
                     .setDstAccessMask(vk::AccessFlagBits::eDepthStencilAttachmentWrite)
                     .setDependencyFlags(vk::DependencyFlagBits::eByRegion);               
 
-    dependencies[1].setSrcSubpass(VK_SUBPASS_EXTERNAL)
-                    .setDstSubpass(0)
+    dependencies[1].setSrcSubpass(0)
+                    .setDstSubpass(VK_SUBPASS_EXTERNAL)
                     .setSrcStageMask(vk::PipelineStageFlagBits::eLateFragmentTests )
                     .setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader)
                     .setSrcAccessMask(vk::AccessFlagBits::eDepthStencilAttachmentWrite)
@@ -269,7 +269,7 @@ void DirShadowPass::Render(){
            .setExtent({depthSize_,depthSize_});
     cmdBuffer.setScissor(0, 1, &scissor);
     float depthBiasConstant = 1.25f;
-    float depthBiasSlope = 7.5f;
+    float depthBiasSlope = 15.5f;
     cmdBuffer.setDepthBias(depthBiasConstant,0.0f,depthBiasSlope);
 
     for(const auto& Rendata : renderDatas_){

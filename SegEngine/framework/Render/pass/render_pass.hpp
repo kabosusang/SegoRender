@@ -27,15 +27,18 @@ public:
     const std::vector<const void*>& (pcos),std::vector<vk::PushConstantRange> push_constant_ranges = {});
     
     void addBufferDescriptorSet(std::vector<vk::WriteDescriptorSet>& desc_writes, 
-			vk::DescriptorBufferInfo& desc_buffer_info, VmaBuffer buffer, uint32_t binding);
+		vk::DescriptorBufferInfo& desc_buffer_info, VmaBuffer buffer, uint32_t binding);
     void addImageDescriptorSet(std::vector<vk::WriteDescriptorSet>& desc_writes, 
         vk::DescriptorImageInfo& desc_image_info, VmaImageViewSampler texture, uint32_t binding);
+     void addDepthImageDescriptorSet(std::vector<vk::WriteDescriptorSet>& desc_writes, 
+        vk::DescriptorImageInfo& desc_image_info, VmaImageViewSampler texture, uint32_t binding);
+
+    //Multiple Images
     void addImagesDescriptorSet(std::vector<vk::WriteDescriptorSet>& desc_writes,
 		vk::DescriptorImageInfo* p_desc_image_info, const std::vector<VmaImageViewSampler>& textures, uint32_t binding);
-
+    
     //Output Function
     virtual void recreateframbuffer();
-    
     virtual void setClearColor(const glm::vec4& color);
     void setRenderDatas(std::vector<std::shared_ptr<RenderData>>& renderDatas){
         renderDatas_ = renderDatas;

@@ -5,9 +5,10 @@
 
 struct VS_OUT{
     vec3 FragPos;
+    vec3 FragPosWS;
     vec3 Normal;
     vec2 uv;
-    vec4 FragPosLightSpace;
+    vec4 shadowmap_space;
 };
 
 #define MAX_POINT_LIGHTS 8 //TOOD: Dynamic Poit light
@@ -35,7 +36,9 @@ layout(set = 0,binding = 3) uniform sampler2D shadowMap;
 
 //Function
 vec3 CalcDirLight(vec3 color,DirLight light,vec3 normal, vec3 viewDir);
-float ShadowCalculation(vec4 fragPosLightSpace);
+vec4 ComputeShadowCoord();
+float ComputePCF(vec4 sc /*shadow croodinate*/, int r /*filtering range*/);
+float ShadowDepthProject(vec4 ShadowCoord, vec2 Offset);
 
 
 void main(){
@@ -49,9 +52,15 @@ void main(){
             color = mt.material.baseColorFactor.rgb;
         }
         vec3 normal = normalize(fs_in.Normal);
-        vec3 viewDir = normalize(LightData_st.dirLight.viewPos - fs_in.FragPos);
+        vec3 viewDir = normalize(LightData_st.dirLight.viewPos - fs_in.FragPosWS);
         vec3 result = CalcDirLight(color,LightData_st.dirLight,normal, viewDir);
-        outColor = vec4(result, 1.0);
+
+        //计算阴影
+        float ShadowFactor = 1.0;
+        vec4 ShadowCoord  = ComputeShadowCoord();
+        ShadowFactor = ComputePCF(ShadowCoord / ShadowCoord.w, 2);
+
+        outColor = vec4(result * ShadowFactor, 1.0);;
     }else{
         if (mt.material.UseSampler != 0){
             outColor = texture(texSampler, fs_in.uv);
@@ -64,42 +73,68 @@ void main(){
 
 vec3 CalcDirLight(vec3 color,DirLight light, vec3 normal, vec3 viewDir)
 {
-
-    vec3 lightDir = normalize(-light.direction);
-    // diffuse shading
-    float diff = max(dot(normal, lightDir), 0.0);
- 
+    vec3 lightColor = vec3(1.0);
+    // Ambient
+    vec3 ambient = 0.15 * color;
+    // Diffuse
+    vec3 lightDir = normalize(lightPos - fs_in.FragPos);
+    float diff = max(dot(lightDir, normal), 0.0);
+    vec3 diffuse = diff * lightColor;
+    // Specular
     vec3 reflectDir = reflect(-lightDir, normal);
-    // combine results
-    vec3 ambient = 0.05 * color;
-    vec3 diffuse = diff * color;
-
     float spec = 0.0;
     vec3 halfwayDir = normalize(lightDir + viewDir);  
-    spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
-    vec3 specular = vec3(0.3) * spec;
-    
-    // 计算阴影
-    float shadow = ShadowCalculation(fs_in.FragPosLightSpace);       
-    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;    
+    spec = pow(max(dot(normal, halfwayDir), 0.0), 64.0);
+    vec3 specular = spec * lightColor;    
 
-    //return (ambient + diffuse + specular);
-    return lighting;
+    return (ambient + diffuse + specular);
+}
+const mat4 BiasMat = mat4( 
+	0.5, 0.0, 0.0, 0.0,
+	0.0, 0.5, 0.0, 0.0,
+	0.0, 0.0, 1.0, 0.0,
+	0.5, 0.5, 0.0, 1.0);
+
+
+vec4 ComputeShadowCoord()
+{
+	return ( BiasMat * fs_in.shadowmap_space);
 }
 
 
-float ShadowCalculation(vec4 fragPosLightSpace)
+float ShadowDepthProject(vec4 ShadowCoord, vec2 Offset)
 {
-    // 执行透视除法
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    // 变换到[0,1]的范围
-    projCoords = projCoords * 0.5 + 0.5;
-    // 取得最近点的深度(使用[0,1]范围下的fragPosLight当坐标)
-    float closestDepth = texture(shadowMap, projCoords.xy).r; 
-    // 取得当前片段在光源视角下的深度
-    float currentDepth = projCoords.z;
-    // 检查当前片段是否在阴影中
-    float shadow = currentDepth > closestDepth  ? 1.0 : 0.0;
+	float ShadowFactor = 1.0;
+	if ( ShadowCoord.z > -1.0 && ShadowCoord.z < 1.0 ) 
+	{
+		float Dist = texture( shadowMap, ShadowCoord.st + Offset ).r;
+		if ( ShadowCoord.w > 0.0 && Dist < ShadowCoord.z ) 
+		{
+			ShadowFactor = 0.1;
+		}
+	}
+	return ShadowFactor;
+}
 
-    return shadow;
+
+// Percentage Closer Filtering (PCF)
+float ComputePCF(vec4 sc /*shadow croodinate*/, int r /*filtering range*/)
+{
+	ivec2 TexDim = textureSize(shadowMap, 0);
+	float Scale = 1.5;
+	float dx = Scale * 1.0 / float(TexDim.x);
+	float dy = Scale * 1.0 / float(TexDim.y);
+
+	float ShadowFactor = 0.0;
+	int Count = 0;
+	
+	for (int x = -r; x <= r; x++)
+	{
+		for (int y = -r; y <= r; y++)
+		{
+			ShadowFactor += ShadowDepthProject(sc, vec2(dx*x, dy*y));
+			Count++;
+		}
+	}
+	return ShadowFactor / Count;
 }

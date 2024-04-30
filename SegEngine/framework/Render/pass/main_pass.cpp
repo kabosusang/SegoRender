@@ -605,7 +605,7 @@ void MainPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelin
                         addImageDescriptorSet(desc_writes, desc_image_info[0], 
                         VulkanRhi.defaultTexture->image_view_sampler_,2); //defualt image use depth image(a kidding) 
                     }
-                    addImageDescriptorSet(desc_writes, desc_image_info[1],
+                    addDepthImageDescriptorSet(desc_writes, desc_image_info[1],
                     lightdata_->directional_light_shadow_texture,3);
 
                     VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
