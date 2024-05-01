@@ -310,7 +310,7 @@ void DirShadowPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pi
             nodeMatrix = currentParent->matrix * nodeMatrix;
             currentParent = currentParent->parent;
         }
-        glm::mat4 inputmvp = lightvp_ * Rendata->model_ * nodeMatrix;
+        glm::mat4 inputmvp = lightvp_  * Rendata->model_ * nodeMatrix;
   
          for ( auto& primitive : node->mesh.primitives) {
             updatePushConstants(cmdBuffer,pipelineLayout,{&inputmvp});

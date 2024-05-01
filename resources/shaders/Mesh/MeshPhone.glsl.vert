@@ -10,7 +10,7 @@ layout(location = 3) in vec3 inColor;
 struct VS_OUT{
     vec3 outPosition;
     vec3 outPositionWS;
-    vec3 OutNormal;
+    vec3 outNormal;
     vec2 outTexCoord;
     vec4 shadowmap_space;
 };
@@ -18,21 +18,36 @@ struct VS_OUT{
 layout(location = 0) out VS_OUT vs_out;
 
 layout(Push_constant) uniform PushConstant{
-    mat4 mvp;
+    mat4 model;
 } pc;
 
 layout(set = 0,binding = 0) uniform lightspace_vt{
-    mat4 model;
+    mat4 view;
+    mat4 projection;
     mat4 lightSpaceMatrix;
 }local;
 
+const mat4 BiasMat = mat4( 
+	0.5, 0.0, 0.0, 0.0,
+	0.0, 0.5, 0.0, 0.0,
+	0.0, 0.0, 1.0, 0.0,
+	0.5, 0.5, 0.0, 1.0);
+
+vec4 ComputeShadowCoord()
+{
+	return (BiasMat * local.lightSpaceMatrix * pc.model * vec4(inPosition, 1.0));
+}
+
+
 void main(){
-    gl_Position = pc.mvp * vec4(inPosition, 1.0);
+    gl_Position = local.projection * local.view * pc.model * vec4(inPosition, 1.0);
 
     vs_out.outPosition = inPosition;
-    vs_out.outPositionWS = vec3(local.model * vec4(inPosition, 1.0));
-    vs_out.OutNormal = mat3(transpose(inverse(local.model))) * inNormal; 
+    vs_out.outPositionWS = (pc.model * vec4(inPosition, 1.0)).xyz;
+    vs_out.outNormal = (pc.model * vec4(normalize(inNormal), 1.0)).rgb; 
     vs_out.outTexCoord = inTexCoord;
-    vs_out.shadowmap_space = local.lightSpaceMatrix * local.model * vec4(inPosition, 1.0);
+    vs_out.shadowmap_space = ComputeShadowCoord();
     
 }
+
+

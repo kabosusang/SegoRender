@@ -51,9 +51,9 @@ namespace Sego{
 
 
         void SetRenderDatas(std::vector<std::shared_ptr<RenderData>>& render_Datas){
-            mainPass_->setRenderDatas(render_Datas);
             dirPass_->setRenderDatas(render_Datas);
             pickPass_->setRenderDatas(render_Datas);
+            mainPass_->setRenderDatas(render_Datas);
         }
 
         void SetSkyboxRenderData(std::shared_ptr<SkyboxRenderData>& skybox){
@@ -66,16 +66,15 @@ namespace Sego{
 
         void updateShadowConstans(shadowConstans& shadowubos){
             dirPass_->updateShadowConstans(shadowubos);
+            m_LightMatrix = shadowubos.LightSpaceMatrix;
         }
      
     public:
-
         std::shared_ptr<Texture2D> defaultTexture;
         std::shared_ptr<TextureCube> defaultSkybox;
-    private:
-        glm::mat4 CameraView_ = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        glm::mat4 projection_ = glm::mat4(1.0f);
-
+        glm::mat4 m_ViewMatrix;
+        glm::mat4 m_ProjectionMatrix;
+        glm::mat4 m_LightMatrix;
     private:
         static VulkanRhi* instance_;
         
@@ -109,7 +108,7 @@ namespace Sego{
         std::unique_ptr<class DirShadowPass> dirPass_;
 
         //All Render mvp UniformBuffer
-        std::vector<VmaBuffer> uniformBuffers_; //LightObjec
+        std::vector<VmaBuffer> uniformBuffers_; //uniform buffer view projection lightMatrix
         bool framebufferResized = false;
     };
 

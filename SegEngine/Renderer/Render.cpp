@@ -14,12 +14,14 @@ struct Renderer2DData{
 namespace Sego{
 
 void Renderer::BeginScene(const Camera& camera, const glm::mat4& transform){
+    auto& Vctx = VulkanRhi::Instance();
     m_CameraPos = glm::vec3(transform[3]);
 
     glm::mat4 proj = camera.GetProjection();
     proj[1][1] *= -1;
     m_ViewProj = proj *  glm::inverse(transform);
-
+    Vctx.m_ViewMatrix = glm::inverse(transform);
+    Vctx.m_ProjectionMatrix = proj;
 }
 
 void Renderer::BeginScene(const EditorCamera &camera){
@@ -30,7 +32,10 @@ void Renderer::BeginScene(const EditorCamera &camera){
     glm::mat4 proj = camera.GetProjectionMatrix();
 
     proj[1][1] *= -1;
+    Vctx.m_ViewMatrix = view;
+    Vctx.m_ProjectionMatrix = proj;
     m_ViewProj = proj * view;
+
     if (camera.m_UseSkybox){
         skybox_->Meshmvp_ = proj * glm::mat4(glm::mat3(view));
         Vctx.SetSkyboxRenderData(skybox_);
@@ -164,7 +169,7 @@ void Renderer::Render(Scene* scene){
 
         //shadow
         float near_plane = 0.1f, far_plane = 1000.0f;
-        glm::vec3 lightPos = -dirLight.Direction * 30.0f;
+        glm::vec3 lightPos = -dirLight.Direction * 100.0f;
         glm::vec3 lightTarget = glm::vec3(0.0f);
         glm::mat4 lightProjection = glm::perspective(glm::radians(m_CameraFOV), 1.0f, near_plane, far_plane);
         glm::mat4 lightView = glm::lookAt(lightPos, lightTarget, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -174,17 +179,15 @@ void Renderer::Render(Scene* scene){
         //Bias
         shadowubos.LightSpaceMatrix = lightSpaceMatrix;
     }
-    light_data->camera_view_proj = lightSpaceMatrix;
     light_data->directional_light_shadow_texture = VCtx.getDirShadowMap();
-    
-    VCtx.updateShadowConstans(shadowubos);
 
+    VCtx.updateShadowConstans(shadowubos);
     //update light uniform buffers
     VmaBuffer ubs = m_Lightubs_[VCtx.getFlightCount()];
     Vulkantool::updateBuffer(ubs,&light,sizeof(LightObj));
     light_data->lighting_ubs = m_Lightubs_;
     VCtx.SetLightRenderData(light_data);
-      
+    
     //Render 2D
     std::vector<std::shared_ptr<RenderData>> RenderDatas;
     auto view = scene->m_Registry.view<TransformComponent,SpriteRendererComponent>();
@@ -200,7 +203,7 @@ void Renderer::Render(Scene* scene){
         if (meshRenderer.MeshData == nullptr)
             continue;
         meshRenderer.MeshData->model_ = transform.GetTransform();
-        meshRenderer.MeshData->Meshmvp_ = m_ViewProj * transform.GetTransform();
+        meshRenderer.MeshData->Meshmvp_ = m_ViewProj * meshRenderer.MeshData->model_;
         meshRenderer.MeshData->EntityID = (int)entity + 1;
         RenderDatas.push_back(meshRenderer.MeshData);
     }

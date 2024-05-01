@@ -37,7 +37,7 @@ public:
 
 private:
     glm::vec3 m_CameraPos;
-    glm::mat4 m_ViewMatrix;
+    
     glm::mat4 m_ViewProj;
     float m_CameraFOV = 45.0f;
 

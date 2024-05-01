@@ -36,7 +36,6 @@ layout(set = 0,binding = 3) uniform sampler2D shadowMap;
 
 //Function
 vec3 CalcDirLight(vec3 color,DirLight light,vec3 normal, vec3 viewDir);
-vec4 ComputeShadowCoord();
 float ComputePCF(vec4 sc /*shadow croodinate*/, int r /*filtering range*/);
 float ShadowDepthProject(vec4 ShadowCoord, vec2 Offset);
 
@@ -55,7 +54,12 @@ void main(){
         vec3 viewDir = normalize(LightData_st.dirLight.viewPos - fs_in.FragPosWS);
         vec3 result = CalcDirLight(color,LightData_st.dirLight,normal, viewDir);
 
-        outColor = vec4(result, 1.0);
+        //计算阴影
+        float ShadowFactor = 1.0;
+        vec4 ShadowCoord  = fs_in.shadowmap_space;
+        ShadowFactor = ComputePCF(ShadowCoord / ShadowCoord.w, 2);
+        //ShadowFactor = ShadowDepthProject(ShadowCoord / ShadowCoord.w,  vec2(0.0, 0.0));
+        outColor = vec4(result * ShadowFactor, 1.0);
     }else{
         if (mt.material.UseSampler != 0){
             outColor = texture(texSampler, fs_in.uv);
@@ -70,7 +74,7 @@ vec3 CalcDirLight(vec3 color,DirLight light, vec3 normal, vec3 viewDir)
 {
     vec3 lightColor = vec3(1.0f);
     // Ambient
-    vec3 ambient = 0.15 * color;
+    vec3 ambient = 0.3 * color;
     // Diffuse
     vec3 lightDir = normalize(-light.direction);
     float diff = max(dot(lightDir, normal), 0.0);
@@ -79,25 +83,10 @@ vec3 CalcDirLight(vec3 color,DirLight light, vec3 normal, vec3 viewDir)
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = 0.0;
     vec3 halfwayDir = normalize(lightDir + viewDir);  
-    spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
+    spec = pow(max(dot(normal, halfwayDir), 0.0), 64.0);
     vec3 specular = spec * lightColor;    
 
-    //计算阴影
-    float ShadowFactor = 1.0;
-    vec4 ShadowCoord  = ComputeShadowCoord();
-    ShadowFactor = ComputePCF(ShadowCoord / ShadowCoord.w, 2);
-
-    return (ambient + diffuse + specular) * color * ShadowFactor;
-}
-const mat4 BiasMat = mat4( 
-	0.5, 0.0, 0.0, 0.0,
-	0.0, 0.5, 0.0, 0.0,
-	0.0, 0.0, 1.0, 0.0,
-	0.5, 0.5, 0.0, 1.0);
-
-vec4 ComputeShadowCoord()
-{
-	return ( BiasMat * fs_in.shadowmap_space);
+    return (ambient + diffuse + specular) * color ;
 }
 
 

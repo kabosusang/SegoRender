@@ -18,15 +18,8 @@ m_formats ={
     vk::Format::eR8G8B8A8Unorm,
     ctx.swapchain->GetDepthFormat()
     };
-    
-
     //LightSpace And ModelSpace
-    vk::DeviceSize bufferSize = sizeof(glm::mat4) * 2;
-    LightSpaceUBOs_.resize(maxFlightCount_);
-    for(int i = 0; i < maxFlightCount_; ++i){
-        Vulkantool::createBuffer(bufferSize,vk::BufferUsageFlagBits::eUniformBuffer,
-        VMA_MEMORY_USAGE_CPU_TO_GPU, LightSpaceUBOs_[i]);
-    }
+  
 
 }
 
@@ -567,7 +560,7 @@ void MainPass::render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteR
 
 void MainPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelineLayout, Node* node,std::shared_ptr<StaticMeshRenderData>& Rendata){
     auto& VulkanRhi = VulkanRhi::Instance();
-    int flight_Index = VulkanRhi.getFlightCount();
+    uint32_t flight_Index = VulkanRhi.getFlightCount();
     if(node->mesh.primitives.size() > 0){
         
         glm::mat4 nodeMatrix = node->matrix;
@@ -576,22 +569,18 @@ void MainPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelin
             nodeMatrix = currentParent->matrix * nodeMatrix;
             currentParent = currentParent->parent;
         }
-        
-        // Pass the final matrix to the vertex shader using push constants
-        LightSpace lps;
-        glm::mat4 nodeMvp = Rendata->Meshmvp_ * nodeMatrix ;
-        lps.model = Rendata->model_ * nodeMatrix;
-        lps.lightSpaceMatrix = lightdata_->camera_view_proj;
-        Vulkantool::updateBuffer(LightSpaceUBOs_[flight_Index], &lps, sizeof(LightSpace));
+         // Pass the final matrix to the vertex shader using push constants
+        glm::mat4 model = Rendata->model_ * nodeMatrix;
 
         for ( auto& primitive : node->mesh.primitives) {
-            updatePushConstants(cmdBuffer,pipelineLayout,{&nodeMvp,
+            
+            updatePushConstants(cmdBuffer,pipelineLayout,{&model,
             &Rendata->materials_[primitive.materialIndex]},mesh_push_constant_ranges_);
             desc_writes.clear();
 				if (primitive.indexCount > 0) {
                     //1. Uniform
                     std::array<vk::DescriptorBufferInfo, 2> desc_buffer_infos{}; //Uniform 
-                    addBufferDescriptorSet(desc_writes,desc_buffer_infos[0],LightSpaceUBOs_[flight_Index],0);
+                    addBufferDescriptorSet(desc_writes,desc_buffer_infos[0],VulkanRhi.getCurrentUniformBuffer(),0);
                     addBufferDescriptorSet(desc_writes,desc_buffer_infos[1],lightdata_->lighting_ubs[flight_Index],1);
                    
                     std::array<vk::DescriptorImageInfo,2>   desc_image_info{};  

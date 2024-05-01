@@ -77,6 +77,7 @@ namespace Sego{
         std::vector<Material> materials_;
         std::vector<Texture2D> textures_;
         
+        
         void destory(){
             vertexBuffer_.destroy();
             indexBuffer_.destroy();
@@ -100,8 +101,6 @@ namespace Sego{
 	{
 		LightingRenderData() { type = RenderDataType::Lighting; }
 
-		glm::mat4 camera_view_proj;
-   
         //LightObj
 		std::vector<VmaBuffer> lighting_ubs;
         
@@ -110,8 +109,12 @@ namespace Sego{
 
 
 
+    struct ViewProjs{
+        glm::mat4 view;
+        glm::mat4 proj;
+        glm::mat4 lightSpaceMatrix;
+    };
 
-    
 
     
 

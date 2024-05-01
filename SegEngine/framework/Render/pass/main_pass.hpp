@@ -28,8 +28,6 @@ namespace Sego{
         }
     //Uniform  
     private:
-        std::vector<VmaBuffer> LightSpaceUBOs_;
-       
 
     private:
         //Node Different Push Constant

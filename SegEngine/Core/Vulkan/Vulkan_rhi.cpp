@@ -113,7 +113,7 @@ void VulkanRhi::createSemaphoresAndFence() {
 }
 
 void VulkanRhi::createUniformBuffers(){
-    vk::DeviceSize bufferSize = sizeof(LightObj);
+    vk::DeviceSize bufferSize = sizeof(ViewProjs);
     uniformBuffers_.resize(maxFlightCount_);
     for(int i = 0; i < maxFlightCount_; ++i){
         Vulkantool::createBuffer(bufferSize,vk::BufferUsageFlagBits::eUniformBuffer,
@@ -138,7 +138,7 @@ VmaImageViewSampler VulkanRhi::getDirShadowMap(){
 
 void VulkanRhi::render(){
     waitFrame();
-    //updtaUniform(); //No Use
+    updtaUniform(); //No Use
 	recordFrame();
 	submitFrame();
 	presentFrame();
@@ -158,6 +158,15 @@ void VulkanRhi::waitFrame(){
         return;
     }
     currentImageIndex_ = resultValue.value;
+}
+
+
+void VulkanRhi::updtaUniform(){
+    ViewProjs viewProjs;
+    viewProjs.view = m_ViewMatrix;
+    viewProjs.proj = m_ProjectionMatrix;
+    viewProjs.lightSpaceMatrix = m_LightMatrix;
+    Vulkantool::updateBuffer(uniformBuffers_[currentFrame_], &viewProjs, sizeof(ViewProjs));
 }
 
 void VulkanRhi::recordFrame(){
@@ -226,14 +235,6 @@ void VulkanRhi::resizeframbuffer(uint32_t w,uint32_t h){
 
 void VulkanRhi::setClearColor(const glm::vec4& color){
     mainPass_->setClearColor(color);
-}
-
-void VulkanRhi::setProjection(const glm::mat4& projection){
-    projection_ = projection;
-}
-
-void VulkanRhi::setView(const glm::mat4& view){
-    CameraView_ = view;
 }
 
 
