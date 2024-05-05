@@ -2,11 +2,13 @@
 #include "Sego.hpp"
 #include "Core/Vulkan/VulkanTool.hpp"
 #include "Core/Scene/Scene.hpp"
+//Panels
 #include "Panels/SceneHierarchyPanel.hpp"
 #include "Panels/ContentBrowsPanel.hpp"
 #include "Panels/Console.hpp"
-#include "Renderer/EditorCamera.hpp"
+#include "Panels/Setting.hpp"
 
+#include "Renderer/EditorCamera.hpp"
 
 namespace Sego{
 class EditorLayer : public Layer{
@@ -68,7 +70,8 @@ private:
     SceneHierarchyPanel m_SceneHierarchyPanel;
     ContentBrowsPanel m_ContentBrowsPanel;
     Console m_Console;
-
+    Setting m_Setting;
+    
 
     enum class SceneState
     {

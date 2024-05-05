@@ -49,7 +49,9 @@ namespace Sego{
         void setProjection(const glm::mat4& projection);
         void setView(const glm::mat4& view);
 
-
+        void SetDepthBias(float Constant,float Slope){
+            dirPass_->SetBias(Constant,Slope);
+        }
         void SetRenderDatas(std::vector<std::shared_ptr<RenderData>>& render_Datas){
             dirPass_->setRenderDatas(render_Datas);
             pickPass_->setRenderDatas(render_Datas);

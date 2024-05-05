@@ -26,9 +26,7 @@ namespace Sego{
         void setLightRenderData(std::shared_ptr<LightingRenderData>& light){
             lightdata_ = light;
         }
-    //Uniform  
-    private:
-
+ 
     private:
         //Node Different Push Constant
         void drawNode(vk::CommandBuffer cmd,vk::PipelineLayout pipelineLayout, Node* node,std::shared_ptr<StaticMeshRenderData>& Rendata);
@@ -39,17 +37,26 @@ namespace Sego{
         void render_skybox(vk::CommandBuffer cmdBuffer);
     private:
         std::vector<vk::Format> m_formats;
+        vk::SampleCountFlagBits m_msaaSamples;
+
+        //ForWard RenderPass
         //Color Texture
         VmaImageViewSampler colorIVs_;
         //Depth Texture
         VmaImageViewSampler depthIVs_;
         //MSAA Texture
         VmaImageView msaaIVs_;
+
+        //Deferred RenderPass -- GBuffer
+        VmaImageViewSampler albedoIVs_;
+        VmaImageViewSampler positionIVs_;
+        VmaImageViewSampler normalIVs_;
+        VmaImageViewSampler shadowpositionIVs_;
+
     
         std::vector<vk::PushConstantRange> mesh_push_constant_ranges_; //mesh
         std::vector<vk::PushConstantRange> cubmap_push_constant_ranges_; //cubemap
-        
-
+         std::vector<vk::PushConstantRange> forward_push_constant_ranges_;//Forward
         //skybox
         std::shared_ptr<SkyboxRenderData> skybox_;
         //LightData

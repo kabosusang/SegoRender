@@ -205,16 +205,7 @@ void EditorLayer::OnImGuiRender(){
 			//Light Settings
 			if (ImGui::BeginMenu("Lighting")) {
 				if (ImGui::MenuItem("Skybox")) {
-					if (ImGui::BeginMenu("Skybox Options")) {
-						if (ImGui::MenuItem("Cubemap")) {
-							// Do something when Cubemap is clicked
-							m_EditorCamera.UseSkybox();
-						}
-						if (ImGui::MenuItem("HDR")) {
-							// Do something when HDR is clicked
-						}
-						ImGui::EndMenu();
-					}
+					m_EditorCamera.UseSkybox();
 				}
 				if (ImGui::MenuItem("Ambient Light")) {
 					// Do something when Ambient Light is clicked
@@ -232,6 +223,7 @@ void EditorLayer::OnImGuiRender(){
 	m_SceneHierarchyPanel.OnImGuiRender();
 	m_ContentBrowsPanel.OnImGuiRender();
 	m_Console.OnImGuiRender();
+	m_Setting.OnImGuiRender();
 
 
 	ImGui::Begin("Stats");

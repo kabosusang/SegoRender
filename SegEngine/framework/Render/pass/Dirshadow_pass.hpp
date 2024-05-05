@@ -16,7 +16,11 @@ namespace Sego{
         virtual void createPipelineLayouts();
         inline void updateShadowConstans(shadowConstans& shadowubos){
             lightvp_ = shadowubos.LightSpaceMatrix;
-        }  
+        } 
+        inline void SetBias(float Constant,float Slope){
+            depthBiasConstant = Constant;
+            depthBiasSlope = Slope;
+        }
         
         VmaImageViewSampler getShadowMap() { return ShadowMap_; }
     private:

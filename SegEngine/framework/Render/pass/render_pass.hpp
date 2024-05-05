@@ -63,6 +63,7 @@ protected:
     vk::PipelineDepthStencilStateCreateInfo depth_stencil_ci{};
     //7. color blending
     vk::PipelineColorBlendAttachmentState colorblendattachment_ci;
+    std::vector<vk::PipelineColorBlendAttachmentState> colorblendattachments_ci;
     vk::PipelineColorBlendStateCreateInfo blend_ci{};
 
     //Vulkan Objects ---------------------------------------------------------------

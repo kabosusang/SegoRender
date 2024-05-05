@@ -4,6 +4,11 @@
 #include "framework/Render/Render_data.hpp"
 #include "Core/Scene/Component.hpp"
 
+struct RenderConstants{
+    float BiasConstant;
+    float BiasSlope;
+};
+
 
 namespace Sego{
 class Scene;
@@ -21,8 +26,6 @@ public:
     void Render(Scene* scene); //has to be called after BeginScene
     void Render();
 
-
-    
     void DrawQuad(const glm::mat4& transform,glm::vec4& color,int entityID, std::vector<std::shared_ptr<RenderData>>& SpriteRenderDatas);
     void DrawQuad(const glm::mat4& transform,glm::vec4& color,std::shared_ptr<Texture2D> texture,int entityID, std::vector<std::shared_ptr<RenderData>>& SpriteRenderDatas);
     void DrawSprite(const glm::mat4& transform,SpriteRendererComponent& src,int entityID, std::vector<std::shared_ptr<RenderData>>& SpriteRenderDatas);
@@ -37,9 +40,10 @@ public:
 
 private:
     glm::vec3 m_CameraPos;
-    
     glm::mat4 m_ViewProj;
     float m_CameraFOV = 45.0f;
+    //Setting
+    RenderConstants renderConstants_;
 
     //Uniform 
     std::vector<VmaBuffer> m_Lightubs_;

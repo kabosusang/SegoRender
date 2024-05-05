@@ -4,6 +4,8 @@
 
 class SDL_Window;
 
+
+
 namespace Sego{
     class VulkanContext : public GraphicsContext{
     public:
@@ -23,7 +25,6 @@ namespace Sego{
         //Render
         std::shared_ptr<class Renderer> render_;
 
-        
         SDL_Window* windowHandle_;
         uint32_t width_, height_;
         

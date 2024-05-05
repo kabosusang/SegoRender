@@ -60,7 +60,7 @@ namespace Sego{
     struct MeshRenderData : public RenderData{ 
         VmaBuffer vertexBuffer_;
         VmaBuffer indexBuffer_;
-    
+        
         glm::mat4 model_;
 
         //push Constant
@@ -76,7 +76,6 @@ namespace Sego{
         std::vector<Node*> nodes_; //nodes
         std::vector<Material> materials_;
         std::vector<Texture2D> textures_;
-        
         
         void destory(){
             vertexBuffer_.destroy();

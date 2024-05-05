@@ -108,13 +108,14 @@ vk::Device Context::createDevice(vk::SurfaceKHR surface) {
 
     vk::DeviceCreateInfo deviceCreateInfo;
     queryQueueInfo(surface);
-    std::array extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME,VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME};
+    std::array extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME,VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,VK_KHR_FRAGMENT_SHADING_RATE_EXTENSION_NAME
+     };
     deviceCreateInfo.setPEnabledExtensionNames(extensions);
 
     vk::PhysicalDeviceFeatures features;
     features.setSamplerAnisotropy(true);
     features.setIndependentBlend(true); //independent blend
-  
+    features.setSampleRateShading(true); //sample rate shading
 
     deviceCreateInfo.setPEnabledFeatures(&features);
     std::vector<vk::DeviceQueueCreateInfo> queueInfos;

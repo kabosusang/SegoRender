@@ -36,12 +36,16 @@ void Renderer::BeginScene(const EditorCamera &camera){
     Vctx.m_ProjectionMatrix = proj;
     m_ViewProj = proj * view;
 
+    std::shared_ptr<SkyboxRenderData> m_skybox = std::make_shared<SkyboxRenderData>();
+   
     if (camera.m_UseSkybox){
         skybox_->Meshmvp_ = proj * glm::mat4(glm::mat3(view));
-        Vctx.SetSkyboxRenderData(skybox_);
+        m_skybox = skybox_;
+    }else{
+        m_skybox.reset();
     }
     m_CameraFOV = camera.GetFOV();
-
+    Vctx.SetSkyboxRenderData(m_skybox);
 }
 
 void Renderer::Init(){
