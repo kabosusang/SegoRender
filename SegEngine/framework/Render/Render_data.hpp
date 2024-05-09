@@ -111,7 +111,6 @@ namespace Sego{
     struct ViewProjs{
         glm::mat4 view;
         glm::mat4 proj;
-        glm::mat4 lightSpaceMatrix;
     };
 
 

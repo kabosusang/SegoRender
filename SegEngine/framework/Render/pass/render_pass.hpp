@@ -22,6 +22,7 @@ public:
     //
     virtual void createDescriptorSetLayout();
     virtual void createPipelineLayouts();
+    void crearePipelineCache();
 
     void updatePushConstants(vk::CommandBuffer commandbuffer,vk::PipelineLayout pipeline_layout,
     const std::vector<const void*>& (pcos),std::vector<vk::PushConstantRange> push_constant_ranges = {});
@@ -53,7 +54,7 @@ protected:
     vk::PipelineInputAssemblyStateCreateInfo input_assemb_ci{};
     //3. viewport and scissor
     vk::PipelineViewportStateCreateInfo viewport_state_ci{};
-    vk::Viewport viewport_ci{};
+    vk::Viewport  viewport_ci{};
     vk::Rect2D scissor_ci{};
     //4. rasteraizer
     vk::PipelineRasterizationStateCreateInfo raster_ci{};
@@ -78,6 +79,8 @@ protected:
     vk::Framebuffer framebuffer_;
     vk::RenderPass renderPass_;
 
+    //pipeline cache
+    vk::PipelineCache pipelineCache_;
     //Renderer tagret Extent
     uint32_t width_,height_;
 

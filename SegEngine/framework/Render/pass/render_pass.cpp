@@ -52,6 +52,15 @@ void RenderPass::createPipelineLayouts(){
 
 }
 
+void RenderPass::crearePipelineCache(){
+    auto& ctx = Context::Instance();
+    vk::PipelineCacheCreateInfo pipeline_cache_ci{};
+    pipeline_cache_ci.setInitialDataSize(0);
+
+    pipelineCache_ = ctx.device.createPipelineCache(pipeline_cache_ci);
+}
+
+
 void RenderPass::updatePushConstants(vk::CommandBuffer commandbuffer, 
 vk::PipelineLayout pipeline_layout, const std::vector<const void*>&(pcos), std::vector<vk::PushConstantRange> push_constant_ranges){
 

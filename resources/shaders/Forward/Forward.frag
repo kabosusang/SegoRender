@@ -8,12 +8,10 @@ layout(set = 0,binding = 0) uniform Light_st{
     LightObj LightData_st;
 };
 
-layout(set = 0,binding = 1) uniform sampler2D AlbedoSpecTexture;
+layout(set = 0,binding = 1) uniform sampler2D albeoTexture;
 layout(set = 0,binding = 2) uniform sampler2D PositionTexture;
 layout(set = 0,binding = 3) uniform sampler2D NormalTexture;
-layout(set = 0,binding = 4) uniform sampler2D ShadowCoordTexture;
-
-layout(set = 0,binding = 5) uniform sampler2D shadowMap;
+layout(set = 0,binding = 4) uniform sampler2D shadowMap;
 
 
 layout (location = 0) in vec2 inUV;
@@ -22,34 +20,31 @@ layout(location = 0) out vec4 outColor;
 vec3 CalcDirLight(DirLight light,vec3 normal, vec3 viewDir);
 float ComputePCF(vec4 sc /*shadow croodinate*/, int r /*filtering range*/);
 float ShadowDepthProject(vec4 ShadowCoord, vec2 Offset);
+vec4 ComputeShadowCoord(vec3 WorldLightSpace);
 // Manual resolve for MSAA samples 
 
 void main(){
-    ivec2 attDim = textureSize(PositionTexture,0);
-    ivec2 UV = ivec2(inUV * attDim);
     // Ambient part
-    vec4 alb = texture(AlbedoSpecTexture, UV);
-	vec3 fragColor = vec3(0.0);
+    vec3 color = texture(albeoTexture, inUV).rgb;
+    vec3 normal = texture(NormalTexture, inUV).rgb;
+    vec3 position = texture(PositionTexture, inUV).rgb;
+
     //计算阴影
     float ShadowFactor = 1.0;
-    vec4 shadowCoord = texture(ShadowCoordTexture, UV);
+    vec4 shadowCoord = ComputeShadowCoord(position);
     ShadowFactor = ComputePCF(shadowCoord / shadowCoord.w, 2);
-
 
     if (LightData_st.lightSetting.UseLight != 0)
     {
-        vec3 position = texture(PositionTexture, UV).rgb;
-        vec3 normal = normalize(texture(NormalTexture, UV).rgb);
+        vec3 fragColor = vec3(0.0);
         vec3 viewDir = normalize(LightData_st.dirLight.viewPos - position);
         // Do lighting calculations
         fragColor = CalcDirLight(LightData_st.dirLight, normal, viewDir);
-        vec3 ambient = 0.3 * alb.rgb;
-        fragColor = ambient + fragColor;
+        float ambient = 0.3;
+        fragColor = (ambient + fragColor) * color;
         outColor = vec4(fragColor * ShadowFactor,1.0);
-
     }else{
-        fragColor = alb.rgb;
-        outColor = vec4(fragColor,1.0);
+        outColor = vec4(color,1.0);
     }
 
 }
@@ -108,4 +103,15 @@ float ComputePCF(vec4 sc /*shadow croodinate*/, int r /*filtering range*/)
 		}
 	}
 	return ShadowFactor / Count;
+}
+
+const mat4 BiasMat = mat4( 
+	0.5, 0.0, 0.0, 0.0,
+	0.0, 0.5, 0.0, 0.0,
+	0.0, 0.0, 1.0, 0.0,
+	0.5, 0.5, 0.0, 1.0);
+
+vec4 ComputeShadowCoord(vec3 WorldLightSpace)
+{
+	return (BiasMat * LightData_st.dirLight.lightSpaceMatrix * vec4(WorldLightSpace,1.0));
 }

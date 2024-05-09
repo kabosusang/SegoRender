@@ -53,7 +53,7 @@ void main(){
         vec3 normal = normalize(fs_in.Normal);
         vec3 viewDir = normalize(LightData_st.dirLight.viewPos - fs_in.FragPosWS);
         vec3 result = CalcDirLight(color,LightData_st.dirLight,normal, viewDir);
-
+ 
         //计算阴影
         float ShadowFactor = 1.0;
         vec4 ShadowCoord  = fs_in.shadowmap_space;

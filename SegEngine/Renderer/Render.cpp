@@ -181,6 +181,7 @@ void Renderer::Render(Scene* scene){
         lightSpaceMatrix = lightProjection * lightView;
 
         //Bias
+        light.dirLight.lightSpaceMatrix = lightSpaceMatrix;
         shadowubos.LightSpaceMatrix = lightSpaceMatrix;
     }
     light_data->directional_light_shadow_texture = VCtx.getDirShadowMap();

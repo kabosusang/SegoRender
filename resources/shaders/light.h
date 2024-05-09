@@ -24,6 +24,7 @@ struct DirLight{
     float Identity; //Identity of the light (Now:Buffer   TODO:USE)
     vec3 viewPos; //Camera position
     float ambient; //Ambient light Buffer
+    mat4 lightSpaceMatrix; //LightSpaceMatrix
 };
 
 struct LightSetting{ 

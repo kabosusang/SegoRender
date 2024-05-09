@@ -68,7 +68,6 @@ namespace Sego{
 
         void updateShadowConstans(shadowConstans& shadowubos){
             dirPass_->updateShadowConstans(shadowubos);
-            m_LightMatrix = shadowubos.LightSpaceMatrix;
         }
      
     public:
@@ -76,7 +75,7 @@ namespace Sego{
         std::shared_ptr<TextureCube> defaultSkybox;
         glm::mat4 m_ViewMatrix;
         glm::mat4 m_ProjectionMatrix;
-        glm::mat4 m_LightMatrix;
+        
     private:
         static VulkanRhi* instance_;
         

@@ -8,7 +8,7 @@ namespace Sego{
     public:
         MainPass();
         virtual void Render() override;
-      
+        virtual void Init() override;
         virtual void CreatePiepline() override;
         virtual void CreateFrameBuffer() override;
         virtual void CreateRenderPass() override;
@@ -26,15 +26,40 @@ namespace Sego{
         void setLightRenderData(std::shared_ptr<LightingRenderData>& light){
             lightdata_ = light;
         }
- 
-    private:
-        //Node Different Push Constant
-        void drawNode(vk::CommandBuffer cmd,vk::PipelineLayout pipelineLayout, Node* node,std::shared_ptr<StaticMeshRenderData>& Rendata);
-        void drawNode_cubemap(vk::CommandBuffer cmd ,vk::PipelineLayout pipelineLayout, Node* node);
-        
-        void render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<StaticMeshRenderData>& Rendata);
+        //Renderer2D
         void render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteRenderData> sprite);
-        void render_skybox(vk::CommandBuffer cmdBuffer);
+
+    private:
+        //Gbuffer
+        void BuildDeferCommandBuffer();
+        void CreateDeferFramebuffer();
+        void CreateDeferObject();
+        
+        void DeferRenderSkybox(vk::CommandBuffer cmdBuffer);
+        void DeferdrawNodeSkybox(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelineLayout, Node* node);
+        
+        void DeferRendererMesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<StaticMeshRenderData>& Rendata);
+        void DeferdrawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelineLayout, Node* node,std::shared_ptr<StaticMeshRenderData>& Rendata);
+        std::vector<vk::Format> m_gbufferformats;
+        vk::Framebuffer DeferredFrameBuffer_;
+        vk::RenderPass DeferredRenderPass_;
+         //Deferred RenderPass -- GBuffer
+        VmaImageViewSampler albedoIVs_;
+        VmaImageViewSampler positionIVs_;
+        VmaImageViewSampler normalIVs_;
+        VmaImageView deferdepthIVs_;
+        //pipeline 
+        //skybox
+        vk::DescriptorSetLayout deferskyboxSetLayout_;
+        vk::PipelineLayout deferskyboxpipelineLayout_;
+        vk::Pipeline deferskyboxpipeline_;
+        //static mesh
+        vk::DescriptorSetLayout deferdescriptorSetLayout_;
+        vk::PipelineLayout deferpipelineLayout_;
+        vk::Pipeline deferpipeline_;
+        vk::Viewport  viewport_defer{};
+        vk::Rect2D scissor_defer{};
+        vk::PipelineViewportStateCreateInfo viewport_state_defer{};
     private:
         std::vector<vk::Format> m_formats;
         vk::SampleCountFlagBits m_msaaSamples;
@@ -46,12 +71,6 @@ namespace Sego{
         VmaImageViewSampler depthIVs_;
         //MSAA Texture
         VmaImageView msaaIVs_;
-
-        //Deferred RenderPass -- GBuffer
-        VmaImageViewSampler albedoIVs_;
-        VmaImageViewSampler positionIVs_;
-        VmaImageViewSampler normalIVs_;
-        VmaImageViewSampler shadowpositionIVs_;
 
     
         std::vector<vk::PushConstantRange> mesh_push_constant_ranges_; //mesh

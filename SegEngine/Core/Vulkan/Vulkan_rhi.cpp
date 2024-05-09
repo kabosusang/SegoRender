@@ -138,7 +138,7 @@ VmaImageViewSampler VulkanRhi::getDirShadowMap(){
 
 void VulkanRhi::render(){
     waitFrame();
-    updtaUniform(); //No Use
+    updtaUniform();
 	recordFrame();
 	submitFrame();
 	presentFrame();
@@ -165,9 +165,9 @@ void VulkanRhi::updtaUniform(){
     ViewProjs viewProjs;
     viewProjs.view = m_ViewMatrix;
     viewProjs.proj = m_ProjectionMatrix;
-    viewProjs.lightSpaceMatrix = m_LightMatrix;
     Vulkantool::updateBuffer(uniformBuffers_[currentFrame_], &viewProjs, sizeof(ViewProjs));
 }
+
 
 void VulkanRhi::recordFrame(){
     auto& ctx = Context::Instance();
@@ -186,6 +186,7 @@ void VulkanRhi::recordFrame(){
     uiPass_->Render();
 
     cmdBuffer.end();
+    
 }
 
 void VulkanRhi::submitFrame(){
