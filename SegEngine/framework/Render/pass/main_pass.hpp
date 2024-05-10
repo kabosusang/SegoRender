@@ -7,6 +7,7 @@ namespace Sego{
     {
     public:
         MainPass();
+        void DeferRender();
         virtual void Render() override;
         virtual void Init() override;
         virtual void CreatePiepline() override;
@@ -26,10 +27,14 @@ namespace Sego{
         void setLightRenderData(std::shared_ptr<LightingRenderData>& light){
             lightdata_ = light;
         }
-        //Renderer2D
-        void render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteRenderData> sprite);
-
     private:
+        //Default Push Constant
+        void drawNode(vk::CommandBuffer cmd,vk::PipelineLayout pipelineLayout, Node* node,std::shared_ptr<StaticMeshRenderData>& Rendata);
+        void drawNode_cubemap(vk::CommandBuffer cmd ,vk::PipelineLayout pipelineLayout, Node* node);
+        
+        void render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<StaticMeshRenderData>& Rendata);
+        void render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteRenderData> sprite);
+        void render_skybox(vk::CommandBuffer cmdBuffer);
         //Gbuffer
         void BuildDeferCommandBuffer();
         void CreateDeferFramebuffer();
@@ -37,7 +42,6 @@ namespace Sego{
         
         void DeferRenderSkybox(vk::CommandBuffer cmdBuffer);
         void DeferdrawNodeSkybox(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelineLayout, Node* node);
-        
         void DeferRendererMesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<StaticMeshRenderData>& Rendata);
         void DeferdrawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelineLayout, Node* node,std::shared_ptr<StaticMeshRenderData>& Rendata);
         std::vector<vk::Format> m_gbufferformats;
@@ -48,6 +52,10 @@ namespace Sego{
         VmaImageViewSampler positionIVs_;
         VmaImageViewSampler normalIVs_;
         VmaImageView deferdepthIVs_;
+        //Forward 
+        vk::DescriptorSetLayout forwarddescriptorSetLayout_;
+        vk::PipelineLayout forwardpipelineLayout_;
+        vk::Pipeline forwardpipeline_;
         //pipeline 
         //skybox
         vk::DescriptorSetLayout deferskyboxSetLayout_;

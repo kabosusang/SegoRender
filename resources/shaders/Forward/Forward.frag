@@ -17,7 +17,7 @@ layout(set = 0,binding = 4) uniform sampler2D shadowMap;
 layout (location = 0) in vec2 inUV;
 layout(location = 0) out vec4 outColor;
 //Function
-vec3 CalcDirLight(DirLight light,vec3 normal, vec3 viewDir);
+vec3 CalcDirLight(vec3 color,DirLight light,vec3 normal, vec3 viewDir);
 float ComputePCF(vec4 sc /*shadow croodinate*/, int r /*filtering range*/);
 float ShadowDepthProject(vec4 ShadowCoord, vec2 Offset);
 vec4 ComputeShadowCoord(vec3 WorldLightSpace);
@@ -39,9 +39,7 @@ void main(){
         vec3 fragColor = vec3(0.0);
         vec3 viewDir = normalize(LightData_st.dirLight.viewPos - position);
         // Do lighting calculations
-        fragColor = CalcDirLight(LightData_st.dirLight, normal, viewDir);
-        float ambient = 0.3;
-        fragColor = (ambient + fragColor) * color;
+        fragColor = CalcDirLight(color,LightData_st.dirLight, normal, viewDir);
         outColor = vec4(fragColor * ShadowFactor,1.0);
     }else{
         outColor = vec4(color,1.0);
@@ -49,10 +47,11 @@ void main(){
 
 }
 
-vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
+vec3 CalcDirLight(vec3 color,DirLight light, vec3 normal, vec3 viewDir)
 {
     vec3 lightColor = vec3(1.0f);
-  
+    // Ambient
+    vec3 ambient = 0.3 * color;
     // Diffuse
     vec3 lightDir = normalize(-light.direction);
     float diff = max(dot(lightDir, normal), 0.0);
@@ -61,10 +60,10 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = 0.0;
     vec3 halfwayDir = normalize(lightDir + viewDir);  
-    spec = pow(max(dot(normal, halfwayDir), 0.0), 64.0);
+    spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
     vec3 specular = spec * lightColor;    
 
-    return (diffuse + specular) ;
+    return (ambient + diffuse + specular) * color ;
 }
 
 

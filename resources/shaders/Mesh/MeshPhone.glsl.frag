@@ -8,7 +8,6 @@ struct VS_OUT{
     vec3 FragPosWS;
     vec3 Normal;
     vec2 uv;
-    vec4 shadowmap_space;
 };
 
 #define MAX_POINT_LIGHTS 8 //TOOD: Dynamic Poit light
@@ -37,8 +36,8 @@ layout(set = 0,binding = 3) uniform sampler2D shadowMap;
 //Function
 vec3 CalcDirLight(vec3 color,DirLight light,vec3 normal, vec3 viewDir);
 float ComputePCF(vec4 sc /*shadow croodinate*/, int r /*filtering range*/);
+vec4 ComputeShadowCoord(vec3 WorldLightSpace);
 float ShadowDepthProject(vec4 ShadowCoord, vec2 Offset);
-
 
 void main(){
     
@@ -56,7 +55,7 @@ void main(){
  
         //计算阴影
         float ShadowFactor = 1.0;
-        vec4 ShadowCoord  = fs_in.shadowmap_space;
+        vec4 ShadowCoord  = ComputeShadowCoord(fs_in.FragPosWS);
         ShadowFactor = ComputePCF(ShadowCoord / ShadowCoord.w, 2);
         //ShadowFactor = ShadowDepthProject(ShadowCoord / ShadowCoord.w,  vec2(0.0, 0.0));
         outColor = vec4(result * ShadowFactor, 1.0);
@@ -125,4 +124,16 @@ float ComputePCF(vec4 sc /*shadow croodinate*/, int r /*filtering range*/)
 		}
 	}
 	return ShadowFactor / Count;
+}
+
+
+const mat4 BiasMat = mat4( 
+	0.5, 0.0, 0.0, 0.0,
+	0.0, 0.5, 0.0, 0.0,
+	0.0, 0.0, 1.0, 0.0,
+	0.5, 0.5, 0.0, 1.0);
+
+vec4 ComputeShadowCoord(vec3 WorldLightSpace)
+{
+	return (BiasMat * LightData_st.dirLight.lightSpaceMatrix * vec4(WorldLightSpace,1.0));
 }

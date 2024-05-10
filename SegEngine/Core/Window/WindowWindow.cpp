@@ -5,8 +5,6 @@
 #include "Core/Event/MouseEvent.h"
 #include "Core/Vulkan/VulkanContext.hpp"
 
-
-
 #include <imgui_impl_vulkan.h>
 #include <imgui_impl_sdl2.h>
 

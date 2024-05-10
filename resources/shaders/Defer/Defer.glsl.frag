@@ -33,7 +33,7 @@ void main(){
     }
 
     gPosition = vec4(fs_in.FragPosWS,1.0);
-    gNormal = vec4(fs_in.Normal,1.0);
+    gNormal = normalize(vec4(fs_in.Normal,1.0));
     gAlbedoSpec.rgb = color;
     gAlbedoSpec.a = 1.0;
 }

@@ -50,9 +50,8 @@ void MainPass::destroy(){
 
 }
 
-//Forward Renderer
 void MainPass::createDescriptorSetLayout(){
-    descriptorSetLayouts_.resize(2);//0 - spriter  1 Forward Lighting
+    descriptorSetLayouts_.resize(3);//0 - spriter  1 - static mesh 2 - skybox(cubemap)
     
     vk::DescriptorSetLayoutBinding samplerLayoutBinding{};
     samplerLayoutBinding.setBinding(0)
@@ -69,24 +68,39 @@ void MainPass::createDescriptorSetLayout(){
 
     descriptorSetLayouts_[0]= Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci);
     
-    //Lighting ForWard DescriptorSetLayout
-    std::vector<vk::DescriptorSetLayoutBinding> bindings_forward = {
-        vk::DescriptorSetLayoutBinding(0, vk::DescriptorType::eUniformBuffer,1,vk::ShaderStageFlagBits::eFragment),
-        vk::DescriptorSetLayoutBinding(1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment),
+    //mesh DescriptorSetLayout
+   
+    std::vector<vk::DescriptorSetLayoutBinding> bindings_mesh = {
+        vk::DescriptorSetLayoutBinding(0,vk::DescriptorType::eUniformBuffer,1,vk::ShaderStageFlagBits::eVertex),
+        vk::DescriptorSetLayoutBinding(1,vk::DescriptorType::eUniformBuffer,1,vk::ShaderStageFlagBits::eFragment),
         vk::DescriptorSetLayoutBinding(2, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment),
         vk::DescriptorSetLayoutBinding(3, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment),
-        vk::DescriptorSetLayoutBinding(4, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment)
     };
-    vk::DescriptorSetLayoutCreateInfo desc_set_layout_ci_forward{};
-    desc_set_layout_ci_forward.setBindingCount(static_cast<uint32_t>(bindings_forward.size()))
-                      .setBindings(bindings_forward)
-                      .setFlags(vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR);
-    descriptorSetLayouts_[1]= Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci_forward);
 
+  
+    vk::DescriptorSetLayoutCreateInfo desc_set_layout_ci_mesh{};
+    desc_set_layout_ci_mesh.setBindingCount(static_cast<uint32_t>(bindings_mesh.size()))
+                      .setBindings(bindings_mesh)
+                      .setFlags(vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR);
+    descriptorSetLayouts_[1]= Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci_mesh);
+
+    //skybox(cubemap) DescriptorSetLayout
+    vk::DescriptorSetLayoutBinding samplerLayoutBinding_cubemap{};
+    samplerLayoutBinding_cubemap.setBinding(0)
+                        .setDescriptorCount(1)
+                        .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+                        .setStageFlags(vk::ShaderStageFlagBits::eFragment)
+                        .setPImmutableSamplers(nullptr);
+    
+    vk::DescriptorSetLayoutCreateInfo desc_set_layout_ci_cubemap{};
+    desc_set_layout_ci_cubemap.setBindingCount(1)
+                      .setBindings(samplerLayoutBinding_cubemap)
+                      .setFlags(vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR);
+    descriptorSetLayouts_[2]= Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci_cubemap);
 }
 
 void MainPass::createPipelineLayouts(){
-    pipelineLayouts_.resize(2); // 0 - spriter  1 - Light Forward 
+    pipelineLayouts_.resize(3); // 0 - spriter  1 - static mesh 2 - skybox(cubemap) 
     //spriter renderer
     push_constant_ranges_ = {
         {vk::ShaderStageFlagBits::eVertex,0,sizeof(glm::mat4)},
@@ -101,17 +115,34 @@ void MainPass::createPipelineLayouts(){
 
     pipelineLayouts_[0] = Context::Instance().device.createPipelineLayout(pipeline_layout_ci);
     //mesh renderer
-     vk::PipelineLayoutCreateInfo Lightpipeline_layout_ci{};
-    Lightpipeline_layout_ci.setSetLayoutCount(1)
-                      .setPSetLayouts(&descriptorSetLayouts_[1]);
-                     
-    pipelineLayouts_[1] = Context::Instance().device.createPipelineLayout(Lightpipeline_layout_ci);
     
+    mesh_push_constant_ranges_ = {
+        {vk::ShaderStageFlagBits::eVertex,0,sizeof(glm::mat4)},
+         {vk::ShaderStageFlagBits::eFragment,sizeof(glm::mat4),sizeof(Material)}
+    };
+    pipeline_layout_ci.setSetLayoutCount(1)
+                      .setPSetLayouts(&descriptorSetLayouts_[1])
+                      .setPushConstantRangeCount(static_cast<uint32_t>(mesh_push_constant_ranges_.size()))
+                      .setPPushConstantRanges(mesh_push_constant_ranges_.data());
+
+    pipelineLayouts_[1] = Context::Instance().device.createPipelineLayout(pipeline_layout_ci);
+
+    //skybox renderer
+    cubmap_push_constant_ranges_ = {
+        {vk::ShaderStageFlagBits::eVertex,0,sizeof(glm::mat4)}
+    };
+     pipeline_layout_ci.setSetLayoutCount(1)
+                      .setPSetLayouts(&descriptorSetLayouts_[2])
+                      .setPushConstantRangeCount(static_cast<uint32_t>(cubmap_push_constant_ranges_.size()))
+                      .setPPushConstantRanges(cubmap_push_constant_ranges_.data());
+
+    pipelineLayouts_[2] = Context::Instance().device.createPipelineLayout(pipeline_layout_ci);
+
 }
 
 void MainPass::CreatePiepline(){
     auto& ctx = Context::Instance();
-    pipelines_.resize(2); //Sprite Renderer,LightForward Renderer
+    pipelines_.resize(3); //Sprite Renderer, Mesh Renderer,cubemap Renderer
 
     //-------------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------
@@ -220,7 +251,7 @@ void MainPass::CreatePiepline(){
                .setLayout(pipelineLayouts_[0])
                .setRenderPass(renderPass_);
     
-    auto Result = ctx.device.createGraphicsPipeline(pipelineCache_, pipeline_ci);
+    auto Result = ctx.device.createGraphicsPipeline(nullptr, pipeline_ci);
     pipelines_[0] = Result.value;
     
     //10. destroy shader module
@@ -231,18 +262,44 @@ void MainPass::CreatePiepline(){
     //-------------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------
-    //LightForward Renderer
+    //Mesh Renderer
     shader_stage_cis.clear();
     shader_stage_cis = {
-        ctx.shaderManager->LoadShader("resources/shaders/Forward/Scenevert.spv", vk::ShaderStageFlagBits::eVertex),
-        ctx.shaderManager->LoadShader("resources/shaders/Forward/Forwardfrag.spv", vk::ShaderStageFlagBits::eFragment)
+        ctx.shaderManager->LoadShader("resources/shaders/Mesh/meshPhonevert.spv", vk::ShaderStageFlagBits::eVertex),
+        ctx.shaderManager->LoadShader("resources/shaders/Mesh/meshPhonefrag.spv", vk::ShaderStageFlagBits::eFragment)
     };
 
-    vertex_input_ci.setVertexAttributeDescriptionCount(0)
-                   .setPVertexAttributeDescriptions(nullptr)
-                   .setVertexBindingDescriptionCount(0)
-                   .setPVertexBindingDescriptions(nullptr);
+    //1. vertex input   BindingDescription And AttributeDescription
+    vk::VertexInputBindingDescription Meshvertex_binding_desc{};
+    Meshvertex_binding_desc.setBinding(0)
+                      .setStride(sizeof(StaticVertex))
+                      .setInputRate(vk::VertexInputRate::eVertex);
+    
+    std::array<vk::VertexInputAttributeDescription, 4> vertex_attr_descs_Mesh;
+    vertex_attr_descs_Mesh[0].setBinding(0)
+                            .setLocation(0)
+                            .setFormat(vk::Format::eR32G32B32Sfloat)
+                            .setOffset(offsetof(StaticVertex, pos));
+    vertex_attr_descs_Mesh[1].setBinding(0)
+                            .setLocation(1)
+                            .setFormat(vk::Format::eR32G32B32Sfloat)
+                            .setOffset(offsetof(StaticVertex, normal));
+    vertex_attr_descs_Mesh[2].setBinding(0)
+                            .setLocation(2)
+                            .setFormat(vk::Format::eR32G32Sfloat)
+                            .setOffset(offsetof(StaticVertex, uv));
+    vertex_attr_descs_Mesh[3].setBinding(0)
+                        .setLocation(3)
+                        .setFormat(vk::Format::eR32G32B32Sfloat)
+                        .setOffset(offsetof(StaticVertex, color));
 
+    vertex_input_ci.setVertexAttributeDescriptionCount(vertex_attr_descs_Mesh.size())
+                   .setPVertexAttributeDescriptions(vertex_attr_descs_Mesh.data())
+                   .setVertexBindingDescriptionCount(1)
+                   .setPVertexBindingDescriptions(&Meshvertex_binding_desc);
+
+    raster_ci.setCullMode(vk::CullModeFlagBits::eBack);
+            
     pipeline_ci.setStages(shader_stage_cis)
                .setPVertexInputState(&vertex_input_ci)
                .setPInputAssemblyState(&input_assemb_ci)
@@ -254,8 +311,45 @@ void MainPass::CreatePiepline(){
                .setPColorBlendState(&blend_ci)
                .setLayout(pipelineLayouts_[1])
                .setRenderPass(renderPass_);
-    Result = ctx.device.createGraphicsPipeline(pipelineCache_, pipeline_ci);
+
+    Result = ctx.device.createGraphicsPipeline(nullptr, pipeline_ci);
     pipelines_[1] = Result.value;
+
+    //10. destroy shader module
+    for(auto& shader_stage_ci : shader_stage_cis){
+        ctx.device.destroyShaderModule(shader_stage_ci.module);
+    }
+
+    //-------------------------------------------------------------------------------------
+    //-------------------------------------------------------------------------------------
+    //-------------------------------------------------------------------------------------
+    // Skybox Renderer
+    shader_stage_cis.clear();
+    shader_stage_cis = {
+        ctx.shaderManager->LoadShader("resources/shaders/cubemap/Cubmapvert.spv", vk::ShaderStageFlagBits::eVertex),
+        ctx.shaderManager->LoadShader("resources/shaders/cubemap/Cubmapfrag.spv", vk::ShaderStageFlagBits::eFragment)
+    };
+
+    raster_ci.setCullMode(vk::CullModeFlagBits::eFront);
+
+    depth_stencil_ci.setDepthTestEnable(false)
+                    .setDepthWriteEnable(false);
+    
+    colorblendattachment_ci.setBlendEnable(false);
+
+    pipeline_ci.setStages(shader_stage_cis)
+               .setPVertexInputState(&vertex_input_ci)
+               .setPInputAssemblyState(&input_assemb_ci)
+               .setPViewportState(&viewport_state_ci)
+               .setPRasterizationState(&raster_ci)
+               .setPDynamicState(&dynamicState)
+               .setPMultisampleState(&multisample_ci)
+               .setPDepthStencilState(&depth_stencil_ci)
+               .setPColorBlendState(&blend_ci)
+               .setLayout(pipelineLayouts_[2])
+               .setRenderPass(renderPass_);
+    Result = ctx.device.createGraphicsPipeline(nullptr, pipeline_ci);
+    pipelines_[2] = Result.value;
 
     //10. destroy shader module
     for(auto& shader_stage_ci : shader_stage_cis){
@@ -366,11 +460,96 @@ void MainPass::CreateRenderPass(){
     renderPass_ = Context::Instance().device.createRenderPass(createInfo);
 }
 
+void MainPass::Render(){
+    auto& ctx = Context::Instance();
+    auto& VulkanRhi = VulkanRhi::Instance();
+    auto cmdBuffer = VulkanRhi.getCommandBuffer();
+    
+    std::array<vk::ClearValue,3> clearValues{};
+    clearValues[0].setColor(vk::ClearColorValue(reinterpret_cast<vk::ClearColorValue&>(clearColor_)));
+    clearValues[1].setColor(vk::ClearColorValue(reinterpret_cast<vk::ClearColorValue&>(clearColor_)));
+    clearValues[2].setDepthStencil({1.0f,0});
+
+    vk::RenderPassBeginInfo renderPassBegin{};
+    renderPassBegin.setRenderPass(renderPass_)
+                   .setFramebuffer(framebuffer_)
+                   .setClearValues(clearValues)
+                   .setRenderArea(vk::Rect2D({}, {width_,height_}));
+   
+    cmdBuffer.beginRenderPass(&renderPassBegin, vk::SubpassContents::eInline);
+    vk::Viewport viewport{};
+    viewport.setX(0.0f)
+            .setY(0.0f)
+            .setWidth(static_cast<float>(width_))
+            .setHeight(static_cast<float>(height_))
+            .setMinDepth(0.0f)
+            .setMaxDepth(1.0f);
+    cmdBuffer.setViewport(0, 1, &viewport);
+    vk::Rect2D scissor{};
+    scissor.setOffset({0, 0})
+           .setExtent({width_,height_});
+    cmdBuffer.setScissor(0, 1, &scissor);
+
+    if (skybox_){
+        render_skybox(cmdBuffer);
+    }
+
+    //Render 
+    for(const auto& Rendata : renderDatas_){
+        if (Rendata->type == RenderDataType::Sprite){
+            std::shared_ptr<SpriteRenderData> spritedata = std::static_pointer_cast<SpriteRenderData>(Rendata);
+            render_sprite(cmdBuffer,spritedata);
+        }
+
+        if (Rendata->type == RenderDataType::StaticMesh){
+            std::shared_ptr<StaticMeshRenderData> meshdata = std::static_pointer_cast<StaticMeshRenderData>(Rendata);
+            render_mesh(cmdBuffer,meshdata);
+        }
+    }
+
+    cmdBuffer.endRenderPass();
+}
+
+void MainPass::render_skybox(vk::CommandBuffer cmdBuffer){
+    auto& VulkanRhi = VulkanRhi::Instance();
+    //pipelines_[2] Skybox Renderer
+    cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines_[2]);
+    vk::Buffer vertexBuffers[] = { skybox_->vertexBuffer_.buffer };
+    vk::DeviceSize offsets[] = { 0 };
+    cmdBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
+    cmdBuffer.bindIndexBuffer(skybox_->indexBuffer_.buffer, 0, vk::IndexType::eUint32);
+
+     //Draw Notes
+    for(auto& node : skybox_->nodes_){
+        drawNode_cubemap(cmdBuffer,pipelineLayouts_[2],node);
+    }
+
+}
+
+
+void MainPass::render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<StaticMeshRenderData>& Rendata){
+    auto& VulkanRhi = VulkanRhi::Instance();
+    
+    //pipelines_[0] Normal GLTF Model Renderer
+    cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines_[1]);
+    vk::Buffer vertexBuffers[] = { Rendata->vertexBuffer_.buffer };
+    vk::DeviceSize offsets[] = { 0 };
+    cmdBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
+    cmdBuffer.bindIndexBuffer(Rendata->indexBuffer_.buffer, 0, vk::IndexType::eUint32);
+
+    desc_writes.clear();
+   // SG_CORE_INFO("Load Model Texture Size: {0}",Rendata->textures_.size());
+    //Draw Notes
+    for(auto& node : Rendata->nodes_){
+        drawNode(cmdBuffer,pipelineLayouts_[1],node,Rendata);
+    }
+}
 
 //2. Sprite Renderer
 void MainPass::render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteRenderData> Rendata){
     auto& VulkanRhi = VulkanRhi::Instance();
     
+    //pipelines_[1] Sprite Renderer
     cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines_[0]);
     vk::Buffer vertexBuffers[] = { Rendata->vertexBuffer_.buffer };
     vk::DeviceSize offsets[] = { 0 };
@@ -398,6 +577,100 @@ void MainPass::render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteR
     cmdBuffer.drawIndexed(Rendata->indexCount_,1,0,0,0);
 }
 
+
+void MainPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelineLayout, Node* node,std::shared_ptr<StaticMeshRenderData>& Rendata){
+    auto& VulkanRhi = VulkanRhi::Instance();
+    uint32_t flight_Index = VulkanRhi.getFlightCount();
+    if(node->mesh.primitives.size() > 0){
+        
+        glm::mat4 nodeMatrix = node->matrix;
+        Node* currentParent = node->parent;
+        while (currentParent) {
+            nodeMatrix = currentParent->matrix * nodeMatrix;
+            currentParent = currentParent->parent;
+        }
+         // Pass the final matrix to the vertex shader using push constants
+        glm::mat4 model = Rendata->model_ * nodeMatrix;
+
+        for ( auto& primitive : node->mesh.primitives) {
+            
+            updatePushConstants(cmdBuffer,pipelineLayout,{&model,
+            &Rendata->materials_[primitive.materialIndex]},mesh_push_constant_ranges_);
+            desc_writes.clear();
+				if (primitive.indexCount > 0) {
+                    //1. Uniform
+                    std::array<vk::DescriptorBufferInfo, 2> desc_buffer_infos{}; //Uniform 
+                    addBufferDescriptorSet(desc_writes,desc_buffer_infos[0],VulkanRhi.getCurrentUniformBuffer(),0);
+                    addBufferDescriptorSet(desc_writes,desc_buffer_infos[1],lightdata_->lighting_ubs[flight_Index],1);
+                   
+                    std::array<vk::DescriptorImageInfo,2>   desc_image_info{};  
+                    if (Rendata->materials_[primitive.materialIndex].has_baseColorTexture){
+                        //Sample
+                        addImageDescriptorSet(desc_writes, desc_image_info[0], 
+                        Rendata->textures_[Rendata->materials_[primitive.materialIndex].baseColorTextureIndex].image_view_sampler_,2);                 
+                    }else{
+                        //Sample
+                        addImageDescriptorSet(desc_writes, desc_image_info[0], 
+                        VulkanRhi.defaultTexture->image_view_sampler_,2); //defualt image use depth image(a kidding) 
+                    }
+                    addDepthImageDescriptorSet(desc_writes, desc_image_info[1],
+                    lightdata_->directional_light_shadow_texture,3);
+
+                    VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        pipelineLayout, 0, static_cast<uint32_t>(desc_writes.size()), (VkWriteDescriptorSet *)desc_writes.data());
+                  
+                    // Bind the descriptor for the current primitive's texture
+                    cmdBuffer.drawIndexed(primitive.indexCount,1,primitive.firstIndex,0,0);
+				}
+			}
+		}
+		for (auto& child : node->children) {
+			drawNode(cmdBuffer,pipelineLayout, child,Rendata);
+		}
+}
+
+void MainPass::drawNode_cubemap(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelineLayout,Node* node){
+    auto& VulkanRhi = VulkanRhi::Instance();
+    if(node->mesh.primitives.size() > 0){
+        
+        glm::mat4 nodeMatrix = node->matrix;
+        Node* currentParent = node->parent;
+        while (currentParent) {
+            nodeMatrix = currentParent->matrix * nodeMatrix;
+            currentParent = currentParent->parent;
+        }
+        
+        // Pass the final matrix to the vertex shader using push constants
+        nodeMatrix = skybox_->Meshmvp_;
+        for ( auto& primitive : node->mesh.primitives) {
+        updatePushConstants(cmdBuffer,pipelineLayout,{&nodeMatrix},cubmap_push_constant_ranges_);
+        desc_writes.clear();
+				if (primitive.indexCount > 0) {
+                    std::array<vk::DescriptorImageInfo,1>   desc_image_info = {};  
+                    if (skybox_->materials_[primitive.materialIndex].has_baseColorTexture){
+                        //Sample
+                        addImageDescriptorSet(desc_writes, desc_image_info[0], 
+                        VulkanRhi.defaultSkybox->image_view_sampler_,0);
+                    }else{
+                        //Sample
+                        addImageDescriptorSet(desc_writes, desc_image_info[0], 
+                        VulkanRhi.defaultSkybox->image_view_sampler_,0); //defualt image use depth image(a kidding)
+                    }
+                  
+				    VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    pipelineLayout, 0, static_cast<uint32_t>(desc_writes.size()), (VkWriteDescriptorSet *)desc_writes.data());
+
+                    // Bind the descriptor for the current primitive's texture
+                    cmdBuffer.drawIndexed(primitive.indexCount,1,primitive.firstIndex,0,0);
+				}
+			}
+		}
+		for (auto& child : node->children) {
+			drawNode_cubemap(cmdBuffer,pipelineLayout,child);
+		}
+}
+
+
 void MainPass::recreateframbuffer(uint32_t width,uint32_t height){
     auto& ctx = Context::Instance();
     ctx.device.waitIdle();
@@ -417,8 +690,8 @@ void MainPass::recreateframbuffer(uint32_t width,uint32_t height){
     CreateFrameBuffer();
     CreateDeferFramebuffer();
 }
-
-void MainPass::Render(){
+//Deferred RenderPass -- GBuffer
+void MainPass::DeferRender(){
     //Gbffer Pass
     BuildDeferCommandBuffer();
 
@@ -460,7 +733,7 @@ void MainPass::Render(){
         VulkanRhi.getDirShadowMap()
     };
     desc_writes.clear();
-    cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines_[1]);
+    cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, forwardpipeline_);
     std::array<vk::DescriptorBufferInfo,1> desc_buffer_infos{}; //Light
     addBufferDescriptorSet(desc_writes,desc_buffer_infos[0],lightdata_->lighting_ubs[flight_Index],0);
 
@@ -471,7 +744,7 @@ void MainPass::Render(){
     addDepthImageDescriptorSet(desc_writes,desc_image_info[3],textures[3],4);
 
     VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-    pipelineLayouts_[1], 0, static_cast<uint32_t>(desc_writes.size()), (VkWriteDescriptorSet *)desc_writes.data());
+    forwardpipelineLayout_, 0, static_cast<uint32_t>(desc_writes.size()), (VkWriteDescriptorSet *)desc_writes.data());
     cmdBuffer.draw(3,1,0,0);
 
     //Render 2D Sprite
@@ -481,13 +754,9 @@ void MainPass::Render(){
             render_sprite(cmdBuffer,spritedata);
         }
     }
-
     cmdBuffer.endRenderPass();
     
 }
-
-
-//Deferred RenderPass -- GBuffer
 void MainPass::CreateDeferFramebuffer(){
     //albedoIVs_ Image
     Vulkantool::createImageViewSampler(width_,height_,nullptr,1,1,m_gbufferformats[0],
@@ -625,6 +894,27 @@ void MainPass::CreateDeferObject(){
                       .setFlags(vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR);
 
     deferdescriptorSetLayout_ = ctx.device.createDescriptorSetLayout(DesSetLayout);
+    //Forward 
+    //Lighting ForWard DescriptorSetLayout
+    std::vector<vk::DescriptorSetLayoutBinding> bindings_forward = {
+        vk::DescriptorSetLayoutBinding(0, vk::DescriptorType::eUniformBuffer,1,vk::ShaderStageFlagBits::eFragment),
+        vk::DescriptorSetLayoutBinding(1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment),
+        vk::DescriptorSetLayoutBinding(2, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment),
+        vk::DescriptorSetLayoutBinding(3, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment),
+        vk::DescriptorSetLayoutBinding(4, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment)
+    };
+    vk::DescriptorSetLayoutCreateInfo desc_set_layout_ci_forward{};
+    desc_set_layout_ci_forward.setBindingCount(static_cast<uint32_t>(bindings_forward.size()))
+                      .setBindings(bindings_forward)
+                      .setFlags(vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR);
+    forwarddescriptorSetLayout_= Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci_forward);
+    
+    vk::PipelineLayoutCreateInfo Lightpipeline_layout_ci{};
+    Lightpipeline_layout_ci.setSetLayoutCount(1)
+                      .setPSetLayouts(&forwarddescriptorSetLayout_);
+                     
+    forwardpipelineLayout_ = Context::Instance().device.createPipelineLayout(Lightpipeline_layout_ci);
+    
     //pipelineLayout
     mesh_push_constant_ranges_ = {
         {vk::ShaderStageFlagBits::eVertex,0,sizeof(glm::mat4)},
@@ -805,6 +1095,36 @@ void MainPass::CreateDeferObject(){
         ctx.device.destroyShaderModule(shader_stage_ci.module);
     }
 
+   
+    //LightForward Renderer
+    std::vector<vk::PipelineShaderStageCreateInfo> shader_stage_cis = {
+        ctx.shaderManager->LoadShader("resources/shaders/Forward/Scenevert.spv", vk::ShaderStageFlagBits::eVertex),
+        ctx.shaderManager->LoadShader("resources/shaders/Forward/Forwardfrag.spv", vk::ShaderStageFlagBits::eFragment)
+    };
+
+    vertex_input_ci.setVertexAttributeDescriptionCount(0)
+                   .setPVertexAttributeDescriptions(nullptr)
+                   .setVertexBindingDescriptionCount(0)
+                   .setPVertexBindingDescriptions(nullptr);
+    pipeline_ci.setStages(shader_stage_cis)
+               .setPVertexInputState(&VertexInput)
+               .setPInputAssemblyState(&InputAssemb)
+               .setPViewportState(&viewport_state_defer)
+               .setPRasterizationState(&Rasterizer)
+               .setPDynamicState(&dynamicState)
+               .setPMultisampleState(&MultiSample)
+               .setPDepthStencilState(&DepthStencil)
+               .setPColorBlendState(&Blend)
+               .setLayout(forwardpipelineLayout_)
+               .setRenderPass(DeferredRenderPass_);
+    Result = ctx.device.createGraphicsPipeline(pipelineCache_, pipeline_ci);
+    forwardpipeline_= Result.value;
+
+     //10. destroy shader module
+    for(auto& shader_stage_ci : shader_stage_cis){
+        ctx.device.destroyShaderModule(shader_stage_ci.module);
+    }
+
 }
 
 void MainPass::BuildDeferCommandBuffer(){
@@ -907,7 +1227,6 @@ void MainPass::DeferdrawNodeSkybox(vk::CommandBuffer cmdBuffer , vk::PipelineLay
             DeferdrawNodeSkybox(cmdBuffer,pipelineLayout,child);
         }
 }
-
 //Static Mesh
 void MainPass::DeferRendererMesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<StaticMeshRenderData>& Rendata)
 {
@@ -927,7 +1246,6 @@ void MainPass::DeferRendererMesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<Sta
     }
 
 }
-
 void MainPass::DeferdrawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelineLayout, Node* node,std::shared_ptr<StaticMeshRenderData>& Rendata){
     auto& VulkanRhi = VulkanRhi::Instance();
     uint32_t flight_Index = VulkanRhi.getFlightCount();

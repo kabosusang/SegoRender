@@ -27,6 +27,7 @@ struct imageIndex{
 /// PBRMaterial
 class PbrMaterial{
     public:
+		enum AlphaMode{ALPHAMODE_OPAQUE, ALPHAMODE_MASK, ALPHAMODE_BLEND};
 		std::shared_ptr<Texture2D> m_base_color_texure;
 		std::shared_ptr<Texture2D> m_metallic_roughness_occlusion_texure;
 		std::shared_ptr<Texture2D> m_normal_texure;
