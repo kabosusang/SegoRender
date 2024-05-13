@@ -193,6 +193,18 @@ void Renderer::Render(Scene* scene){
     light_data->lighting_ubs = m_Lightubs_;
     VCtx.SetLightRenderData(light_data);
     
+
+
+
+
+
+
+
+
+
+
+
+    
     //Render 2D
     std::vector<std::shared_ptr<RenderData>> RenderDatas;
     auto view = scene->m_Registry.view<TransformComponent,SpriteRendererComponent>();

@@ -2,7 +2,7 @@
 #include "Core/Vulkan/VulkanContext.hpp"
 #include "Core/Base/Input.hpp" 
 #include "framework/Render/Render_data.hpp"
-
+#include "framework/Render/pass/brdf_lut_pass.hpp"
 
 namespace Sego{
 VulkanRhi* VulkanRhi::instance_ = nullptr;
@@ -36,7 +36,12 @@ VulkanRhi::VulkanRhi(uint32_t windowWidth, uint32_t windowHeight){
     dirPass_ = std::make_unique<DirShadowPass>();
     dirPass_->Init();
 
+    std::shared_ptr<BRDFLutPass> brdf_pass = std::make_shared<BRDFLutPass>();
+    brdf_pass->Init();
+    brdf_pass->Render();
+    brdf_pass->destroy();
 }
+
 void VulkanRhi::Init(std::vector<const char*>& extensions, 
 Context::GetSurfaceCallback cb, int windowWidth, int windowHeight) {
     Context::Init(extensions, cb);

@@ -10,7 +10,6 @@
 
 
 namespace Sego{
-
     struct Node{
         Node* parent;
 		std::vector<Node*> children;
@@ -26,7 +25,6 @@ namespace Sego{
     enum class RenderDataType{
         Sprite,Base,StaticMesh,Skybox,Lighting
     };
-
 
     struct RenderData{
         RenderDataType type ;
@@ -61,11 +59,10 @@ namespace Sego{
         VmaBuffer vertexBuffer_;
         VmaBuffer indexBuffer_;
         
-        glm::mat4 model_;
 
+        glm::mat4 model_;
         //push Constant
         glm::mat4 Meshmvp_;
-        
     };
 
 
@@ -106,6 +103,13 @@ namespace Sego{
 		VmaImageViewSampler directional_light_shadow_texture;
 	};
 
+
+    struct SkyLightRenderData : public RenderData{
+        VmaImageViewSampler environmentCube;
+        VmaImageViewSampler lutBrdf;
+        VmaImageViewSampler irradianceCube;
+        VmaImageViewSampler prefilteredCube;
+    };
 
 
     struct ViewProjs{

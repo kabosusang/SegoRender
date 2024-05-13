@@ -56,8 +56,6 @@ void DirShadowPass::CreatePiepline(){
     //-------------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------
-    //Sprite Renderer
-    // 0. shader prepare
      std::vector<vk::PipelineShaderStageCreateInfo> shader_stage_cis  ={
         ctx.shaderManager->LoadShader("resources/shaders/DirShadow/shadowmapvert.spv", vk::ShaderStageFlagBits::eVertex),
         ctx.shaderManager->LoadShader("resources/shaders/DirShadow/shadowmapfrag.spv", vk::ShaderStageFlagBits::eFragment)

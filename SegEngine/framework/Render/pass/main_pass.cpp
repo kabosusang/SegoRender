@@ -577,7 +577,6 @@ void MainPass::render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteR
     cmdBuffer.drawIndexed(Rendata->indexCount_,1,0,0,0);
 }
 
-
 void MainPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelineLayout, Node* node,std::shared_ptr<StaticMeshRenderData>& Rendata){
     auto& VulkanRhi = VulkanRhi::Instance();
     uint32_t flight_Index = VulkanRhi.getFlightCount();
@@ -670,7 +669,6 @@ void MainPass::drawNode_cubemap(vk::CommandBuffer cmdBuffer , vk::PipelineLayout
 		}
 }
 
-
 void MainPass::recreateframbuffer(uint32_t width,uint32_t height){
     auto& ctx = Context::Instance();
     ctx.device.waitIdle();
@@ -690,6 +688,13 @@ void MainPass::recreateframbuffer(uint32_t width,uint32_t height){
     CreateFrameBuffer();
     CreateDeferFramebuffer();
 }
+
+
+
+
+
+
+
 //Deferred RenderPass -- GBuffer
 void MainPass::DeferRender(){
     //Gbffer Pass

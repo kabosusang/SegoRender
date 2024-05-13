@@ -31,7 +31,6 @@ namespace Sego{
             : Tag(tag) {}
     };
 
-
     struct TransformComponent{
         glm::vec3 Translation = {0.0f,0.0f,0.0f};
         glm::vec3 Rotation = {0.0f,0.0f,0.0f};
@@ -153,16 +152,45 @@ namespace Sego{
 
     struct DirLightComponent{
         glm::vec3 Direction = {-0.2f,-1.0f,-0.3f};
-
         float Intensity = 1.0f;//TODO: add intensity
+        bool castshadow = true;
         
         DirLightComponent() = default;
         DirLightComponent(const DirLightComponent&) = default;
     };
     
+    struct SpoitLightComponent{
+        glm::vec3 color = glm::vec3(1.0f);
+
+        SpoitLightComponent() = default;
+        SpoitLightComponent(const SpoitLightComponent&) = default;
+    } ;
+
+    struct SkyLightComponent{
+        glm::vec3 color;
+        float m_intensity;
+        bool castshadow;
+
+        std::shared_ptr<SkyLightRenderData> skylight = nullptr;
+        uint32_t m_prefilter_mip_levels;
+        std::shared_ptr<StaticMeshRenderData> skybox_cube = nullptr;
+        std::shared_ptr<Texture2D> textureCube = nullptr;
+
+        SkyLightComponent() = default;
+        SkyLightComponent(const SkyLightComponent&) = default;
+    };
 
 
+    struct AnimationComponent{
+        
+    };
 
-
+    struct SceneRenderSettings{
+        float exposure = 4.5f; //曝光
+        float gamma = 2.2f;//伽马
+        float scaleIBLAmbient = 1.0f;
+        float debugViewInputs = 0;
+        float debugViewEquation = 0;
+    };
 
 };

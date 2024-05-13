@@ -58,7 +58,7 @@ public:
         
 
         static void transitionImageLayout(vk::Image image, vk::ImageLayout old_layout, vk::ImageLayout new_layout, vk::Format format, uint32_t mip_levels, uint32_t layers);
-private:
+public:
         //image related
         static bool hasStencilComponent(vk::Format format);
         static bool hasDepthComponent(vk::Format format);

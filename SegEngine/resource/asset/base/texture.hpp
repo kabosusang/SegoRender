@@ -36,8 +36,6 @@ public:
     }
     //TODO: Fix Copy Bugs 
     //memory address Same image_view_sampler_ = other.image_view_sampler_;
-   
-    
 };
 
 

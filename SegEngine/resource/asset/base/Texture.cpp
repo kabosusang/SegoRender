@@ -58,7 +58,7 @@ void Texture::loadKtxTexture(void* p_ktx_texture,vk::Format format){
     // clean up staging resources
     ktxTexture_Destroy(ktx_texture);
     staging_buffer.destroy();
-
+    
 }
 
 
