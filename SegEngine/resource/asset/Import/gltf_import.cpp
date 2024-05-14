@@ -273,7 +273,6 @@ namespace GltfModel{
 		bb.valid = true;
     }
 
-
 void GLTFTexture::fromglTfImage(tinygltf::Image & gltfimage, TextureSampler textureSampler)
 {	
 	unsigned char* buffer = nullptr;

@@ -11,6 +11,7 @@
 //asset
 #include "framework/Render/Render_data.hpp"
 #include "resource/asset/Texture2D.hpp"
+#include "resource/asset/CubeTexture.hpp"
 #include "resource/asset/Import/gltf_import.hpp"
 
 
@@ -161,21 +162,27 @@ namespace Sego{
     
     struct SpoitLightComponent{
         glm::vec3 color = glm::vec3(1.0f);
+        float m_intensity = 0.5f;
 
         SpoitLightComponent() = default;
         SpoitLightComponent(const SpoitLightComponent&) = default;
     } ;
 
     struct SkyLightComponent{
-        glm::vec3 color;
-        float m_intensity;
-        bool castshadow;
+        glm::vec3 color= glm::vec3(1.0f);
+        float m_intensity = 0.5f;
+        bool castshadow = true;
+
+        std::string name = "null";
+        std::string path;
+        std::shared_ptr<TextureCube> textureCube = nullptr;
 
         std::shared_ptr<SkyLightRenderData> skylight = nullptr;
-        uint32_t m_prefilter_mip_levels;
-        std::shared_ptr<StaticMeshRenderData> skybox_cube = nullptr;
-        std::shared_ptr<Texture2D> textureCube = nullptr;
-
+        bool Attach() {
+            if (textureCube == nullptr)
+                return false;
+            skylight->CreateIBLTexture();
+        }
         SkyLightComponent() = default;
         SkyLightComponent(const SkyLightComponent&) = default;
     };
@@ -183,14 +190,6 @@ namespace Sego{
 
     struct AnimationComponent{
         
-    };
-
-    struct SceneRenderSettings{
-        float exposure = 4.5f; //曝光
-        float gamma = 2.2f;//伽马
-        float scaleIBLAmbient = 1.0f;
-        float debugViewInputs = 0;
-        float debugViewEquation = 0;
     };
 
 };

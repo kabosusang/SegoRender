@@ -237,15 +237,13 @@ void BRDFLutPass::Render(){
     Vulkantool::endInstantCommands(cmdBuffer);
 
     // write to texture2d
-    std::future<void> lut_async = std::async(std::launch::async,[&](){
-        std::vector<uint8_t> image_data;
-        Vulkantool::readImagePixel(lutIv_.image(),lutsize_,lutsize_,m_format,image_data);
-        
-        std::ofstream ofs("resources/assets/engine/texture/brdflut.tex", std::ios::binary);
-		ofs.write((const char*)image_data.data(), image_data.size());
-		ofs.close();
-    });
-
+    std::vector<uint8_t> image_data;
+    Vulkantool::readImagePixel(lutIv_.image(),lutsize_,lutsize_,m_format,image_data);
+    
+    std::ofstream ofs("resources/assets/engine/texture/brdflut.tex", std::ios::binary);
+    ofs.write((const char*)image_data.data(), image_data.size());
+    ofs.close();
+   
 }
 
 

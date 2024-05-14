@@ -57,7 +57,7 @@ public:
         static void createIndexBuffer(uint32_t buffer_size, void* data, VmaBuffer& buffer);
         
 
-        static void transitionImageLayout(vk::Image image, vk::ImageLayout old_layout, vk::ImageLayout new_layout, vk::Format format, uint32_t mip_levels, uint32_t layers);
+        static void transitionImageLayout(vk::Image image, vk::ImageLayout old_layout, vk::ImageLayout new_layout, vk::Format format = vk::Format::eB8G8R8A8Sint, uint32_t mip_levels = 1, uint32_t layers = 1);
 public:
         //image related
         static bool hasStencilComponent(vk::Format format);

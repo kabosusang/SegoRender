@@ -526,7 +526,6 @@ void MainPass::render_skybox(vk::CommandBuffer cmdBuffer){
 
 }
 
-
 void MainPass::render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<StaticMeshRenderData>& Rendata){
     auto& VulkanRhi = VulkanRhi::Instance();
     
@@ -688,10 +687,6 @@ void MainPass::recreateframbuffer(uint32_t width,uint32_t height){
     CreateFrameBuffer();
     CreateDeferFramebuffer();
 }
-
-
-
-
 
 
 

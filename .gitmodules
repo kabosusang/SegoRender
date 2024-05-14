@@ -7,9 +7,6 @@
 [submodule "3rdL/tinygltf"]
 	path = 3rdL/tinygltf
 	url = https://github.com/syoyo/tinygltf
-[submodule "3rdL/cereal"]
-	path = 3rdL/cereal
-	url = https://github.com/USCiLab/cereal
 [submodule "3rdL/vma"]
 	path = 3rdL/vma
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator

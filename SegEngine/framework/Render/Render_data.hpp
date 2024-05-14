@@ -8,6 +8,8 @@
 #include "resource/asset/CubeTexture.hpp"
 #include "resource/asset/base/Light.h"
 
+#define LUTPATH "resources/assets/engine/texture/brdflut.tex"
+
 
 namespace Sego{
     struct Node{
@@ -23,7 +25,7 @@ namespace Sego{
     };
 
     enum class RenderDataType{
-        Sprite,Base,StaticMesh,Skybox,Lighting
+        Sprite,Base,StaticMesh,Skybox,Lighting,SkyLight
     };
 
     struct RenderData{
@@ -58,7 +60,6 @@ namespace Sego{
     struct MeshRenderData : public RenderData{ 
         VmaBuffer vertexBuffer_;
         VmaBuffer indexBuffer_;
-        
 
         glm::mat4 model_;
         //push Constant
@@ -105,10 +106,18 @@ namespace Sego{
 
 
     struct SkyLightRenderData : public RenderData{
-        VmaImageViewSampler environmentCube;
-        VmaImageViewSampler lutBrdf;
-        VmaImageViewSampler irradianceCube;
-        VmaImageViewSampler prefilteredCube;
+        SkyLightRenderData() { type = RenderDataType::SkyLight;m_prefilter_mip_levels = 0; }
+
+
+        VmaImageViewSampler lutBrdfIVs_;
+        VmaImageViewSampler irradianceIVs_;
+        VmaImageViewSampler prefilteredIVs_;
+        uint32_t m_prefilter_mip_levels;
+        std::shared_ptr<StaticMeshRenderData> cube_mesh = nullptr;
+        std::shared_ptr<TextureCube> textureCube = nullptr;
+
+        void CreateIBLTexture();
+
     };
 
 
@@ -117,7 +126,13 @@ namespace Sego{
         glm::mat4 proj;
     };
 
+    struct SceneRenderSettings{
+        float exposure = 4.5f; //曝光
+        float gamma = 2.2f;//伽马
+        float scaleIBLAmbient = 1.0f;
+        float debugViewInputs = 0;
+        float debugViewEquation = 0;
+    };
 
-    
 
 }

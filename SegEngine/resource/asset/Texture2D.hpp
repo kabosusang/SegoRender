@@ -9,6 +9,9 @@ public:
     ~Texture2D();
     static std::shared_ptr<Texture2D> Create(const std::string& path);
     void loadFromMemory();
+    void loadFormFileBiranry(std::string & filenamem,vk::Format format,uint32_t w,uint32_t h,vk::SamplerAddressMode sampleraddress);
+    
+    
     Texture2D(const Texture2D& other){
         width_ = other.width_;
         height_ = other.height_;
@@ -25,9 +28,6 @@ public:
         layes_ = other.layes_;
         loadFromMemory();
     }
-    
-    
-    
 };
 
 

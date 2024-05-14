@@ -25,20 +25,6 @@ void PickPass::destroy(){
 void PickPass::createDescriptorSetLayout(){
     descriptorSetLayouts_.resize(2);
 
-    vk::DescriptorSetLayoutBinding uboLayoutBinding{};
-    uboLayoutBinding.setBinding(0)
-                    .setDescriptorType(vk::DescriptorType::eUniformBuffer)
-                    .setDescriptorCount(1)
-                    .setStageFlags(vk::ShaderStageFlagBits::eVertex)
-                    .setPImmutableSamplers(nullptr);
-    vk::DescriptorSetLayoutBinding samplerLayoutBinding{};
-    samplerLayoutBinding.setBinding(1)
-                        .setDescriptorCount(1)
-                        .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-                        .setStageFlags(vk::ShaderStageFlagBits::eFragment)
-                        .setPImmutableSamplers(nullptr);
-    vk::DescriptorSetLayoutBinding bindings[] = {uboLayoutBinding, samplerLayoutBinding};
-
     vk::DescriptorSetLayoutCreateInfo desc_set_layout_ci{};
     //spritor DescriptorSetLayout
     desc_set_layout_ci.setBindingCount(0)
@@ -198,7 +184,7 @@ void PickPass::CreatePiepline(){
                .setLayout(pipelineLayouts_[0])
                .setRenderPass(renderPass_);
     
-    auto Result = ctx.device.createGraphicsPipeline(nullptr, pipeline_ci);
+    auto Result = ctx.device.createGraphicsPipeline(pipelineCache_, pipeline_ci);
     pipelines_[0] = Result.value;
     
     //10. destroy shader module
@@ -255,7 +241,7 @@ void PickPass::CreatePiepline(){
                .setLayout(pipelineLayouts_[1])
                .setRenderPass(renderPass_);
 
-    Result = ctx.device.createGraphicsPipeline(nullptr, pipeline_ci);
+    Result = ctx.device.createGraphicsPipeline(pipelineCache_, pipeline_ci);
     pipelines_[1] = Result.value;
 
     //10. destroy shader module
