@@ -25,19 +25,22 @@ struct imageIndex{
 
 
 /// PBRMaterial
-class PbrMaterial{
-    public:
-		enum AlphaMode{ALPHAMODE_OPAQUE, ALPHAMODE_MASK, ALPHAMODE_BLEND};
-		std::shared_ptr<Texture2D> m_base_color_texure;
-		std::shared_ptr<Texture2D> m_metallic_roughness_occlusion_texure;
-		std::shared_ptr<Texture2D> m_normal_texure;
-		std::shared_ptr<Texture2D> m_emissive_texure;
-
-		glm::vec4 m_base_color_factor = glm::vec4(1.0f);
-		glm::vec4 m_emissive_factor = glm::vec4(0.0f);
-		float m_metallic_factor = 1.0f;
-		float m_roughness_factor = 1.0f;
-		bool m_contains_occlusion_channel = false;
+struct alignas(16) ShaderMaterial {
+	glm::vec4 baseColorFactor;
+	glm::vec4 emissiveFactor;
+	glm::vec4 diffuseFactor;
+	glm::vec4 specularFactor;
+	float workflow;
+	int colorTextureSet;
+	int PhysicalDescriptorTextureSet;
+	int normalTextureSet;
+	int occlusionTextureSet;
+	int emissiveTextureSet;
+	float metallicFactor;
+	float roughnessFactor;
+	float alphaMask;
+	float alphaMaskCutoff;
+	float emissiveStrength;
 };
 
 

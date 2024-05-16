@@ -46,8 +46,6 @@ namespace Sego{
         inline VmaBuffer getCurrentUniformBuffer() { return uniformBuffers_[currentFrame_];}
         //Render Output Function
         void setClearColor(const glm::vec4& color);
-        void setProjection(const glm::mat4& projection);
-        void setView(const glm::mat4& view);
 
         void SetDepthBias(float Constant,float Slope){
             dirPass_->SetBias(Constant,Slope);

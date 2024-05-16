@@ -7,9 +7,9 @@
 #include "resource/asset/Texture2D.hpp"
 #include "resource/asset/CubeTexture.hpp"
 #include "resource/asset/base/Light.h"
+#include "resource/asset/GLTFModel.hpp"
 
 #define LUTPATH "resources/assets/engine/texture/brdflut.tex"
-
 
 namespace Sego{
     struct Node{
@@ -94,6 +94,19 @@ namespace Sego{
          }
     };
 
+    struct PbrMeshRenderData : public MeshRenderData{
+        PbrMeshRenderData() { type = RenderDataType::StaticMesh; }
+
+        std::shared_ptr<GltfModel::Model> model = nullptr;
+        
+        void destory() {
+           model->destory();
+        }
+        uint32_t EntityID = -1;
+    };
+
+
+
     struct LightingRenderData : public RenderData
 	{
 		LightingRenderData() { type = RenderDataType::Lighting; }
@@ -129,10 +142,11 @@ namespace Sego{
     struct SceneRenderSettings{
         float exposure = 4.5f; //曝光
         float gamma = 2.2f;//伽马
-        float scaleIBLAmbient = 1.0f;
         float debugViewInputs = 0;
         float debugViewEquation = 0;
     };
 
+    
 
+    extern SceneRenderSettings SceneRenderData;
 }

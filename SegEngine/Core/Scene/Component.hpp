@@ -162,7 +162,7 @@ namespace Sego{
     
     struct SpoitLightComponent{
         glm::vec3 color = glm::vec3(1.0f);
-        float m_intensity = 0.5f;
+        float Intensity = 0.5f;
 
         SpoitLightComponent() = default;
         SpoitLightComponent(const SpoitLightComponent&) = default;
@@ -170,7 +170,7 @@ namespace Sego{
 
     struct SkyLightComponent{
         glm::vec3 color= glm::vec3(1.0f);
-        float m_intensity = 0.5f;
+        float Intensity = 0.5f;
         bool castshadow = true;
 
         std::string name = "null";
@@ -187,9 +187,16 @@ namespace Sego{
         SkyLightComponent(const SkyLightComponent&) = default;
     };
 
+    struct MaterialComponent{
+        
+
+    };
+
 
     struct AnimationComponent{
-        
+        int32_t animationIndex = 0;
+        float animationTimer = 0.0f;
+	    bool animate = true;
     };
 
 };

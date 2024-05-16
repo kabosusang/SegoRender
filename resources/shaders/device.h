@@ -38,7 +38,35 @@ struct CircleOutput{
 	float Fade;
 };
 
+struct ShaderMaterial {
+	vec4 baseColorFactor;
+	vec4 emissiveFactor;
+	vec4 diffuseFactor;
+	vec4 specularFactor;
+	float workflow;
+	int baseColorTextureSet;
+	int physicalDescriptorTextureSet;
+	int normalTextureSet;	
+	int occlusionTextureSet;
+	int emissiveTextureSet;
+	float metallicFactor;	
+	float roughnessFactor;	
+	float alphaMask;	
+	float alphaMaskCutoff;
+	float emissiveStrength;
+};
 
+enum PBRWorkflows{ PBR_WORKFLOW_METALLIC_ROUGHNESS = 0, PBR_WORKFLOW_SPECULAR_GLOSINESS = 1 };
+
+struct MaterialInfo{
+	vec3 position;
+	vec3 normal;
+	vec4 base_color;
+	vec4 emissive_color;
+	float metallic;
+	float roughness;
+	float occlusion;
+};
 
 
 #endif

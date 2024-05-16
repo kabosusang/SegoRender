@@ -5,7 +5,7 @@
 #include "framework/Render/pass/filter_cube_pass.hpp"
 
 namespace Sego{
-
+    SceneRenderSettings SceneRenderData;
 
     void SkyLightRenderData::CreateIBLTexture()
     {

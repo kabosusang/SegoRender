@@ -62,6 +62,9 @@ void Renderer::Init(){
         VMA_MEMORY_USAGE_CPU_TO_GPU, m_Lightubs_[i]);
     }
 
+    
+
+
 }
 
 void Renderer::BeginScene(){
@@ -234,14 +237,6 @@ void Renderer::Render(){
     auto& VCtx =  VulkanRhi::Instance();
     VCtx.render();
 }
-
-
-
-
-
-
-
-
 
 
 

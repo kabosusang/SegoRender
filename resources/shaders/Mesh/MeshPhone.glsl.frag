@@ -15,7 +15,6 @@ struct VS_OUT{
 
 layout(location = 0) in VS_OUT fs_in;
 
-
 layout(location = 0) out vec4 outColor;
 
 // Uniforms (push_constant)
