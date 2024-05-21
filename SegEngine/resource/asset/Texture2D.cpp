@@ -11,28 +11,25 @@ void Texture2D::loadFromMemory(){
     minfilter_,magfilter_,addressmode_u,image_view_sampler_);
 }
 
-void Texture2D::loadFormFileBiranry(std::string & file_path,vk::Format format,
+std::shared_ptr<Texture2D> Texture2D::loadFormFileBiranry(std::string & file_path,vk::Format format,
 uint32_t w,uint32_t h,vk::SamplerAddressMode sampleraddress)
 {
-    format_ = format;
-    width_ = w;
-    height_ = h;
-    addressmode_u = sampleraddress;
-    
-    std::ifstream file(file_path, std::ios::binary | std::ios::ate);
-    if (!file.is_open()) {
-        SG_CORE_ERROR("Could not open file: {}",file_path);
-    }
-    // Get the size of the file
-    std::streamsize file_size = file.tellg();
-    file.seekg(0);
+    std::shared_ptr<Texture2D> texture = std::make_shared<Texture2D>();
+    texture->format_ = format;
+    texture->width_ = w;
+    texture->height_ = h;
+    texture->addressmode_u = sampleraddress;
+    std::ifstream ifs(file_path, std::ios::binary);
+    ifs.seekg(0, std::ios::end);
+    size_t file_size = ifs.tellg();
+    ifs.seekg(0, std::ios::beg);
 
-    // Reserve space for the vector
-    image_data_.reserve(file_size);
+    texture->image_data_.resize(file_size);
+    ifs.read((char*)texture->image_data_.data(), file_size);
+    ifs.close();
 
-    // Read the file into the vector
-    image_data_.insert(image_data_.end(), std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
-    loadFromMemory();
+    texture->loadFromMemory();
+    return texture;
 }
 
 Texture2D::~Texture2D()
@@ -40,7 +37,7 @@ Texture2D::~Texture2D()
     image_view_sampler_.destroy();
 }
 
-std::shared_ptr<Texture2D> Texture2D::Create(const std::string &path)
+std::shared_ptr<Texture2D> Texture2D::Create(const std::string &path,vk::Format format)
 {
     std::shared_ptr<Texture2D> texture = std::make_shared<Texture2D>();
     int tex_width,tex_height,tex_channels;
@@ -52,6 +49,7 @@ std::shared_ptr<Texture2D> Texture2D::Create(const std::string &path)
     texture->width_ = tex_width;
     texture->height_ = tex_height;
     texture->image_data_.resize(tex_width*tex_height*4);
+    texture->format_ = format;
     memcpy(texture->image_data_.data(),pixels,tex_width*tex_height*4);
     stbi_image_free(pixels);
     texture->loadFromMemory();

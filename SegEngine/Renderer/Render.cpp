@@ -26,8 +26,10 @@ void Renderer::BeginScene(const Camera& camera, const glm::mat4& transform){
 
 void Renderer::BeginScene(const EditorCamera &camera){
     auto& Vctx = VulkanRhi::Instance();
-
+    m_Camenear = camera.GetCmaeraNearClip();
+    m_Camefar = camera.GetCmaeraFarClip();
     m_CameraPos = camera.GetPosition();
+    m_CameraDir = camera.GetDirPoint();
     glm::mat4 view = camera.GetViewMatrix();
     glm::mat4 proj = camera.GetProjectionMatrix();
 
@@ -35,37 +37,31 @@ void Renderer::BeginScene(const EditorCamera &camera){
     Vctx.m_ViewMatrix = view;
     Vctx.m_ProjectionMatrix = proj;
     m_ViewProj = proj * view;
-
-    std::shared_ptr<SkyboxRenderData> m_skybox = std::make_shared<SkyboxRenderData>();
-   
-    if (camera.m_UseSkybox){
-        skybox_->Meshmvp_ = proj * glm::mat4(glm::mat3(view));
-        m_skybox = skybox_;
-    }else{
-        m_skybox.reset();
-    }
-    m_CameraFOV = camera.GetFOV();
-    Vctx.SetSkyboxRenderData(m_skybox);
+    SkyboxMvp_ = proj * glm::mat4(glm::mat3(view));
+    //Vctx.SetSkyboxRenderData(m_skybox);
 }
 
 void Renderer::Init(){
     auto& Vctx = VulkanRhi::Instance();
     uint32_t maxFlightCount_ = Vctx.getMaxFlightCount();
-    skybox_ = std::make_shared<SkyboxRenderData>();
-    skybox_ = std::static_pointer_cast<SkyboxRenderData>(GlTFImporter::LoadglTFFile("resources/Settings/skybox/cube.gltf"));
 
     //lightubs
-    vk::DeviceSize bufferSize = sizeof(LightObj);
+    vk::DeviceSize bufferSize = sizeof(LightingUBO);
     m_Lightubs_.resize(maxFlightCount_);
     for(int i = 0; i < maxFlightCount_; ++i){
         Vulkantool::createBuffer(bufferSize,vk::BufferUsageFlagBits::eUniformBuffer,
         VMA_MEMORY_USAGE_CPU_TO_GPU, m_Lightubs_[i]);
     }
 
-    
-
-
 }
+
+void Renderer::destory(){
+    for (auto& buffer : m_Lightubs_){
+        buffer.destroy();
+    }
+}
+
+
 
 void Renderer::BeginScene(){
 }
@@ -155,82 +151,236 @@ void Renderer::DrawCircle(const glm::mat4 &transform, const glm::vec4 &color, fl
 
 void Renderer::Render(Scene* scene){
     auto& VCtx =  VulkanRhi::Instance();
+    // set render datas
+    const VmaImageViewSampler& default_texture_2d = VCtx.defaultTexture->image_view_sampler_;
+    std::shared_ptr<LightingRenderData> lighting_render_data = std::make_shared<LightingRenderData>();
+    lighting_render_data->camera_view_proj = m_ViewProj;
+    lighting_render_data->brdf_lut_texture = default_texture_2d;
+    lighting_render_data->irradiance_texture = default_texture_2d;
+    lighting_render_data->prefilter_texture =default_texture_2d;
+    lighting_render_data->directional_light_shadow_texture = VCtx.getDirShadowMap();
+    lighting_render_data->point_light_shadow_textures.resize(MAX_POINT_LIGHT_NUM);
+    lighting_render_data->spot_light_shadow_textures.resize(MAX_SPOT_LIGHT_NUM);
 
-    //Lighting
-    LightObj light;
-    std::shared_ptr<LightingRenderData> light_data = std::make_shared<LightingRenderData>();
-    light.lightSetting.UseLight = 0; //No Light
-    light.lightSetting.lightCount = 0;
-    light.dirLight.direction = glm::vec3(0.0f,0.0f,0.0f);
-    light.dirLight.viewPos = m_CameraPos;
-    //shadowmap
-    glm::mat4 lightSpaceMatrix = glm::mat4(1.0f);
-    //shadow
-    shadowConstans shadowubos;
+    for (uint32_t i = 0; i < MAX_POINT_LIGHT_NUM; ++i)
+    {
+        lighting_render_data->point_light_shadow_textures[i] = default_texture_2d;
+    }
+    for (uint32_t i = 0; i < MAX_SPOT_LIGHT_NUM; ++i)
+    {
+        lighting_render_data->spot_light_shadow_textures[i] = default_texture_2d;
+    }
+    //skybox
+    std::shared_ptr<SkyboxRenderData> skybox_render_data = nullptr;
+
+    // shadow create infos
+    ShadowCascadeCreateInfo shadow_cascade_ci{};
+    shadow_cascade_ci.camera_near = m_Camenear;
+    shadow_cascade_ci.camera_far = m_Camefar;
+    shadow_cascade_ci.inv_camera_view_proj = glm::inverse(m_ViewProj);
+
+    std::vector<ShadowCubeCreateInfo> shadow_cube_cis;
+	std::vector<ShadowFrustumCreateInfo> shadow_frustum_cis;
+
+    // set lighting uniform buffer object
+    LightingUBO lighting_ubo;
+    lighting_ubo.camera_pos = m_CameraPos;
+    lighting_ubo.exposure = 4.5f; // TODO
+    lighting_ubo.camera_view = VCtx.m_ViewMatrix;
+    lighting_ubo.inv_camera_view_proj = glm::inverse(m_ViewProj);
+    lighting_ubo.has_sky_light = lighting_ubo.has_directional_light = false;
+    lighting_ubo.point_light_num = lighting_ubo.spot_light_num = 0;
+
     auto DirLightview = scene->m_Registry.view<TransformComponent,DirLightComponent>();
     for (auto entity : DirLightview){
         auto [transform,dirLight] = DirLightview.get<TransformComponent,DirLightComponent>(entity);
-        light.dirLight.direction = dirLight.Direction;
-        light.lightSetting.UseLight = 1; //Use Light
-        light.lightSetting.lightCount = 1;
+       
+        // set lighting uniform buffer object
+        lighting_ubo.has_directional_light = true;
+        lighting_ubo.directional_light.direction = dirLight.Direction;
+        lighting_ubo.directional_light.color = dirLight.Color;
+        lighting_ubo.directional_light.cast_shadow = dirLight.castshadow;
 
-        //shadow
-        float near_plane = 0.1f, far_plane = 1000.0f;
-        glm::vec3 lightPos = -dirLight.Direction * 100.0f;
-        glm::vec3 lightTarget = glm::vec3(0.0f);
-        glm::mat4 lightProjection = glm::perspective(glm::radians(m_CameraFOV), 1.0f, near_plane, far_plane);
-        glm::mat4 lightView = glm::lookAt(lightPos, lightTarget, glm::vec3(0.0f, 1.0f, 0.0f));
-        lightProjection[1][1] *= -1;
-        lightSpaceMatrix = lightProjection * lightView;
-
-        //Bias
-        light.dirLight.lightSpaceMatrix = lightSpaceMatrix;
-        shadowubos.LightSpaceMatrix = lightSpaceMatrix;
+        shadow_cascade_ci.light_dir = dirLight.Direction;
+        shadow_cascade_ci.light_cascade_frustum_near = dirLight.m_cascade_frustum_near;
     }
-    light_data->directional_light_shadow_texture = VCtx.getDirShadowMap();
+    // get sky light component
+    auto SkyLightview = scene->m_Registry.view<TransformComponent,SkyLightComponent>();
+    for (auto entity : SkyLightview){
+        auto [transform,skyLight] = SkyLightview.get<TransformComponent,SkyLightComponent>(entity);
 
-    VCtx.updateShadowConstans(shadowubos);
-    //update light uniform buffers
-    VmaBuffer ubs = m_Lightubs_[VCtx.getFlightCount()];
-    Vulkantool::updateBuffer(ubs,&light,sizeof(LightObj));
-    light_data->lighting_ubs = m_Lightubs_;
-    VCtx.SetLightRenderData(light_data);
-    
+        // set lighting render data
+        if (skyLight.textureCube == nullptr) continue;
+        lighting_render_data->brdf_lut_texture = skyLight.skylight->lutBrdfIVs_;
+        lighting_render_data->irradiance_texture = skyLight.skylight->irradianceIVs_;
+        lighting_render_data->prefilter_texture = skyLight.skylight->prefilteredIVs_;
 
+        // set skybox render data
+        skybox_render_data = std::make_shared<SkyboxRenderData>();
+        std::shared_ptr<StaticMeshRenderData> skybox_cube_mesh = skyLight.skylight->cube_mesh;
+        skybox_render_data->vertexBuffer_ = skybox_cube_mesh->vertexBuffer_;
+        skybox_render_data->indexBuffer_ = skybox_cube_mesh->indexBuffer_;
+        skybox_render_data->Meshmvp_ = SkyboxMvp_;
+        skybox_render_data->env_texture = skyLight.skylight->prefilteredIVs_;
 
+        // set lighting uniform buffer object
+        lighting_ubo.has_sky_light = true;
+        lighting_ubo.sky_light.color = skyLight.Color;
+        lighting_ubo.sky_light.prefilter_mip_levels = skyLight.skylight->m_prefilter_mip_levels;
+    }
+    //PointLight Component
+    auto PointtLightview = scene->m_Registry.view<TransformComponent,PointLightComponent>();
+    for (auto entity : PointtLightview){
+        auto [transform,pointLight] = PointtLightview.get<TransformComponent,PointLightComponent>(entity);
 
+        // set lighting uniform buffer object
+        PointLight& point_light = lighting_ubo.point_lights[lighting_ubo.point_light_num++];
+        point_light.position = transform.Translation;
+        point_light.color = pointLight.Color;
+        point_light.radius = pointLight.m_radius;
+        point_light.linear_attenuation = pointLight.m_linear_attenuation;
+        point_light.quadratic_attenuation = pointLight.m_quadratic_attenuation;
+        point_light.cast_shadow = pointLight.castshadow;
 
+        ShadowCubeCreateInfo shadow_cube_ci;
+        shadow_cube_ci.light_pos = transform.Translation;
+        shadow_cube_ci.light_far = pointLight.m_radius;
+        shadow_cube_ci.light_near = m_Camenear;
+        shadow_cube_cis.push_back(shadow_cube_ci);
+    }
+    //Spot Light Component
+    auto SpotLightview = scene->m_Registry.view<TransformComponent,SpoitLightComponent>();
+    for (auto entity : SpotLightview){
+        auto [transform,spotlight] = SpotLightview.get<TransformComponent,SpoitLightComponent>(entity);
+        // set lighting uniform buffer object
+        SpotLight& spot_light = lighting_ubo.spot_lights[lighting_ubo.spot_light_num++];
+        PointLight& point_light = spot_light._pl;
+        point_light.position = transform.Translation;
+        point_light.color = spotlight.Color;
+        point_light.radius = spotlight.m_radius;
+        point_light.linear_attenuation = spotlight.m_linear_attenuation;
+        point_light.quadratic_attenuation = spotlight.m_quadratic_attenuation;
+        point_light.cast_shadow = spotlight.castshadow;
+        point_light.padding0 = std::cos(glm::radians(spotlight.m_inner_cone_angle));
+        point_light.padding1 = std::cos(glm::radians(spotlight.m_outer_cone_angle));
 
+        spot_light.direction = spotlight.Direction;
+        ShadowFrustumCreateInfo shadow_frustum_ci;
+        shadow_frustum_ci.light_pos =  transform.Translation;
+        shadow_frustum_ci.light_dir = spot_light.direction;
+        shadow_frustum_ci.light_angle = spotlight.m_outer_cone_angle;
+        shadow_frustum_ci.light_far = spotlight.m_radius;
+        shadow_frustum_ci.light_near = m_Camenear;
+        shadow_frustum_cis.push_back(shadow_frustum_ci);
+    }
 
-
-
-
-
-
-    
     //Render 2D
     std::vector<std::shared_ptr<RenderData>> RenderDatas;
+   
     auto view = scene->m_Registry.view<TransformComponent,SpriteRendererComponent>();
     for(auto entity : view){
         auto [transform,spriteRenderer] = view.get<TransformComponent,SpriteRendererComponent>(entity);
         DrawSprite(transform.GetTransform(),spriteRenderer,(int)entity,RenderDatas);
     }
-
     //Render 3D Static Mesh
-    auto view2 = scene->m_Registry.view<TransformComponent,MeshComponent>();
+    
+    auto view2 = scene->m_Registry.view<TransformComponent,MeshComponent,MaterialComponent>();
     for(auto entity : view2){
-        auto [transform,meshRenderer] = view2.get<TransformComponent,MeshComponent>(entity);
-        if (meshRenderer.MeshData == nullptr)
+        auto [transform,meshRenderer,material] = view2.get<TransformComponent,MeshComponent,MaterialComponent>(entity);
+        std::shared_ptr<PbrMeshRenderData> MesData = nullptr;
+        if (meshRenderer.model == nullptr)
             continue;
-        meshRenderer.MeshData->model_ = transform.GetTransform();
-        meshRenderer.MeshData->Meshmvp_ = m_ViewProj * meshRenderer.MeshData->model_;
-        meshRenderer.MeshData->EntityID = (int)entity + 1;
-        RenderDatas.push_back(meshRenderer.MeshData);
+        MesData = std::make_shared<PbrMeshRenderData>();
+        MesData->model_ = transform.GetTransform();
+        MesData->EntityID = (int)entity + 1;
+        MesData->model = meshRenderer.model;
+
+        //Material
+        
+        MesData->MaterialBuffer = material.shaderMaterialBuffer;
+        RenderDatas.push_back(MesData);
     }
 
+
+    // directional light shadow pass: n mesh datas
+    if (lighting_ubo.has_directional_light)
+    {
+        VCtx.dirPass_->updateCascades(shadow_cascade_ci);
+        
+        for (uint32_t i = 0; i < SHADOW_CASCADE_NUM; ++i)
+        {
+            lighting_ubo.directional_light.cascade_splits[i] = VCtx.dirPass_->m_cascade_splits[i];
+            lighting_ubo.directional_light.cascade_view_projs[i] = VCtx.dirPass_->m_shadow_cascade_ubo.cascade_view_projs[i];
+        }
+
+        if (lighting_ubo.directional_light.cast_shadow)
+        {
+            VCtx.dirPass_->setRenderDatas(RenderDatas);
+        }
+    }
+
+    // point light shadow pass: n mesh datas
+    if (lighting_ubo.point_light_num > 0)
+    {
+         VCtx.pointPass_->updateCubes(shadow_cube_cis);
+        const auto& point_light_shadow_textures = VCtx.pointPass_->getShadowImageViewSamplers();
+        for (size_t i = 0; i < point_light_shadow_textures.size(); ++i)
+        {
+            lighting_render_data->point_light_shadow_textures[i] = point_light_shadow_textures[i];
+        }
+
+        bool cast_shadow = false;
+        for (uint32_t i = 0; i < lighting_ubo.point_light_num; ++i)
+        {
+            if (lighting_ubo.point_lights[i].cast_shadow)
+            {
+                cast_shadow = true;
+                break;
+            }
+        }
+
+        if (cast_shadow)
+        {
+            VCtx.pointPass_->setRenderDatas(RenderDatas);
+        }
+    }
+
+    // spot light shadow pass: n mesh datas
+    if (lighting_ubo.spot_light_num > 0)
+    {
+        VCtx.spotPass_->updateFrustums(shadow_frustum_cis);
+        const auto& spot_light_shadow_textures = VCtx.spotPass_->getShadowImageViewSamplers();
+        for (size_t i = 0; i < spot_light_shadow_textures.size(); ++i)
+        {
+            lighting_render_data->spot_light_shadow_textures[i] = spot_light_shadow_textures[i];
+        }
+
+        bool cast_shadow = false;
+        for (uint32_t i = 0; i < lighting_ubo.spot_light_num; ++i)
+        {
+            lighting_ubo.spot_lights[i].view_proj = VCtx.spotPass_->m_light_view_projs[i];
+            if (lighting_ubo.spot_lights[i]._pl.cast_shadow)
+            {
+                cast_shadow = true;
+            }
+        }
+
+        if (cast_shadow)
+        {
+            VCtx.spotPass_->setRenderDatas(RenderDatas);
+        }
+    }
+
+    // update lighting uniform buffers
+    VmaBuffer uniform_buffer = m_Lightubs_[VCtx.getFlightCount()];
+    Vulkantool::updateBuffer(uniform_buffer, (void*)&lighting_ubo, sizeof(LightingUBO));
+    lighting_render_data->lighting_ubs = m_Lightubs_;
+
     //Push Renderer
-    
+    VCtx.SetLightRenderData(lighting_render_data);
+    VCtx.SetSkyboxRenderData(skybox_render_data);
     VCtx.SetRenderDatas(RenderDatas);
+
 }
 
 void Renderer::Render(){

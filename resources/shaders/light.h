@@ -15,6 +15,9 @@ using uint = unsigned int;
 #define MAX_SPOT_LIGHT_NUM 8
 #define PCF_DELTA_SCALE 0.75
 #define PCF_SAMPLE_RANGE 1
+#define SHADOW_FACE_NUM 6
+#define MIN_SHADOW_ALPHA 0.001
+
 
 #define DIRECTIONAL_LIGHT_SHADOW_BIAS 0.002
 #define SPOT_LIGHT_SHADOW_BIAS 0.001
@@ -74,7 +77,15 @@ struct LightingUBO
     int spot_light_num;
 };
 
+struct ShadowCascadeUBO
+{
+    mat4 cascade_view_projs[SHADOW_CASCADE_NUM];
+};
 
+struct ShadowCubeUBO
+{
+    mat4 face_view_projs[SHADOW_FACE_NUM];
+};
 
 
 
@@ -108,9 +119,6 @@ struct LightSpace{
 struct shadowConstans{
     mat4 LightSpaceMatrix;
 };
-
-
-
 
 
 #endif

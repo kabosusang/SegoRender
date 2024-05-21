@@ -56,8 +56,6 @@ struct ShaderMaterial {
 	float emissiveStrength;
 };
 
-enum PBRWorkflows{ PBR_WORKFLOW_METALLIC_ROUGHNESS = 0, PBR_WORKFLOW_SPECULAR_GLOSINESS = 1 };
-
 struct MaterialInfo{
 	vec3 position;
 	vec3 normal;
@@ -67,6 +65,7 @@ struct MaterialInfo{
 	float roughness;
 	float occlusion;
 };
+
 
 
 #endif

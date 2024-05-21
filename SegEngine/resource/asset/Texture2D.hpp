@@ -7,9 +7,9 @@ class Texture2D : public Texture{
 public:
     Texture2D() = default;
     ~Texture2D();
-    static std::shared_ptr<Texture2D> Create(const std::string& path);
+    static std::shared_ptr<Texture2D> Create(const std::string& path,vk::Format format = vk::Format::eR8G8B8A8Unorm);
     void loadFromMemory();
-    void loadFormFileBiranry(std::string & filenamem,vk::Format format,uint32_t w,uint32_t h,vk::SamplerAddressMode sampleraddress);
+    static std::shared_ptr<Texture2D> loadFormFileBiranry(std::string & filenamem,vk::Format format,uint32_t w,uint32_t h,vk::SamplerAddressMode sampleraddress);
     
     
     Texture2D(const Texture2D& other){

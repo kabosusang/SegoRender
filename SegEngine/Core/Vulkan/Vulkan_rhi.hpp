@@ -5,6 +5,8 @@
 #include "framework/Render/pass/ui_pass.hpp"
 #include "framework/Render/pass/pick_pass.hpp"
 #include "framework/Render/pass/Dirshadow_pass.hpp"
+#include "framework/Render/pass/PointShadow_pass.hpp"
+#include "framework/Render/pass/SpotShadow_pass.hpp"
 
 //asste
 #include "resource/asset/base/Light.h"
@@ -47,11 +49,7 @@ namespace Sego{
         //Render Output Function
         void setClearColor(const glm::vec4& color);
 
-        void SetDepthBias(float Constant,float Slope){
-            dirPass_->SetBias(Constant,Slope);
-        }
         void SetRenderDatas(std::vector<std::shared_ptr<RenderData>>& render_Datas){
-            dirPass_->setRenderDatas(render_Datas);
             pickPass_->setRenderDatas(render_Datas);
             mainPass_->setRenderDatas(render_Datas);
         }
@@ -64,10 +62,11 @@ namespace Sego{
             mainPass_->setLightRenderData(light);
         }
 
-        void updateShadowConstans(shadowConstans& shadowubos){
-            dirPass_->updateShadowConstans(shadowubos);
-        }
-     
+
+        //Shadow Cascades
+        std::shared_ptr<class DirShadowPass> dirPass_;
+        std::shared_ptr<class PointShadowPass> pointPass_;
+        std::shared_ptr<class SpotShadowPass>  spotPass_;
     public:
         std::shared_ptr<Texture2D> defaultTexture;
         std::shared_ptr<TextureCube> defaultSkybox;
@@ -101,10 +100,10 @@ namespace Sego{
         void loadExtensionFuncs();
         void createUniformBuffers();
         //Test RenderPass
-        std::unique_ptr<class UiPass> uiPass_;
-        std::unique_ptr<class MainPass> mainPass_;
-        std::unique_ptr<class PickPass> pickPass_;
-        std::unique_ptr<class DirShadowPass> dirPass_;
+        std::shared_ptr<class UiPass> uiPass_;
+        std::shared_ptr<class MainPass> mainPass_;
+        std::shared_ptr<class PickPass> pickPass_;
+        std::vector<std::shared_ptr<RenderPass>> m_render_passes;
 
         //All Render mvp UniformBuffer
         std::vector<VmaBuffer> uniformBuffers_; //uniform buffer view projection lightMatrix

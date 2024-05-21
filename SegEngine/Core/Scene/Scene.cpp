@@ -321,6 +321,29 @@ void Scene::OnComponentAdded<DirLightComponent>(Entity entity, DirLightComponent
 
 }
 
+template<>
+void Scene::OnComponentAdded<MaterialComponent>(Entity entity, MaterialComponent& component){
+
+}
+template<>
+void Scene::OnComponentAdded<SpoitLightComponent>(Entity entity, SpoitLightComponent& component){
+
+}
+
+template<>
+void Scene::OnComponentAdded<PointLightComponent>(Entity entity, PointLightComponent& component){
+
+}
+
+template<>
+void Scene::OnComponentAdded<SkyLightComponent>(Entity entity, SkyLightComponent& component){
+   
+}
+
+template<>
+void Scene::OnComponentAdded<AnimationComponent>(Entity entity, AnimationComponent& component){
+
+}
 
 
 }

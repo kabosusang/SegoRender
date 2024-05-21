@@ -52,6 +52,7 @@ void VulkanContext::SwapBuffers(){
 
 VulkanContext::~VulkanContext(){
     VulkanRhi::Instance().destory();
+    render_->destory();
 }
 
 bool VulkanContext::RebuildSwapChain(){

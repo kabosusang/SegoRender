@@ -134,6 +134,21 @@ void Vulkantool::copyBuffer(vk::Buffer src_buffer, vk::Buffer dst_buffer, vk::De
 }
 
 
+void Vulkantool::createMaterialBuffer(uint32_t buffer_size, void* data, VmaBuffer& vertex_buffer){
+    VmaBuffer staging_buffer;
+    createBuffer(buffer_size, vk::BufferUsageFlagBits::eTransferSrc , 
+    VMA_MEMORY_USAGE_AUTO_PREFER_HOST, staging_buffer);
+    updateBuffer(staging_buffer, data, static_cast<size_t>(buffer_size));
+
+    createBuffer(buffer_size, 
+    vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer,VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,vertex_buffer);
+
+    copyBuffer(staging_buffer.buffer, vertex_buffer.buffer, buffer_size);
+	vmaDestroyBuffer(Context::Instance().getAllocator(), staging_buffer.buffer, staging_buffer.allocation);
+}
+
+
+
 void Vulkantool::createVertexBuffer(uint32_t buffer_size, void* data, VmaBuffer& vertex_buffer){
     VmaBuffer staging_buffer;
     createBuffer(buffer_size, vk::BufferUsageFlagBits::eTransferSrc, 

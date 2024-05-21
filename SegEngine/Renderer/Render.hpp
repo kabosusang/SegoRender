@@ -4,20 +4,13 @@
 #include "framework/Render/Render_data.hpp"
 #include "Core/Scene/Component.hpp"
 
-struct RenderConstants{
-    float BiasConstant;
-    float BiasSlope;
-};
-
-
 namespace Sego{
 class Scene;
-
 
 class Renderer{
 public:
     void Init();
-
+    void destory();
     void BeginScene(const Camera& camera, const glm::mat4& transform);
     void BeginScene(const EditorCamera& camera);
     void BeginScene();
@@ -35,21 +28,19 @@ public:
     void SetClearColor(const glm::vec4& color);
     void resizeframbuffer(uint32_t w,uint32_t h);
     vk::ImageView GetColorImageView();
-   
     uint32_t ReadPixel(uint32_t x, uint32_t y);
 
 private:
     glm::vec3 m_CameraPos;
+    glm::vec3 m_CameraDir;
     glm::mat4 m_ViewProj;
     float m_CameraFOV = 45.0f;
-    //Setting
-    RenderConstants renderConstants_;
+    float m_Camenear;
+    float m_Camefar;
 
-    //Uniform 
+    //Uniform
     std::vector<VmaBuffer> m_Lightubs_;
-    
-
-    std::shared_ptr<SkyboxRenderData> skybox_ = nullptr;
+    glm::mat4 SkyboxMvp_;
 };
 
 

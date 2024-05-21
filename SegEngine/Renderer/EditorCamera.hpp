@@ -20,19 +20,21 @@ namespace Sego{
 		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
         const glm::mat4& GetProjectionMatrix() const { return m_Projection;}
 		const float GetFOV() const { return m_FOV; }
+		
+		const float GetCmaeraNearClip() const { return m_NearClip; }
+		const float GetCmaeraFarClip() const { return m_FarClip; }
+		
 		glm::mat4 GetViewProjection() const { return m_Projection * m_ViewMatrix; }
 
 		glm::vec3 GetUpDirection() const;
 		glm::vec3 GetRightDirection() const;
 		glm::vec3 GetForwardDirection() const;
 		const glm::vec3& GetPosition() const { return m_Position; }
+		const glm::vec3& GetDirPoint() const { return m_FocalPoint;}
 		glm::quat GetOrientation() const;
 
 		float GetPitch() const { return m_Pitch; }
 		float GetYaw() const { return m_Yaw; }
-
-		void UseSkybox() { m_UseSkybox = !m_UseSkybox; }
-		bool m_UseSkybox = false;
 
 	private:
 		void UpdateProjection();
@@ -59,6 +61,9 @@ namespace Sego{
 
 		float m_Distance = 10.0f;
 		float m_Pitch = 0.0f, m_Yaw = 0.0f;
+
+		//post
+		float m_exposure = 4.5f;
 
 		float m_ViewportWidth = 1280, m_ViewportHeight = 720;
 	};

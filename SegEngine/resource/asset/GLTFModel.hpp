@@ -2,6 +2,7 @@
 #include "pch.h"
 #include "tiny_gltf.h"
 #include "core/Vulkan/Vulkantool.hpp"
+#include "base/Vertex.hpp"
 
 #define MAX_NUM_JOINTS 128u
 
@@ -32,7 +33,9 @@ struct GLTFTexture{
     uint32_t mipLevels_ = 1;
     uint32_t layerCount_ = 1;
     vk::Format format_;
-
+    inline Sego::VmaImageViewSampler& GetImageViewSampler() {
+        return image_view_sampler_;
+    }
     void fromglTfImage(tinygltf::Image& gltfimage, TextureSampler textureSampler);
     void destory(){
         image_view_sampler_.destroy();
@@ -48,10 +51,16 @@ struct PBRMaterial{
     glm::vec4 baseColorFactor = glm::vec4(1.0f);
     glm::vec4 emissiveFactor = glm::vec4(0.0f);
     GLTFTexture* baseColorTexture;
-    GLTFTexture* metallicRoughnessTexture; //
+    Sego::VmaImageViewSampler& GetColorImageViewSampler();
+    GLTFTexture* metallicRoughnessTexture; //Roughness
+    Sego::VmaImageViewSampler& GetMetallicRoughnessImageViewSampler();
     GLTFTexture* normalTexture; //normal 通用
+    Sego::VmaImageViewSampler& GetNormalImageViewSampler();
     GLTFTexture* occlusionTexture; //AO 通用
+    Sego::VmaImageViewSampler& GetOcclusionImageViewSampler();
     GLTFTexture* emissiveTexture;
+    Sego::VmaImageViewSampler& GetEmissiveImageViewSampler();
+   
     bool doubleSided = false;
     struct TexCoordSets{
         uint8_t baseColor = 0;
@@ -161,15 +170,6 @@ struct Animation {
 
 // Model
 struct Model{
-    struct Vertex{
-        glm::vec3 pos;
-        glm::vec3 normal;
-        glm::vec2 uv0;
-        glm::vec2 uv1;
-        glm::vec4 joint0;
-        glm::vec4 weight0;
-        glm::vec4 color;
-    };
     Sego::VmaBuffer vertexBuffer_;
     Sego::VmaBuffer indexBuffer_;
 
@@ -193,7 +193,7 @@ struct Model{
 
     struct LoaderInfo{
         uint32_t* indexBuffer;
-        Vertex* vertexBuffer;
+        MeshAndSkeletonVertex* vertexBuffer;
         size_t indexPos = 0;
         size_t vertexPos = 0;
     };

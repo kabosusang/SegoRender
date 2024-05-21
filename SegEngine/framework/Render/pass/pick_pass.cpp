@@ -33,9 +33,15 @@ void PickPass::createDescriptorSetLayout(){
 
     descriptorSetLayouts_[0]= Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci);
     //mesh DescriptorSetLayout
-     vk::DescriptorSetLayoutCreateInfo desc_set_layout_ci_mesh{};
-    desc_set_layout_ci_mesh.setBindingCount(0)
-                      .setBindings(nullptr)
+    //mesh DescriptorSetLayout
+    std::vector<vk::DescriptorSetLayoutBinding> bindings_mesh = {
+        vk::DescriptorSetLayoutBinding(0,vk::DescriptorType::eUniformBuffer,1,vk::ShaderStageFlagBits::eVertex),
+        vk::DescriptorSetLayoutBinding(1,vk::DescriptorType::eUniformBuffer,1,vk::ShaderStageFlagBits::eVertex),
+    };
+
+    vk::DescriptorSetLayoutCreateInfo desc_set_layout_ci_mesh{};
+    desc_set_layout_ci_mesh.setBindingCount(static_cast<uint32_t>(bindings_mesh.size()))
+                      .setBindings(bindings_mesh)
                       .setFlags(vk::DescriptorSetLayoutCreateFlagBits::ePushDescriptorKHR);
 
     descriptorSetLayouts_[1] = Context::Instance().device.createDescriptorSetLayout(desc_set_layout_ci_mesh);
@@ -195,38 +201,51 @@ void PickPass::CreatePiepline(){
     //Mesh Renderer
     shader_stage_cis.clear();
     shader_stage_cis = {
-        ctx.shaderManager->LoadShader("resources/shaders/Mesh/meshvert.spv", vk::ShaderStageFlagBits::eVertex),
-        ctx.shaderManager->LoadShader("resources/shaders/pick/meshpick.spv", vk::ShaderStageFlagBits::eFragment)
+        ctx.shaderManager->LoadShader("resources/shaders/pick/meshpickvert.spv", vk::ShaderStageFlagBits::eVertex),
+        ctx.shaderManager->LoadShader("resources/shaders/pick/meshpickfrag.spv", vk::ShaderStageFlagBits::eFragment)
     };
 
     //1. vertex input   BindingDescription And AttributeDescription
-    vk::VertexInputBindingDescription Meshvertex_binding_desc{};
-    Meshvertex_binding_desc.setBinding(0)
-                      .setStride(sizeof(StaticVertex))
+    vk::VertexInputBindingDescription vertex_binding_desc_mesh{};
+    vertex_binding_desc_mesh.setBinding(0)
+                      .setStride(sizeof(MeshAndSkeletonVertex))
                       .setInputRate(vk::VertexInputRate::eVertex);
     
-    std::array<vk::VertexInputAttributeDescription, 4> vertex_attr_descs_Mesh;
-    vertex_attr_descs_Mesh[0].setBinding(0)
-                            .setLocation(0)
-                            .setFormat(vk::Format::eR32G32B32Sfloat)
-                            .setOffset(offsetof(StaticVertex, pos));
-    vertex_attr_descs_Mesh[1].setBinding(0)
-                            .setLocation(1)
-                            .setFormat(vk::Format::eR32G32B32Sfloat)
-                            .setOffset(offsetof(StaticVertex, normal));
-    vertex_attr_descs_Mesh[2].setBinding(0)
-                            .setLocation(2)
-                            .setFormat(vk::Format::eR32G32Sfloat)
-                            .setOffset(offsetof(StaticVertex, uv));
-    vertex_attr_descs_Mesh[3].setBinding(0)
-                        .setLocation(3)
+    std::array<vk::VertexInputAttributeDescription, 7> vertex_attr_descs_shadow;
+    vertex_attr_descs_shadow[0].setBinding(0)
+                        .setLocation(0)
                         .setFormat(vk::Format::eR32G32B32Sfloat)
-                        .setOffset(offsetof(StaticVertex, color));
+                        .setOffset(offsetof(MeshAndSkeletonVertex, pos));
+    vertex_attr_descs_shadow[1].setBinding(0)
+                        .setLocation(1)
+                        .setFormat(vk::Format::eR32G32B32Sfloat)
+                        .setOffset(offsetof(MeshAndSkeletonVertex, normal));
+    vertex_attr_descs_shadow[2].setBinding(0)
+                        .setLocation(2)
+                        .setFormat(vk::Format::eR32G32Sfloat)
+                        .setOffset(offsetof(MeshAndSkeletonVertex, uv0));
+    vertex_attr_descs_shadow[3].setBinding(0)
+                        .setLocation(3)
+                        .setFormat(vk::Format::eR32G32Sfloat)
+                        .setOffset(offsetof(MeshAndSkeletonVertex, uv1));
+    vertex_attr_descs_shadow[4].setBinding(0)
+                        .setLocation(4)
+                        .setFormat(vk::Format::eR32G32B32A32Sfloat)
+                        .setOffset(offsetof(MeshAndSkeletonVertex, joint0));
+    vertex_attr_descs_shadow[5].setBinding(0)
+                        .setLocation(5)
+                        .setFormat(vk::Format::eR32G32B32A32Sfloat)
+                        .setOffset(offsetof(MeshAndSkeletonVertex, weight0));
+    vertex_attr_descs_shadow[6].setBinding(0)
+                        .setLocation(6)
+                        .setFormat(vk::Format::eR32G32B32A32Sfloat)
+                        .setOffset(offsetof(MeshAndSkeletonVertex, color));
 
-    vertex_input_ci.setVertexAttributeDescriptionCount(vertex_attr_descs_Mesh.size())
-                   .setPVertexAttributeDescriptions(vertex_attr_descs_Mesh.data())
+    vertex_input_ci.setVertexAttributeDescriptionCount(vertex_attr_descs_shadow.size())
+                   .setPVertexAttributeDescriptions(vertex_attr_descs_shadow.data())
                    .setVertexBindingDescriptionCount(1)
-                   .setPVertexBindingDescriptions(&Meshvertex_binding_desc);
+                   .setPVertexBindingDescriptions(&vertex_binding_desc_mesh);
+    
     raster_ci.setCullMode(vk::CullModeFlagBits::eBack);
 
     pipeline_ci.setStages(shader_stage_cis)
@@ -356,15 +375,25 @@ void PickPass::Render(){
             render_sprite(cmdBuffer,spritedata);
        }
 
-        if (Rendata->type == RenderDataType::StaticMesh){
-            std::shared_ptr<StaticMeshRenderData> staticmeshdata = std::static_pointer_cast<StaticMeshRenderData>(Rendata);
-            render_mesh(cmdBuffer,staticmeshdata);
+        if (Rendata->type == RenderDataType::PbrAndSkeletomMesh){
+            vk::DeviceSize offsets[] = { 0 };
+            std::shared_ptr<PbrMeshRenderData> meshdata = std::static_pointer_cast<PbrMeshRenderData>(Rendata);
+            GltfModel::Model& model = *(meshdata->model);
+            cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines_[1]);
+            vk::Buffer vertexBuffers[] = { model.vertexBuffer_.buffer };
+            cmdBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
+            if (model.indexBuffer_.buffer!= VK_NULL_HANDLE){
+                cmdBuffer.bindIndexBuffer(model.indexBuffer_.buffer, 0, vk::IndexType::eUint32);
+            }
+            updatePushConstants(cmdBuffer,pipelineLayouts_[0],{&meshdata->model_,&meshdata->EntityID});
+            // All primitives Renderer
+            for (auto node : model.nodes) {
+                renderNode(cmdBuffer,node);
+            }
        }
-
-
     }
     cmdBuffer.endRenderPass();
-
+  
     std::vector<uint8_t> image_data;
     Vulkantool::readImagePixel(EntityIV_.image(),width_,height_,m_formats[0],image_data);
     if (m_mouse_x < width_ && m_mouse_y < height_) //缝缝补补
@@ -408,21 +437,32 @@ void PickPass::recreateframbuffer(uint32_t width, uint32_t height){
 	CreateFrameBuffer();
 }
 
-void PickPass::render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<StaticMeshRenderData>& Rendata){
+void PickPass::renderNode(vk::CommandBuffer cmdBuffer,GltfModel::Node * node)
+{
     auto& VulkanRhi = VulkanRhi::Instance();
+    uint32_t flight_Index = VulkanRhi.getFlightCount();
     
-    //pipelines_[0] Normal GLTF Model Renderer
-    cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines_[1]);
-    vk::Buffer vertexBuffers[] = { Rendata->vertexBuffer_.buffer };
-    vk::DeviceSize offsets[] = { 0 };
-    cmdBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
-    cmdBuffer.bindIndexBuffer(Rendata->indexBuffer_.buffer, 0, vk::IndexType::eUint32);
+    if (node->mesh){
+        std::vector<vk::WriteDescriptorSet> desc_write;
+        std::array<vk::DescriptorBufferInfo, 2> desc_buffer_infos{};
+        addBufferDescriptorSet(desc_write,desc_buffer_infos[0],VulkanRhi.getCurrentUniformBuffer(),0);
+        addBufferDescriptorSet(desc_write,desc_buffer_infos[1],node->mesh->uniformBuffer.buffer,1);
+        // Render mesh primitives
+        VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+        pipelineLayouts_[1], 0, static_cast<uint32_t>(desc_write.size()), (VkWriteDescriptorSet *)desc_write.data());
 
-    desc_writes.clear();
-    //Draw Notes
-    for(auto& node : Rendata->nodes_){
-        drawNode(cmdBuffer,pipelineLayouts_[1],node,Rendata);
+        for (GltfModel::Primitive* primitive : node->mesh->primitives){
+            if (primitive->hasIndices) {
+                    cmdBuffer.drawIndexed(primitive->indexCount, 1, primitive->firstIndex, 0, 0);
+                } else {
+                    cmdBuffer.draw(primitive->vertexCount, 1, 0, 0);
+                }
+        }
+
     }
+    for (auto child : node->children) {
+			renderNode(cmdBuffer,child);
+	}
 }
 
 //2. Sprite Renderer
@@ -444,35 +484,6 @@ void PickPass::render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteR
 }
 
 
-void PickPass::drawNode(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelineLayout, Node* node,std::shared_ptr<StaticMeshRenderData>& Rendata){
-     auto& VulkanRhi = VulkanRhi::Instance();
-
-    if(node->mesh.primitives.size() > 0){
-        // Pass the node's matrix via push constants
-        // Traverse the node hierarchy to the top-most parent to get the final matrix of the current node
-       
-        glm::mat4 nodeMatrix = node->matrix;
-        Node* currentParent = node->parent;
-        while (currentParent) {
-            nodeMatrix = currentParent->matrix * nodeMatrix;
-            currentParent = currentParent->parent;
-        }
-        desc_writes.clear();
-        glm::mat4 inputmvp = Rendata->Meshmvp_ * nodeMatrix;
-
-         for ( auto& primitive : node->mesh.primitives) {
-            updatePushConstants(cmdBuffer,pipelineLayout,{&inputmvp,&Rendata->EntityID});
-                // Update the push constant block
-				if (primitive.indexCount > 0) {
-                    // Bind the descriptor for the current primitive's texture
-                    cmdBuffer.drawIndexed(primitive.indexCount,1,primitive.firstIndex,0,0);
-				}
-			}
-		}
-		for (auto& child : node->children) {
-			drawNode(cmdBuffer,pipelineLayout, child,Rendata);
-		}
-}
 
 
 

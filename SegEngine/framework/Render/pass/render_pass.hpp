@@ -26,7 +26,10 @@ public:
 
     void updatePushConstants(vk::CommandBuffer commandbuffer,vk::PipelineLayout pipeline_layout,
     const std::vector<const void*>& (pcos),std::vector<vk::PushConstantRange> push_constant_ranges = {});
-    
+    //SSBO
+    void addSsboBufferDescriptorSet(std::vector<vk::WriteDescriptorSet>& desc_writes, 
+		vk::DescriptorBufferInfo& desc_buffer_info, VmaBuffer buffer, uint32_t binding);
+
     void addBufferDescriptorSet(std::vector<vk::WriteDescriptorSet>& desc_writes, 
 		vk::DescriptorBufferInfo& desc_buffer_info, VmaBuffer buffer, uint32_t binding);
     void addImageDescriptorSet(std::vector<vk::WriteDescriptorSet>& desc_writes, 

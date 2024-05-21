@@ -40,8 +40,15 @@ struct VmaImageViewSampler{
     vk::DescriptorType descriptor_type{};
     void destroy();
     vk::Image image() {return vma_image.image;}
-};
 
+    bool empty() { 
+        if (vma_image.image == VK_NULL_HANDLE){
+            return true;
+        }else{
+            return false;
+        }
+    };
+};
 
 class Vulkantool{
 public:
@@ -55,7 +62,7 @@ public:
         static void copyBuffer(vk::Buffer src_buffer, vk::Buffer dst_buffer, vk::DeviceSize size);
         static void createVertexBuffer(uint32_t buffer_size, void* data, VmaBuffer& buffer);
         static void createIndexBuffer(uint32_t buffer_size, void* data, VmaBuffer& buffer);
-        
+        static void createMaterialBuffer(uint32_t buffer_size, void* data, VmaBuffer& buffer);
 
         static void transitionImageLayout(vk::Image image, vk::ImageLayout old_layout, vk::ImageLayout new_layout, vk::Format format = vk::Format::eB8G8R8A8Sint, uint32_t mip_levels = 1, uint32_t layers = 1);
 public:

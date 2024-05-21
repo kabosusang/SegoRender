@@ -4,6 +4,7 @@ using namespace Sego;
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "core/Vulkan/Vulkan_rhi.hpp"
 
 namespace GltfModel{
 // Bounding box
@@ -346,11 +347,13 @@ void Model::loadNode(Node* parent, const tinygltf::Node& node, uint32_t nodeInde
 					hasSkin = (bufferJoints && bufferWeights);
 
 					for (size_t v = 0; v < posAccessor.count; v++) {
-						Vertex& vert = loaderInfo.vertexBuffer[loaderInfo.vertexPos];
+						MeshAndSkeletonVertex& vert = loaderInfo.vertexBuffer[loaderInfo.vertexPos];
 						vert.pos = glm::vec4(glm::make_vec3(&bufferPos[v * posByteStride]), 1.0f);
 						vert.normal = glm::normalize(glm::vec3(bufferNormals ? glm::make_vec3(&bufferNormals[v * normByteStride]) : glm::vec3(0.0f)));
 						vert.uv0 = bufferTexCoordSet0 ? glm::make_vec2(&bufferTexCoordSet0[v * uv0ByteStride]) : glm::vec3(0.0f);
+						vert.uv0.y = 1.0f - vert.uv0.y; //Vulkan 
 						vert.uv1 = bufferTexCoordSet1 ? glm::make_vec2(&bufferTexCoordSet1[v * uv1ByteStride]) : glm::vec3(0.0f);
+						vert.uv1.y = 1.0f - vert.uv1.y; //Vulkan
 						vert.color = bufferColorSet0 ? glm::make_vec4(&bufferColorSet0[v * color0ByteStride]) : glm::vec4(1.0f);
 
 						if (hasSkin)
@@ -573,17 +576,21 @@ void Model::loadTextureSamplers(tinygltf::Model &gltfModel)
 
 void Model::loadMaterials(tinygltf::Model &gltfModel)
 {
-for (tinygltf::Material &mat : gltfModel.materials) {
+	for (tinygltf::Material &mat : gltfModel.materials) {
 		PBRMaterial material{};
 		material.doubleSided = mat.doubleSided;
+		//BaseColor
 		if (mat.values.find("baseColorTexture") != mat.values.end()) {
 			material.baseColorTexture = &textures[mat.values["baseColorTexture"].TextureIndex()];
 			material.texCoordSets.baseColor = mat.values["baseColorTexture"].TextureTexCoord();
 		}
+
+		//MetallicRoughnessTexture
 		if (mat.values.find("metallicRoughnessTexture") != mat.values.end()) {
 			material.metallicRoughnessTexture = &textures[mat.values["metallicRoughnessTexture"].TextureIndex()];
 			material.texCoordSets.metallicRoughness = mat.values["metallicRoughnessTexture"].TextureTexCoord();
 		}
+
 		if (mat.values.find("roughnessFactor") != mat.values.end()) {
 			material.roughnessFactor = static_cast<float>(mat.values["roughnessFactor"].Factor());
 		}
@@ -592,19 +599,25 @@ for (tinygltf::Material &mat : gltfModel.materials) {
 		}
 		if (mat.values.find("baseColorFactor") != mat.values.end()) {
 			material.baseColorFactor = glm::make_vec4(mat.values["baseColorFactor"].ColorFactor().data());
-		}				
+		}
+
+		//Normal Texture		
 		if (mat.additionalValues.find("normalTexture") != mat.additionalValues.end()) {
 			material.normalTexture = &textures[mat.additionalValues["normalTexture"].TextureIndex()];
 			material.texCoordSets.normal = mat.additionalValues["normalTexture"].TextureTexCoord();
 		}
+
+
 		if (mat.additionalValues.find("emissiveTexture") != mat.additionalValues.end()) {
 			material.emissiveTexture = &textures[mat.additionalValues["emissiveTexture"].TextureIndex()];
 			material.texCoordSets.emissive = mat.additionalValues["emissiveTexture"].TextureTexCoord();
 		}
+
 		if (mat.additionalValues.find("occlusionTexture") != mat.additionalValues.end()) {
 			material.occlusionTexture = &textures[mat.additionalValues["occlusionTexture"].TextureIndex()];
 			material.texCoordSets.occlusion = mat.additionalValues["occlusionTexture"].TextureTexCoord();
 		}
+
 		if (mat.additionalValues.find("alphaMode") != mat.additionalValues.end()) {
 			tinygltf::Parameter param = mat.additionalValues["alphaMode"];
 			if (param.string_value == "BLEND") {
@@ -815,7 +828,7 @@ void Model::loadFromFile(std::string filename, float scale)
 		for (size_t i = 0; i < scene.nodes.size(); i++) {
 			getNodeProps(gltfModel.nodes[scene.nodes[i]], gltfModel, vertexCount, indexCount);
 		}
-		loaderInfo.vertexBuffer = new Vertex[vertexCount];
+		loaderInfo.vertexBuffer = new MeshAndSkeletonVertex[vertexCount];
 		loaderInfo.indexBuffer = new uint32_t[indexCount];
 
 		// TODO: scene handling with no default scene
@@ -847,7 +860,7 @@ void Model::loadFromFile(std::string filename, float scale)
 
 	extensions = gltfModel.extensionsUsed;
 
-	size_t vertexBufferSize = vertexCount * sizeof(Vertex);
+	size_t vertexBufferSize = vertexCount * sizeof(MeshAndSkeletonVertex);
 	size_t indexBufferSize = indexCount * sizeof(uint32_t);
 
 	assert(vertexBufferSize > 0);
@@ -1024,6 +1037,46 @@ Node *Model::nodeFromIndex(uint32_t index)
 		}
 		return nodeFound;
 	}
-	
-}
 
+    Sego::VmaImageViewSampler &PBRMaterial::GetColorImageViewSampler()
+    {
+        if (baseColorTexture == nullptr){
+			return Sego::VulkanRhi::Instance().defaultTexture->image_view_sampler_;
+		}else{
+			return baseColorTexture->GetImageViewSampler();
+		}
+    }
+
+    Sego::VmaImageViewSampler &PBRMaterial::GetMetallicRoughnessImageViewSampler()
+    {
+        if (metallicRoughnessTexture == nullptr){
+			return Sego::VulkanRhi::Instance().defaultTexture->image_view_sampler_;
+		}else{
+			return metallicRoughnessTexture->GetImageViewSampler();
+		}
+    }
+    Sego::VmaImageViewSampler &PBRMaterial::GetNormalImageViewSampler()
+    {
+         if (normalTexture == nullptr){
+			return Sego::VulkanRhi::Instance().defaultTexture->image_view_sampler_;
+		}else{
+			return normalTexture->GetImageViewSampler();
+		}
+    }
+    Sego::VmaImageViewSampler &PBRMaterial::GetOcclusionImageViewSampler()
+    {
+         if (occlusionTexture == nullptr){
+			return Sego::VulkanRhi::Instance().defaultTexture->image_view_sampler_;
+		}else{
+			return occlusionTexture->GetImageViewSampler();
+		}
+    }
+    Sego::VmaImageViewSampler &PBRMaterial::GetEmissiveImageViewSampler()
+    {
+         if (emissiveTexture == nullptr){
+			return Sego::VulkanRhi::Instance().defaultTexture->image_view_sampler_;
+		}else{
+			return emissiveTexture->GetImageViewSampler();
+		}
+    }
+}

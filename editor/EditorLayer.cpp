@@ -107,9 +107,6 @@ void EditorLayer::OnUpdate(Timestep ts){
 			break;
 	}
 
-	//m_ActiveScene->OnUpdateEditor(ts,m_EditorCamera);
-	//m_ActiveScene->OnUpdateRuntime(ts);
-	
 	auto[mx,my] = ImGui::GetMousePos();
 	mx -= m_ViewportBounds[0].x;
 	my -= m_ViewportBounds[0].y;
@@ -205,7 +202,7 @@ void EditorLayer::OnImGuiRender(){
 			//Light Settings
 			if (ImGui::BeginMenu("Lighting")) {
 				if (ImGui::MenuItem("Skybox")) {
-					m_EditorCamera.UseSkybox();
+					
 				}
 				if (ImGui::MenuItem("Ambient Light")) {
 					// Do something when Ambient Light is clicked

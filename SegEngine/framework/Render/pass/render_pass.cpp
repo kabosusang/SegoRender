@@ -74,6 +74,23 @@ push_constant_ranges_ : push_constant_ranges;
     }
 }
 
+void RenderPass::addSsboBufferDescriptorSet(std::vector<vk::WriteDescriptorSet> &desc_writes, vk::DescriptorBufferInfo &desc_buffer_info, VmaBuffer buffer, uint32_t binding)
+{
+    desc_buffer_info.buffer = buffer.buffer;
+    desc_buffer_info.offset = 0;
+    desc_buffer_info.range = buffer.size;
+
+    vk::WriteDescriptorSet desc_write{};
+    desc_write.setDstSet(nullptr)
+              .setDstBinding(binding)
+              .setDstArrayElement(0)
+              .setDescriptorType(vk::DescriptorType::eStorageBuffer)
+              .setDescriptorCount(1)
+              .setPBufferInfo(&desc_buffer_info);
+    desc_writes.push_back(desc_write);
+}
+
+
 void RenderPass::addBufferDescriptorSet(std::vector<vk::WriteDescriptorSet> &desc_writes, vk::DescriptorBufferInfo &desc_buffer_info, VmaBuffer buffer, uint32_t binding){
     desc_buffer_info.buffer = buffer.buffer;
     desc_buffer_info.offset = 0;
@@ -91,7 +108,7 @@ void RenderPass::addBufferDescriptorSet(std::vector<vk::WriteDescriptorSet> &des
 
 void RenderPass::addImageDescriptorSet(std::vector<vk::WriteDescriptorSet> &desc_writes,
  vk::DescriptorImageInfo &desc_image_info, VmaImageViewSampler texture, uint32_t binding){
-    desc_image_info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+    desc_image_info.imageLayout = texture.image_layout;
     desc_image_info.imageView = texture.image_view;
     desc_image_info.sampler = texture.sampler;
 
@@ -137,7 +154,7 @@ const std::vector<VmaImageViewSampler> &textures, uint32_t binding){
               .setDstBinding(binding)
               .setDstArrayElement(0)
               .setDescriptorType(textures.front().descriptor_type)
-              .setDescriptorCount(textures.size())
+              .setDescriptorCount(static_cast<uint32_t>(textures.size()))
               .setPImageInfo(p_desc_image_info);
     desc_writes.push_back(desc_write);
 

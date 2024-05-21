@@ -5,7 +5,7 @@
 #include "resource/asset/base/Vertex.hpp"
 #include "resource/asset/base/Mesh.hpp"
 #include "resource/asset/Texture2D.hpp"
-
+#include "stb_image_write.h"
 namespace Sego{
 
 BRDFLutPass::BRDFLutPass(){
@@ -19,7 +19,6 @@ void BRDFLutPass::Init(){
 
 void BRDFLutPass::destroy(){
     RenderPass::destroy();
-    lutIv_.destroy();
 }
 
 void BRDFLutPass::createDescriptorSetLayout(){
@@ -147,9 +146,9 @@ void BRDFLutPass::CreatePiepline(){
 void BRDFLutPass::CreateFrameBuffer(){
     auto& ctx = Context::Instance();
     //lutIv_
-    Vulkantool::createImageAndView(lutsize_,lutsize_,1,1,vk::SampleCountFlagBits::e1,
-    m_format,vk::ImageTiling::eOptimal,vk::ImageUsageFlagBits::eColorAttachment |vk::ImageUsageFlagBits::eSampled| vk::ImageUsageFlagBits::eTransferSrc,
-    VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,vk::ImageAspectFlagBits::eColor,lutIv_);
+    Vulkantool::createImageViewSampler(lutsize_,lutsize_,nullptr,1,1
+    ,m_format,vk::Filter::eLinear,vk::Filter::eLinear,vk::SamplerAddressMode::eClampToEdge,
+    lutIv_,vk::ImageUsageFlagBits::eColorAttachment |vk::ImageUsageFlagBits::eSampled| vk::ImageUsageFlagBits::eTransferSrc);
 
     std::vector<vk::ImageView> attachments = { 
     lutIv_.image_view
@@ -235,15 +234,17 @@ void BRDFLutPass::Render(){
     cmdBuffer.draw(3,1,0,0);
     cmdBuffer.endRenderPass();
     Vulkantool::endInstantCommands(cmdBuffer);
-
+    /*
     // write to texture2d
     std::vector<uint8_t> image_data;
     Vulkantool::readImagePixel(lutIv_.image(),lutsize_,lutsize_,m_format,image_data);
     
-    std::ofstream ofs("resources/assets/engine/texture/brdflut.tex", std::ios::binary);
-    ofs.write((const char*)image_data.data(), image_data.size());
-    ofs.close();
-   
+    // 将图像数据写入到一个 PNG 文件中
+    if (stbi_write_png("resources/assets/engine/texture/brdflut.png", lutsize_, lutsize_, 4, image_data.data(), lutsize_ * 4 * 3) == 0) {
+        // 写入失败
+        SG_CORE_ERROR("Generate Brdf Lut Failed!");
+    } */
+
 }
 
 

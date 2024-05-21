@@ -23,7 +23,7 @@ struct imageIndex{
 	int32_t imageIndex;
 };
 
-
+enum PBRWorkflows{ PBR_WORKFLOW_METALLIC_ROUGHNESS = 0, PBR_WORKFLOW_SPECULAR_GLOSINESS = 1 };
 /// PBRMaterial
 struct alignas(16) ShaderMaterial {
 	glm::vec4 baseColorFactor;
@@ -42,10 +42,6 @@ struct alignas(16) ShaderMaterial {
 	float alphaMaskCutoff;
 	float emissiveStrength;
 };
-
-
-
-
 
 
 }

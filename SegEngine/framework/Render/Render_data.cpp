@@ -6,8 +6,8 @@
 
 namespace Sego{
     SceneRenderSettings SceneRenderData;
-
-    void SkyLightRenderData::CreateIBLTexture()
+    
+    void SkyLightRenderData::CreateIBLTexture(std::shared_ptr<TextureCube>& textureCube)
     {
         if (!std::filesystem::exists(LUTPATH)){
             std::shared_ptr<BRDFLutPass> brdf_pass = std::make_shared<BRDFLutPass>();
@@ -15,11 +15,15 @@ namespace Sego{
             brdf_pass->Render();
             brdf_pass->destroy();
         }
-        std::shared_ptr<Texture2D> brdf_lut = std::make_shared<Texture2D>();
-        std::string temp = LUTPATH;
-        brdf_lut->loadFormFileBiranry(temp,vk::Format::eR16G16Sfloat,2048,2048,vk::SamplerAddressMode::eClampToEdge);
+        //std::string temp = LUTPATH;
+        //std::shared_ptr<Texture2D> brdf_lut = Texture2D::Create(temp,vk::Format::eR16G16Sfloat);
 
-        lutBrdfIVs_ = brdf_lut->image_view_sampler_;
+        std::shared_ptr<BRDFLutPass> brdf_pass = std::make_shared<BRDFLutPass>();
+        brdf_pass->Init();
+        brdf_pass->Render();
+        brdf_pass->destroy();
+        lutBrdfIVs_ = brdf_pass->GetImageViewSampler();
+        
         std::shared_ptr<FilterCubePass> filter_pass = std::make_shared<FilterCubePass>(textureCube);
         filter_pass->Init();
         filter_pass->Render();

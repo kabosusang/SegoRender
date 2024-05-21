@@ -20,23 +20,29 @@ VulkanRhi::VulkanRhi(uint32_t windowWidth, uint32_t windowHeight){
     loadExtensionFuncs();
     createUniformBuffers();
 
-    defaultTexture = Texture2D::Create("resources/assets/empty.png");
+    defaultTexture = Texture2D::Create("resources/assets/empty.jpg");
     defaultSkybox = TextureCube::Create("resources/Settings/skybox/sky.ktx");
-    //defaultSkybox = TextureCube::Create("resources/Settings/skybox/sky.ktx");
 
-    uiPass_ = std::make_unique<UiPass>();
-    uiPass_->Init();
+    uiPass_ = std::make_shared<UiPass>();
+    mainPass_ = std::make_shared<MainPass>();
+    pickPass_ = std::make_shared<PickPass>();
+    dirPass_ = std::make_shared<DirShadowPass>();
+    pointPass_ = std::make_shared<PointShadowPass>();
+    spotPass_ = std::make_shared<SpotShadowPass>();
 
-    mainPass_ = std::make_unique<MainPass>();
-    mainPass_->Init();
+    m_render_passes = {
+        pointPass_,
+        spotPass_,
+        dirPass_,
+        pickPass_,
+        mainPass_,
+        uiPass_
+    };
 
-    pickPass_ = std::make_unique<PickPass>();
-    pickPass_->Init();
-
-    dirPass_ = std::make_unique<DirShadowPass>();
-    dirPass_->Init();
-
-   
+    for (auto& render_pass : m_render_passes)
+    {
+        render_pass->Init();
+    }
 }
 
 void VulkanRhi::Init(std::vector<const char*>& extensions, 
@@ -46,6 +52,9 @@ Context::GetSurfaceCallback cb, int windowWidth, int windowHeight) {
 }
 void VulkanRhi::destory() {
     Context::Instance().device.waitIdle();
+    for (auto& render_pass : m_render_passes){
+        render_pass->destroy();
+    }
     Context::Instance().device.destroyCommandPool(cmdPool_);
     for (auto& uniform : uniformBuffers_){
         uniform.destroy();
@@ -60,10 +69,13 @@ void VulkanRhi::destory() {
         Context::Instance().device.destroyFence(fence);
     }
 
+
     Context::Quit();
 
     delete instance_;
     instance_ = nullptr;
+    defaultTexture.reset();
+    defaultSkybox.reset();
 }
 
 
@@ -134,7 +146,7 @@ vk::ImageView VulkanRhi::getColorImageView(){
 }
 
 VmaImageViewSampler VulkanRhi::getDirShadowMap(){
-    return dirPass_->getShadowMap();
+    return dirPass_->getShadowImageViewSampler();
 }
 
 
@@ -182,11 +194,9 @@ void VulkanRhi::recordFrame(){
 
     cmdBuffer.begin(beginInfo);
     //record all renderpass
-    dirPass_->Render();
-    pickPass_->Render();
-    mainPass_->Render();
-    uiPass_->Render();
-
+    for (auto& render_pass : m_render_passes){
+        render_pass->Render();
+    }
     cmdBuffer.end();
     
 }

@@ -6,6 +6,7 @@
 
 #include "Core/Scene/Component.hpp"
 #include "resource/asset/Import/gltf_import.hpp"
+#include "Core/Vulkan/Vulkan_rhi.hpp"
 
 #include <future>
 
@@ -68,6 +69,22 @@ void SceneHierarchyPanel::OnImGuiRender(){
                     Entity curent = m_Context->CreateEntity("Directional Light");
                     curent.AddComponent<DirLightComponent>();
                 }
+                
+                if (ImGui::MenuItem("Sky Light")){
+                    Entity curent = m_Context->CreateEntity("Sky Light");
+                    curent.AddComponent<SkyLightComponent>();
+                }
+
+                if (ImGui::MenuItem("Poit Light")){
+                    Entity curent = m_Context->CreateEntity("Poit Light");
+                    curent.AddComponent<PointLightComponent>();
+                }
+
+                 if (ImGui::MenuItem("Spot Light")){
+                    Entity curent = m_Context->CreateEntity("Spot Light");
+                    curent.AddComponent<SpoitLightComponent>();
+                }
+
                 ImGui::EndMenu();
             }
             ImGui::EndPopup();    
@@ -84,6 +101,54 @@ void SceneHierarchyPanel::OnImGuiRender(){
 
 void SceneHierarchyPanel::SetSelectedEntity(Entity entity){
     m_SelectionContext = entity;
+}
+
+void SceneHierarchyPanel::AttachMaterial(Entity entity)
+{
+    std::vector<ShaderMaterial> shaderMaterials{};
+    auto& mesh = entity.GetComponent<MeshComponent>();
+    for (auto& material : mesh.model->materials) {
+        ShaderMaterial shaderMaterial{};
+        shaderMaterial.emissiveFactor = material.emissiveFactor;
+        // To save space, availabilty and texture coordinate set are combined
+        // -1 = texture not used for this material, >= 0 texture used and index of texture coordinate set
+        shaderMaterial.colorTextureSet = material.baseColorTexture != nullptr ? material.texCoordSets.baseColor : -1;                  
+        shaderMaterial.normalTextureSet = material.normalTexture != nullptr ? material.texCoordSets.normal : -1;                   
+        shaderMaterial.occlusionTextureSet = material.occlusionTexture != nullptr ? material.texCoordSets.occlusion : -1;
+        shaderMaterial.emissiveTextureSet = material.emissiveTexture != nullptr ? material.texCoordSets.emissive : -1;
+        shaderMaterial.alphaMask = static_cast<float>(material.alphaMode == GltfModel::PBRMaterial::ALPHAMODE_MASK);
+        shaderMaterial.alphaMaskCutoff = material.alphaCutoff;
+        shaderMaterial.emissiveStrength = material.emissiveStrength;
+
+        // TODO: glTF specs states that metallic roughness should be preferred, even if specular glosiness is present
+        if (material.pbrWorkflows.metallicRoughness) {
+            // Metallic roughness workflow
+            shaderMaterial.workflow = static_cast<float>(PBR_WORKFLOW_METALLIC_ROUGHNESS);
+            shaderMaterial.baseColorFactor = material.baseColorFactor;
+            shaderMaterial.metallicFactor = material.metallicFactor;
+            shaderMaterial.roughnessFactor = material.roughnessFactor;
+            shaderMaterial.PhysicalDescriptorTextureSet = material.metallicRoughnessTexture != nullptr ? material.texCoordSets.metallicRoughness : -1;    
+            shaderMaterial.colorTextureSet = material.baseColorTexture != nullptr ? material.texCoordSets.baseColor : -1;
+            
+        }
+        if (material.pbrWorkflows.specularGlossiness) {
+            // Specular glossiness workflow
+            shaderMaterial.workflow = static_cast<float>(PBR_WORKFLOW_SPECULAR_GLOSINESS);
+            shaderMaterial.PhysicalDescriptorTextureSet = material.extension.specularGlossinessTexture != nullptr ? material.texCoordSets.specularGlossiness : -1;
+            shaderMaterial.colorTextureSet = material.extension.diffuseTexture != nullptr ? material.texCoordSets.baseColor : -1;   
+            shaderMaterial.diffuseFactor = material.extension.diffuseFactor;
+            shaderMaterial.specularFactor = glm::vec4(material.extension.specularFactor, 1.0f);
+        }
+        shaderMaterials.push_back(shaderMaterial);
+    }
+    
+    entity.AddComponent<MaterialComponent>(shaderMaterials);
+    auto& matComt = entity.GetComponent<MaterialComponent>();
+    if (!shaderMaterials.empty()){
+        auto maxFlightCount_ = VulkanRhi::Instance().getMaxFlightCount(); 
+        vk::DeviceSize bufferSize = sizeof(ShaderMaterial) * shaderMaterials.size();
+        Vulkantool::createMaterialBuffer(bufferSize,shaderMaterials.data(), matComt.shaderMaterialBuffer);
+    }
 }
 
 void SceneHierarchyPanel::DrawEnityNode(Entity entity)
@@ -296,7 +361,7 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
             }
         }
 
-         if (!m_SelectionContext.HasComponent<MeshComponent>() && !m_SelectionContext.HasComponent<SpriteRendererComponent>()){
+        if (!m_SelectionContext.HasComponent<MeshComponent>() && !m_SelectionContext.HasComponent<SpriteRendererComponent>()){
             if (ImGui::MenuItem("MeshComponent"))
             {
                 m_SelectionContext.AddComponent<MeshComponent>();
@@ -304,6 +369,14 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
             }
         }
 
+        if (!m_SelectionContext.HasComponent<MaterialComponent>() && !m_SelectionContext.HasComponent<SpriteRendererComponent>() && m_SelectionContext.HasComponent<MeshComponent>()){
+        
+            if (ImGui::MenuItem("Material"))
+            {
+                AttachMaterial(m_SelectionContext); //Material Attach
+                ImGui::CloseCurrentPopup();
+            }
+        }
         ImGui::EndPopup();
     }
 
@@ -444,7 +517,7 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
         ImGui::DragFloat("Restitution Threshold", &component.RestitutionThreshold, 0.01f,0.0f);
     });
 
-    DrawComponent<MeshComponent>("MeshComponent", entity, [](auto& component)
+    DrawComponent<MeshComponent>("MeshComponent", entity, [&](auto& component)
     {
         ImGui::Text("Mesh");
         ImGui::SameLine();
@@ -458,7 +531,15 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
                 std::future<void> async_result = std::async(std::launch::async,[&](){
                     component.name = modelPath.filename().replace_extension().string();
                     component.path = modelPath.string();
-                    component.MeshData = GlTFImporter::LoadglTFFile(modelPath.string());
+                    auto tStart = std::chrono::high_resolution_clock::now();
+                    component.model = std::make_shared<GltfModel::Model>();
+                    component.model->loadFromFile(component.path);
+                    auto tFileLoad = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - tStart).count();
+                    SG_CORE_INFO("Load Model Time:{} ms",tFileLoad);
+                    if (entity.HasComponent<MaterialComponent>()){
+                        entity.RemoveComponent<MaterialComponent>();
+                        AttachMaterial(entity);
+                    }
                 });
             }else{
                 SG_CORE_ERROR("Model format not supported");
@@ -469,13 +550,67 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
 
     });
 
-    DrawComponent<DirLightComponent>("DirLightComponent", entity, [](auto& component){
+    //Material
+    DrawComponent<MaterialComponent>("Material", entity, [](auto& component){
+       
+    });
+
+    //Light Component
+    DrawComponent<SkyLightComponent>("SkyLightComponent", entity, [](auto& component){
+        ImGui::ColorEdit3("Color", glm::value_ptr(component.Color));
+        ImGui::Checkbox("Shadow",&component.castshadow);
+        ImGui::Text("IBL");
+        ImGui::SameLine();
+        ImGui::Button(component.name.c_str(),ImVec2(300.0f,0.0f));
+        if (ImGui::BeginDragDropTarget()){
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM")){
+                const wchar_t* path = (const wchar_t*)payload->Data;
+                std::filesystem::path texturePath = std::filesystem::path(s_AssetPath)/path;
+                if (texturePath.extension() == ".ktx")
+                {
+                    component.name = texturePath.filename().replace_extension().string();
+                    component.path = texturePath.string();
+                    component.textureCube = TextureCube::Create(component.path);
+                    component.skylight = std::make_shared<SkyLightRenderData>();
+                    component.Attach();
+                }else{
+                    SG_CORE_ERROR("Texture format not supported");
+                }        
+            }
+        }
+
+    });
+
+    DrawComponent<DirLightComponent>("DirLight", entity, [](auto& component){
         DrawVec3Control("Direction", component.Direction);
-        ImGui::DragFloat("Intensity", &component.Intensity,0.1f,0.0f, 100.0f);
+        ImGui::ColorEdit3("Color", glm::value_ptr(component.Color));
+        ImGui::DragFloat("Intensity", &component.Intensity,0.1f,0.0f, 10.0f);
+        ImGui::DragFloat("Near Planes",&component.m_cascade_frustum_near,0.1f,0.0f, 10.0f);
+        ImGui::Checkbox("Shadow",&component.castshadow);
     });
 
     
-    
+    DrawComponent<PointLightComponent>("PointLight", entity, [](auto& component){
+        ImGui::ColorEdit3("Color", glm::value_ptr(component.Color));
+        ImGui::DragFloat("Intensity", &component.Intensity,0.1f,0.0f, 10.0f);
+        ImGui::DragFloat("Radius", &component.m_radius,1.0f,0.0f, 1000.0f);
+        ImGui::DragFloat("Linear", &component.m_linear_attenuation,0.01f,0.0f, 1.0f);
+        ImGui::DragFloat("Quadratic", &component.m_quadratic_attenuation,0.01f,0.0f, 1.0f);
+        ImGui::Checkbox("Shadow",&component.castshadow);
+    });
+
+     DrawComponent<SpoitLightComponent>("SpotLight", entity, [](auto& component){
+        DrawVec3Control("Direction", component.Direction);
+        ImGui::ColorEdit3("Color", glm::value_ptr(component.Color));
+        ImGui::DragFloat("Intensity", &component.Intensity,0.1f,0.0f, 10.0f);
+        ImGui::DragFloat("Radius", &component.m_radius,1.0f,0.0f, 1000.0f);
+        ImGui::DragFloat("Linear", &component.m_linear_attenuation,0.01f,0.0f, 1.0f);
+        ImGui::DragFloat("Quadratic", &component.m_quadratic_attenuation,0.01f,0.0f, 1.0f);
+        ImGui::SliderFloat("Inner Cone Angle", &component.m_inner_cone_angle, 0.0f, 90.0f);
+        ImGui::SliderFloat("Outer Cone Angle", &component.m_outer_cone_angle, 0.0f, 90.0f);
+        ImGui::Checkbox("Shadow",&component.castshadow);
+
+    });
 
 
 }

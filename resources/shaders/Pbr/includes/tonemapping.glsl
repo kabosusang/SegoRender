@@ -23,3 +23,9 @@ vec4 tonemap(vec4 color)
 	outcol = outcol * (1.0f / Uncharted2Tonemap(vec3(11.2f)));	
 	return vec4(pow(outcol, vec3(1.0f / uboParams.gamma)), color.a);
 }
+
+
+vec3 tonemap(vec3 color, float exposure)
+{
+	return vec3(1.0) - exp(-color * exposure);
+}

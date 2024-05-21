@@ -14,6 +14,8 @@ namespace Sego{
         virtual void destroy() override;
         virtual void createDescriptorSetLayout();
         virtual void createPipelineLayouts();
+        
+        VmaImageViewSampler GetImageViewSampler(){return lutIv_;}
     private:
      
     private:
@@ -21,7 +23,7 @@ namespace Sego{
         uint32_t lutsize_;
 
         //pick Entity Pass
-        VmaImageView lutIv_;
+        VmaImageViewSampler lutIv_;
         
 
     };

@@ -337,7 +337,8 @@ bool SceneSerializer::Deserialize(const std::string &filepath){
                 mc.name = meshComponent["Name"].as<std::string>();
                 mc.path = meshComponent["Path"].as<std::string>();
                 std::future<void> mesh_async = std::async(std::launch::async,[&](){
-                   mc.MeshData = GlTFImporter::LoadglTFFile(mc.path);
+                    mc.model  = std::make_shared<GltfModel::Model>();
+                    mc.model->loadFromFile(mc.path);
                 });
                 mesh_async.get();
             }

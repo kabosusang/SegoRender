@@ -116,6 +116,7 @@ vk::Device Context::createDevice(vk::SurfaceKHR surface) {
     features.setSamplerAnisotropy(true);
     features.setIndependentBlend(true); //independent blend
     features.setSampleRateShading(true); //sample rate shading
+    features.setGeometryShader(true); //Gemotry
 
     deviceCreateInfo.setPEnabledFeatures(&features);
     std::vector<vk::DeviceQueueCreateInfo> queueInfos;

@@ -133,27 +133,44 @@ namespace Sego{
     struct MeshComponent{
         std::string name = "nullmesh";
         std::string path;
-        std::shared_ptr<StaticMeshRenderData> MeshData = nullptr;
-        
+        std::shared_ptr<GltfModel::Model> model;
+
         MeshComponent() = default;
         MeshComponent(std::string_view meshname,std::string_view meshpath)
-        { 
+        {
             std::future<void> async_result = std::async(std::launch::async,[&](){
                 name = meshname;
                 path = meshpath;
-                MeshData = GlTFImporter::LoadglTFFile(path);
+                auto tStart = std::chrono::high_resolution_clock::now();
+                model = std::make_shared<GltfModel::Model>();
+                model->loadFromFile(path);
+                auto tFileLoad = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - tStart).count();
+                SG_CORE_INFO("Load Model Time:{} ms",tFileLoad);
             });
         
         }
         MeshComponent(const MeshComponent& other) :
         name(other.name),
         path(other.path),
-        MeshData(std::make_shared<StaticMeshRenderData>(*other.MeshData)){}
+        model(other.model)
+        {}
+    };
+
+    //Material
+    struct MaterialComponent{
+        std::vector<ShaderMaterial> shaderMaterials{};
+        VmaBuffer shaderMaterialBuffer;
+
+        MaterialComponent() = default;
+        MaterialComponent(std::vector<ShaderMaterial>& material){ shaderMaterials = material; }
+        MaterialComponent(const MaterialComponent&) = default;
     };
 
     struct DirLightComponent{
         glm::vec3 Direction = {-0.2f,-1.0f,-0.3f};
+        glm::vec3 Color{1.0f,1.0f,1.0f};
         float Intensity = 1.0f;//TODO: add intensity
+        float m_cascade_frustum_near = 0.0f;
         bool castshadow = true;
         
         DirLightComponent() = default;
@@ -161,37 +178,49 @@ namespace Sego{
     };
     
     struct SpoitLightComponent{
-        glm::vec3 color = glm::vec3(1.0f);
-        float Intensity = 0.5f;
-
+        glm::vec3 Color = glm::vec3(1.0f);
+        glm::vec3 Direction = {-0.2f,-1.0f,-0.3f};
+        float Intensity =  1.0f;
+        float m_radius = 64.0f;
+		float m_linear_attenuation = 0.14f;
+		float m_quadratic_attenuation = 0.07f;
+        float m_inner_cone_angle = 30.0f;
+		float m_outer_cone_angle = 45.0f;
+        bool castshadow = true;
         SpoitLightComponent() = default;
         SpoitLightComponent(const SpoitLightComponent&) = default;
     } ;
 
+    struct PointLightComponent{
+        glm::vec3 Color = glm::vec3(1.0f);
+        float Intensity =  1.0f;
+        bool castshadow = true;
+        float m_radius = 64.0f;
+		float m_linear_attenuation = 0.14f;
+		float m_quadratic_attenuation = 0.07f;
+        PointLightComponent() = default;
+        PointLightComponent(const PointLightComponent&) = default;
+    } ;
+
+
     struct SkyLightComponent{
-        glm::vec3 color= glm::vec3(1.0f);
+        glm::vec3 Color= glm::vec3(1.0f);
         float Intensity = 0.5f;
         bool castshadow = true;
-
+        
         std::string name = "null";
         std::string path;
-        std::shared_ptr<TextureCube> textureCube = nullptr;
-
         std::shared_ptr<SkyLightRenderData> skylight = nullptr;
+        std::shared_ptr<TextureCube> textureCube = nullptr;
         bool Attach() {
             if (textureCube == nullptr)
                 return false;
-            skylight->CreateIBLTexture();
+            skylight->CreateIBLTexture(textureCube);
+            return true;
         }
         SkyLightComponent() = default;
         SkyLightComponent(const SkyLightComponent&) = default;
     };
-
-    struct MaterialComponent{
-        
-
-    };
-
 
     struct AnimationComponent{
         int32_t animationIndex = 0;

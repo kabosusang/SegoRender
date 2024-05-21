@@ -49,18 +49,7 @@ void FilterCubePass::Init(){
 void FilterCubePass::destroy(){
     auto& ctx = Context::Instance();
     RenderPass::destroy();
-    for (auto& view : m_color_image_views){
-        view.destroy();
-    }
-    for (auto& sampler : m_cube_image_view_samplers){
-        sampler.destroy();
-    }
-    for (auto& pass : m_render_passes){
-        ctx.device.destroyRenderPass(pass);
-    }
-    for (auto& frame : m_framebuffers){
-        ctx.device.destroyFramebuffer(frame);
-    }
+   
 }
 
 void FilterCubePass::createDescriptorSetLayout(){
@@ -133,24 +122,12 @@ void FilterCubePass::CreatePiepline(){
                       .setStride(sizeof(StaticVertex))
                       .setInputRate(vk::VertexInputRate::eVertex);
     
-    std::array<vk::VertexInputAttributeDescription, 4> vertex_attr_descs_Mesh;
+    std::array<vk::VertexInputAttributeDescription, 1> vertex_attr_descs_Mesh;
     vertex_attr_descs_Mesh[0].setBinding(0)
                             .setLocation(0)
                             .setFormat(vk::Format::eR32G32B32Sfloat)
                             .setOffset(offsetof(StaticVertex, pos));
-    vertex_attr_descs_Mesh[1].setBinding(0)
-                            .setLocation(1)
-                            .setFormat(vk::Format::eR32G32B32Sfloat)
-                            .setOffset(offsetof(StaticVertex, normal));
-    vertex_attr_descs_Mesh[2].setBinding(0)
-                            .setLocation(2)
-                            .setFormat(vk::Format::eR32G32Sfloat)
-                            .setOffset(offsetof(StaticVertex, uv));
-    vertex_attr_descs_Mesh[3].setBinding(0)
-                        .setLocation(3)
-                        .setFormat(vk::Format::eR32G32B32Sfloat)
-                        .setOffset(offsetof(StaticVertex, color));
-
+   
     vertex_input_ci.setVertexAttributeDescriptionCount(vertex_attr_descs_Mesh.size())
                    .setPVertexAttributeDescriptions(vertex_attr_descs_Mesh.data())
                    .setVertexBindingDescriptionCount(1)
@@ -242,7 +219,7 @@ void FilterCubePass::CreatePiepline(){
     shader_stage_cis.clear();
     shader_stage_cis = {
         ctx.shaderManager->LoadShader("resources/shaders/Pbr/filtercubevert.spv", vk::ShaderStageFlagBits::eVertex),
-        ctx.shaderManager->LoadShader("resources/shaders/Pbr/meshpick.spv", vk::ShaderStageFlagBits::eFragment)
+        ctx.shaderManager->LoadShader("resources/shaders/Pbr/prefilterfrag.spv", vk::ShaderStageFlagBits::eFragment)
     };
 
     viewport_ci.setX(0.0f).setY(0.0f).setWidth(m_sizes[1])
@@ -428,16 +405,21 @@ void FilterCubePass::Render(){
                     break;
                 }
                 // 
-                std::vector<vk::WriteDescriptorSet> desc_writes;
+                std::vector<vk::WriteDescriptorSet> desc_write;
                 std::array<vk::DescriptorImageInfo,1>   desc_image_info{};
-                addImageDescriptorSet(desc_writes, desc_image_info[0], 
+                addImageDescriptorSet(desc_write, desc_image_info[0], 
                 skytexture_->image_view_sampler_,0);
                 
                 Vctx.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                pipelineLayouts_[i], 0, static_cast<uint32_t>(desc_writes.size()), (VkWriteDescriptorSet *)desc_writes.data());
+                pipelineLayouts_[i], 0, static_cast<uint32_t>(desc_write.size()), (VkWriteDescriptorSet *)desc_write.data());
                 //bind pipeline
                 cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines_[i]);
                 // draw indexed mesh
+                 vk::Buffer vertexBuffers[] = { skybox_->vertexBuffer_.buffer };
+                vk::DeviceSize offsets[] = { 0 };
+                cmdBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
+                cmdBuffer.bindIndexBuffer(skybox_->indexBuffer_.buffer, 0, vk::IndexType::eUint32);
+
                 //Draw Notes
                 for(auto& node : skybox_->nodes_){
                     drawNode(cmdBuffer,pipelineLayouts_[i],node);

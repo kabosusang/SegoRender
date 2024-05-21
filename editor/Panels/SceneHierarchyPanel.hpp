@@ -16,6 +16,9 @@ class SceneHierarchyPanel{
 
         Entity GetSelectedEntity() const { return m_SelectionContext; }
         void SetSelectedEntity(Entity entity);
+
+        //TODO: 未来移除
+        void AttachMaterial(Entity entity);
     private:
         void DrawEnityNode(Entity entity);
         void DrawComponents(Entity entity);

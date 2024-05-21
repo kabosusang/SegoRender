@@ -9,7 +9,8 @@
 #include "resource/asset/base/Light.h"
 #include "resource/asset/GLTFModel.hpp"
 
-#define LUTPATH "resources/assets/engine/texture/brdflut.tex"
+#define LUTPATH "resources/assets/engine/texture/brdflut.png"
+
 
 namespace Sego{
     struct Node{
@@ -25,7 +26,7 @@ namespace Sego{
     };
 
     enum class RenderDataType{
-        Sprite,Base,StaticMesh,Skybox,Lighting,SkyLight
+        Sprite,Base,StaticMesh,Skybox,Lighting,SkyLight,PbrAndSkeletomMesh
     };
 
     struct RenderData{
@@ -87,22 +88,24 @@ namespace Sego{
         SkyboxRenderData(){
               type = RenderDataType::Skybox;
         }
-        
+
+        VmaImageViewSampler env_texture;
          void destory(){
             vertexBuffer_.destroy();
             indexBuffer_.destroy();
          }
     };
 
-    struct PbrMeshRenderData : public MeshRenderData{
-        PbrMeshRenderData() { type = RenderDataType::StaticMesh; }
+    struct PbrMeshRenderData : public RenderData{
+        PbrMeshRenderData() { type = RenderDataType::PbrAndSkeletomMesh; }
 
         std::shared_ptr<GltfModel::Model> model = nullptr;
-        
+        VmaBuffer MaterialBuffer;
         void destory() {
            model->destory();
         }
         uint32_t EntityID = -1;
+        glm::mat4 model_;
     };
 
 
@@ -110,26 +113,31 @@ namespace Sego{
     struct LightingRenderData : public RenderData
 	{
 		LightingRenderData() { type = RenderDataType::Lighting; }
-
         //LightObj
+		glm::mat4 camera_view_proj;
+
 		std::vector<VmaBuffer> lighting_ubs;
-        
+
+		VmaImageViewSampler irradiance_texture;
+		VmaImageViewSampler prefilter_texture;
+		VmaImageViewSampler brdf_lut_texture;
+
 		VmaImageViewSampler directional_light_shadow_texture;
+		std::vector<VmaImageViewSampler> point_light_shadow_textures;
+		std::vector<VmaImageViewSampler> spot_light_shadow_textures;
 	};
 
 
     struct SkyLightRenderData : public RenderData{
         SkyLightRenderData() { type = RenderDataType::SkyLight;m_prefilter_mip_levels = 0; }
 
-
         VmaImageViewSampler lutBrdfIVs_;
         VmaImageViewSampler irradianceIVs_;
         VmaImageViewSampler prefilteredIVs_;
-        uint32_t m_prefilter_mip_levels;
+        uint32_t m_prefilter_mip_levels = 0;
         std::shared_ptr<StaticMeshRenderData> cube_mesh = nullptr;
-        std::shared_ptr<TextureCube> textureCube = nullptr;
 
-        void CreateIBLTexture();
+        void CreateIBLTexture(std::shared_ptr<TextureCube>& textureCube);
 
     };
 
@@ -143,10 +151,34 @@ namespace Sego{
         float exposure = 4.5f; //曝光
         float gamma = 2.2f;//伽马
         float debugViewInputs = 0;
-        float debugViewEquation = 0;
     };
 
-    
+    struct ShadowCascadeCreateInfo
+	{
+		float camera_near;
+		float camera_far;
+		glm::mat4 inv_camera_view_proj;
+
+		glm::vec3 light_dir;
+		float light_cascade_frustum_near;
+	};
+
+	struct ShadowCubeCreateInfo
+	{
+		glm::vec3 light_pos;
+		float light_near;
+		float light_far;
+	};
+
+	struct ShadowFrustumCreateInfo
+	{
+		glm::vec3 light_pos;
+		glm::vec3 light_dir;
+		float light_angle;
+		float light_near;
+		float light_far;
+	};
+   
 
     extern SceneRenderSettings SceneRenderData;
 }

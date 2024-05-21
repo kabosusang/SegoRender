@@ -5,6 +5,7 @@ namespace Sego{
     class DirShadowPass :public RenderPass{
     public:
         DirShadowPass();
+        virtual void Init() override;
         virtual void Render() override;
       
         virtual void CreatePiepline() override;
@@ -14,30 +15,22 @@ namespace Sego{
         virtual void destroy() override;
         virtual void createDescriptorSetLayout();
         virtual void createPipelineLayouts();
-        inline void updateShadowConstans(shadowConstans& shadowubos){
-            lightvp_ = shadowubos.LightSpaceMatrix;
-        } 
-        inline void SetBias(float Constant,float Slope){
-            depthBiasConstant = Constant;
-            depthBiasSlope = Slope;
-        }
-        
-        VmaImageViewSampler getShadowMap() { return ShadowMap_; }
+        void updateCascades(ShadowCascadeCreateInfo& shadowubos);
+        VmaImageViewSampler getShadowImageViewSampler() { return ShadowMap_; }
+        ShadowCascadeUBO m_shadow_cascade_ubo;
+        float m_cascade_splits[SHADOW_CASCADE_NUM];
+    
     private:
-        void drawNode(vk::CommandBuffer cmd,vk::PipelineLayout pipelineLayout, Node* node,std::shared_ptr<StaticMeshRenderData>& Rendata);
-        void render_mesh(vk::CommandBuffer cmdBuffer,std::shared_ptr<StaticMeshRenderData>& Rendata);
-    private:
-        float depthBiasConstant = 1.25f;
-        float depthBiasSlope = 7.5f;
-     
+        void renderNode(vk::CommandBuffer cmdBuffer,GltfModel::Node *node);
     private:
         vk::Format m_format;
         uint32_t depthSize_;
+        float m_cascade_split_lambda;
 
         glm::mat4 lightvp_;
         //pick Entity Pass
         VmaImageViewSampler ShadowMap_;
-        
+        std::vector<VmaBuffer> shadowconstans_;
 
     };
 

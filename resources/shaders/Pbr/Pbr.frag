@@ -10,6 +10,8 @@
 
 #version 450
 #extension GL_GOOGLE_include_directive : require
+#include "../light.h"
+#include "includes/shadermaterial.glsl"
 
 layout (location = 0) in vec3 inWorldPos;
 layout (location = 1) in vec3 inNormal;
@@ -17,57 +19,41 @@ layout (location = 2) in vec2 inUV0;
 layout (location = 3) in vec2 inUV1;
 layout (location = 4) in vec4 inColor0;
 
-// Scene bindings
 
-layout (set = 0, binding = 0) uniform UBO {
-	mat4 projection;
-	mat4 view;
-	vec3 camPos;
-} ubo;
-
-layout (set = 0, binding = 1) uniform UBOParams {
-	vec4 lightDir;
-	float exposure;
+// Scene PushConstatns
+layout (push_constant) uniform UBOParams {
+	layout(offset = 64) float exposure;
 	float gamma;
-	float prefilteredCubeMipLevels;
-	float scaleIBLAmbient;
 	float debugViewInputs;
-	float debugViewEquation;
+	int MaterialIndex;
 } uboParams;
 
 // ibl textures
 layout (set = 0, binding = 2) uniform samplerCube samplerIrradiance;
 layout (set = 0, binding = 3) uniform samplerCube prefilteredMap;
 layout (set = 0, binding = 4) uniform sampler2D samplerBRDFLUT;
+//Shadow Texture
+layout(set = 0, binding = 5) uniform sampler2DArray directional_light_shadow_texture_sampler;
+layout(set = 0, binding = 6) uniform samplerCube point_light_shadow_texture_samplers[MAX_POINT_LIGHT_NUM];
+layout(set = 0, binding = 7) uniform sampler2D spot_light_shadow_texture_samplers[MAX_SPOT_LIGHT_NUM];
 
 // Material bindings
 // Textures
-layout (set = 0, binding = 5) uniform sampler2D colorMap;
-layout (set = 0, binding = 6) uniform sampler2D physicalDescriptorMap;
-layout (set = 0, binding = 7) uniform sampler2D normalMap;
-layout (set = 0, binding = 8) uniform sampler2D aoMap;
-layout (set = 0, binding = 9) uniform sampler2D emissiveMap;
+layout (set = 0, binding = 8) uniform sampler2D colorMap;
+layout (set = 0, binding = 9) uniform sampler2D physicalDescriptorMap;
+layout (set = 0, binding = 10) uniform sampler2D normalMap;
+layout (set = 0, binding = 11) uniform sampler2D aoMap;
+layout (set = 0, binding = 12) uniform sampler2D emissiveMap;
 
 // Properties
-#include "includes/shadermaterial.glsl"
-layout(std430, set = 0, binding = 10) buffer SSBO
+layout(std430, set = 0, binding = 13) buffer SSBO
 {
    ShaderMaterial materials[ ];
 };
 //Light
-#include "../light.h"
-layout(set = 0,binding = 11) uniform _LightingUBO{
+layout(set = 0,binding = 14) uniform _LightingUBO{
     LightingUBO lighting_ubo;
 };
-
-//Shadow Texture
-layout (set = 0, binding = 12) uniform sampler2DArray directional_light_shadow_texture_sampler;
-layout(set = 0, binding = 13) uniform samplerCube point_light_shadow_texture_samplers[MAX_POINT_LIGHT_NUM];
-layout(set = 0, binding = 14) uniform sampler2D spot_light_shadow_texture_samplers[MAX_SPOT_LIGHT_NUM];
-
-layout (push_constant) uniform PushConstants {
-	layout(offset = 64) int materialIndex;
-} pushConstants;
 
 
 layout (location = 0) out vec4 outColor;
@@ -165,7 +151,7 @@ float filterPCF(vec4 shadow_coord, uint cascade_index)
 // See our README.md on Environment Maps [3] for additional discussion.
 vec3 getIBLContribution(PBRInfo pbrInputs, vec3 n, vec3 reflection)
 {
-	float lod = (pbrInputs.perceptualRoughness * uboParams.prefilteredCubeMipLevels);
+	float lod = (pbrInputs.perceptualRoughness * lighting_ubo.sky_light.prefilter_mip_levels);
 	// retrieve a scale and bias to F0. See [1], Figure 3
 	vec3 brdf = (texture(samplerBRDFLUT, vec2(pbrInputs.NdotV, 1.0 - pbrInputs.perceptualRoughness))).rgb;
 	vec3 diffuseLight = SRGBtoLINEAR(tonemap(texture(samplerIrradiance, n))).rgb;
@@ -177,10 +163,7 @@ vec3 getIBLContribution(PBRInfo pbrInputs, vec3 n, vec3 reflection)
 
 	// For presentation, this allows us to disable IBL terms
 	// For presentation, this allows us to disable IBL terms
-	diffuse *= uboParams.scaleIBLAmbient;
-	specular *= uboParams.scaleIBLAmbient;
-
-	return diffuse + specular;
+	return (diffuse + specular) * lighting_ubo.sky_light.color;
 }
 
 // Basic Lambertian diffuse
@@ -259,7 +242,7 @@ vec3 getLightContribution(PBRInfo pbr_info, vec3 n, vec3 v, vec3 l, vec3 c)
 
 void main()
 {
-	ShaderMaterial material = materials[pushConstants.materialIndex];
+	ShaderMaterial material = materials[uboParams.MaterialIndex];
 
 	float perceptualRoughness;
 	float metallic;
@@ -350,7 +333,7 @@ void main()
 
 	vec3 n = (material.normalTextureSet > -1) ? getNormal(material) : normalize(inNormal);
 	n.y *= -1.0f;
-	vec3 v = normalize(ubo.camPos - inWorldPos);    // Vector from surface point to camera
+	vec3 v = normalize(lighting_ubo.camera_pos - inWorldPos);    // Vector from surface point to camera
 	vec3 reflection = normalize(reflect(-v, n));
 	float NdotV = clamp(abs(dot(n, v)), 0.001, 1.0);
 
