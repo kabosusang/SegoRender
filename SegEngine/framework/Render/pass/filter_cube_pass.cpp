@@ -38,8 +38,8 @@ FilterCubePass::FilterCubePass(std::shared_ptr<class TextureCube>& skybox_textur
     }
     
     skytexture_ = skybox_texture;
-    skybox_ = std::make_shared<SkyboxRenderData>();
-    skybox_ = std::static_pointer_cast<SkyboxRenderData>(GlTFImporter::LoadglTFFile("resources/Settings/skybox/cube.gltf"));
+    skybox_ = std::make_shared<StaticMeshRenderData>();
+    skybox_ = std::static_pointer_cast<StaticMeshRenderData>(GlTFImporter::LoadglTFFile("resources/Settings/skybox/cube.gltf"));
 }
 
 void FilterCubePass::Init(){
@@ -49,7 +49,6 @@ void FilterCubePass::Init(){
 void FilterCubePass::destroy(){
     auto& ctx = Context::Instance();
     RenderPass::destroy();
-   
 }
 
 void FilterCubePass::createDescriptorSetLayout(){

@@ -29,13 +29,13 @@ namespace Sego{
         filter_pass->Render();
         filter_pass->destroy();
 
-        irradianceIVs_.destroy();
-		prefilteredIVs_.destroy();
+        this->irradianceIVs_.destroy();
+		this->prefilteredIVs_.destroy();
 
-        cube_mesh = filter_pass->getCubeMesh();
-        irradianceIVs_ = filter_pass->getirradianceTexture();
-        prefilteredIVs_ = filter_pass->getPrefilterTexture();
-        m_prefilter_mip_levels = filter_pass->getPrefilterMipLevels();
+        this->cube_mesh = filter_pass->getCubeMesh();
+        this->irradianceIVs_ = filter_pass->getirradianceTexture();
+        this->prefilteredIVs_ = filter_pass->getPrefilterTexture();
+        this->m_prefilter_mip_levels = filter_pass->getPrefilterMipLevels();
     }
 
 }

@@ -219,7 +219,12 @@ namespace Sego{
             return true;
         }
         SkyLightComponent() = default;
-        SkyLightComponent(const SkyLightComponent&) = default;
+        SkyLightComponent(const SkyLightComponent& other) :
+        name(other.name),
+        path(other.path),
+        skylight(other.skylight),
+        textureCube(other.textureCube)
+        {}
     };
 
     struct AnimationComponent{

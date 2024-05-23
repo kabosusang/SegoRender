@@ -84,11 +84,13 @@ namespace Sego{
     };
 
 
-    struct SkyboxRenderData : public StaticMeshRenderData{
+    struct SkyboxRenderData : public MeshRenderData{
         SkyboxRenderData(){
               type = RenderDataType::Skybox;
         }
-
+        std::shared_ptr<StaticMeshRenderData> box_;
+        //push Constant
+        glm::mat4 Meshmvp_;
         VmaImageViewSampler env_texture;
          void destory(){
             vertexBuffer_.destroy();

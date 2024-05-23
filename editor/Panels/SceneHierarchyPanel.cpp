@@ -593,7 +593,7 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
     DrawComponent<PointLightComponent>("PointLight", entity, [](auto& component){
         ImGui::ColorEdit3("Color", glm::value_ptr(component.Color));
         ImGui::DragFloat("Intensity", &component.Intensity,0.1f,0.0f, 10.0f);
-        ImGui::DragFloat("Radius", &component.m_radius,1.0f,0.0f, 1000.0f);
+        ImGui::DragFloat("Radius", &component.m_radius,0.01f,0.0f, 10.0f);
         ImGui::DragFloat("Linear", &component.m_linear_attenuation,0.01f,0.0f, 1.0f);
         ImGui::DragFloat("Quadratic", &component.m_quadratic_attenuation,0.01f,0.0f, 1.0f);
         ImGui::Checkbox("Shadow",&component.castshadow);

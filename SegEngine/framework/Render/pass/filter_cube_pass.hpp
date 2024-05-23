@@ -20,7 +20,7 @@ namespace Sego{
         virtual void createDescriptorSetLayout();
         virtual void createPipelineLayouts();
         
-        std::shared_ptr<class SkyboxRenderData> getCubeMesh(){ return skybox_;}
+        std::shared_ptr<class StaticMeshRenderData> getCubeMesh(){ return skybox_;}
         VmaImageViewSampler getirradianceTexture() {return m_cube_image_view_samplers[0];}
         VmaImageViewSampler getPrefilterTexture() {return m_cube_image_view_samplers[1];}
         uint32_t getPrefilterMipLevels() { return m_mip_levels[1]; }
@@ -36,7 +36,7 @@ namespace Sego{
         VmaImageView m_color_image_views[2];
         VmaImageViewSampler m_cube_image_view_samplers[2];
 
-        std::shared_ptr<class SkyboxRenderData> skybox_;
+        std::shared_ptr<class StaticMeshRenderData> skybox_;
         std::shared_ptr<class TextureCube> skytexture_;
     };
 

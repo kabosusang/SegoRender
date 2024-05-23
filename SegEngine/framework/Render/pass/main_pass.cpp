@@ -13,6 +13,11 @@ struct UboParams{
     int materiaIndex = 0;
 };
 
+struct SkyboxParams{
+    float exposure = 4.5f; //曝光
+    float gamma = 2.2f;//伽马
+};
+
 
 namespace Sego{
 
@@ -130,7 +135,8 @@ void MainPass::createPipelineLayouts(){
 
     //skybox renderer
     cubmap_push_constant_ranges_ = {
-        {vk::ShaderStageFlagBits::eVertex,0,sizeof(glm::mat4)}
+        {vk::ShaderStageFlagBits::eVertex,0,sizeof(glm::mat4)},
+        {vk::ShaderStageFlagBits::eFragment,sizeof(glm::mat4),sizeof(SkyboxParams)}
     };
      pipeline_layout_ci.setSetLayoutCount(1)
                       .setPSetLayouts(&descriptorSetLayouts_[2])
@@ -344,6 +350,35 @@ void MainPass::CreatePiepline(){
         ctx.shaderManager->LoadShader("resources/shaders/cubemap/Cubmapfrag.spv", vk::ShaderStageFlagBits::eFragment)
     };
 
+    //1. vertex input   BindingDescription And AttributeDescription
+    vk::VertexInputBindingDescription vertex_binding_desc_skybox{};
+    vertex_binding_desc_skybox.setBinding(0)
+                      .setStride(sizeof(StaticVertex))
+                      .setInputRate(vk::VertexInputRate::eVertex);
+    
+    std::array<vk::VertexInputAttributeDescription, 4> vertex_attr_descs_Skybox;
+    vertex_attr_descs_Skybox[0].setBinding(0)
+                                .setLocation(0)
+                                .setFormat(vk::Format::eR32G32B32Sfloat)
+                                .setOffset(offsetof(StaticVertex, pos));
+    vertex_attr_descs_Skybox[1].setBinding(0)
+                                .setLocation(1)
+                                .setFormat(vk::Format::eR32G32B32Sfloat)
+                                .setOffset(offsetof(StaticVertex, normal));
+    vertex_attr_descs_Skybox[2].setBinding(0)
+                                .setLocation(2)
+                                .setFormat(vk::Format::eR32G32Sfloat)
+                                .setOffset(offsetof(StaticVertex, uv));
+    vertex_attr_descs_Skybox[3].setBinding(0)
+                                .setLocation(3)
+                                .setFormat(vk::Format::eR32G32B32Sfloat)
+                                .setOffset(offsetof(StaticVertex, color));
+
+    vertex_input_ci.setVertexAttributeDescriptionCount(vertex_attr_descs_Skybox.size())
+                   .setPVertexAttributeDescriptions(vertex_attr_descs_Skybox.data())
+                   .setVertexBindingDescriptionCount(1)
+                   .setPVertexBindingDescriptions(&vertex_binding_desc_skybox);
+
     raster_ci.setCullMode(vk::CullModeFlagBits::eFront);
 
     depth_stencil_ci.setDepthTestEnable(false)
@@ -540,13 +575,13 @@ void MainPass::render_skybox(vk::CommandBuffer cmdBuffer){
     auto& VulkanRhi = VulkanRhi::Instance();
     //pipelines_[2] Skybox Renderer
     cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines_[2]);
-    vk::Buffer vertexBuffers[] = { skybox_->vertexBuffer_.buffer };
+    vk::Buffer vertexBuffers[] = { skybox_->box_->vertexBuffer_.buffer };
     vk::DeviceSize offsets[] = { 0 };
     cmdBuffer.bindVertexBuffers(0, 1, vertexBuffers, offsets);
-    cmdBuffer.bindIndexBuffer(skybox_->indexBuffer_.buffer, 0, vk::IndexType::eUint32);
-
+    cmdBuffer.bindIndexBuffer(skybox_->box_->indexBuffer_.buffer, 0, vk::IndexType::eUint32);
+    
      //Draw Notes
-    for(auto& node : skybox_->nodes_){
+    for(auto& node : skybox_->box_->nodes_){
         drawNode_cubemap(cmdBuffer,pipelineLayouts_[2],node);
     }
 
@@ -656,6 +691,9 @@ void MainPass::render_sprite(vk::CommandBuffer cmdBuffer,std::shared_ptr<SpriteR
 
 void MainPass::drawNode_cubemap(vk::CommandBuffer cmdBuffer , vk::PipelineLayout pipelineLayout,Node* node){
     auto& VulkanRhi = VulkanRhi::Instance();
+    SkyboxParams skyboxparams;
+    skyboxparams.exposure = SceneRenderData.exposure;
+    skyboxparams.gamma = SceneRenderData.gamma;
     if(node->mesh.primitives.size() > 0){
         
         glm::mat4 nodeMatrix = node->matrix;
@@ -667,21 +705,14 @@ void MainPass::drawNode_cubemap(vk::CommandBuffer cmdBuffer , vk::PipelineLayout
         
         // Pass the final matrix to the vertex shader using push constants
         nodeMatrix = skybox_->Meshmvp_;
+        updatePushConstants(cmdBuffer,pipelineLayout,{&nodeMatrix,&skyboxparams},cubmap_push_constant_ranges_);
         for ( auto& primitive : node->mesh.primitives) {
-        updatePushConstants(cmdBuffer,pipelineLayout,{&nodeMatrix},cubmap_push_constant_ranges_);
         desc_writes.clear();
 				if (primitive.indexCount > 0) {
                     std::array<vk::DescriptorImageInfo,1>   desc_image_info = {};  
-                    if (skybox_->materials_[primitive.materialIndex].has_baseColorTexture){
-                        //Sample
-                        addImageDescriptorSet(desc_writes, desc_image_info[0], 
-                        skybox_->env_texture,0);
-                    }else{
-                        //Sample
-                        addImageDescriptorSet(desc_writes, desc_image_info[0], 
-                        skybox_->env_texture,0); //defualt image use depth image(a kidding)
-                    }
-                  
+                    addImageDescriptorSet(desc_writes, desc_image_info[0], 
+                    skybox_->env_texture,0);
+
 				    VulkanRhi.getCmdPushDescriptorSet()(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                     pipelineLayout, 0, static_cast<uint32_t>(desc_writes.size()), (VkWriteDescriptorSet *)desc_writes.data());
 

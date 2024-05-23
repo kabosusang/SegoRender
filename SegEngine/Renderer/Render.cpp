@@ -217,9 +217,7 @@ void Renderer::Render(Scene* scene){
 
         // set skybox render data
         skybox_render_data = std::make_shared<SkyboxRenderData>();
-        std::shared_ptr<StaticMeshRenderData> skybox_cube_mesh = skyLight.skylight->cube_mesh;
-        skybox_render_data->vertexBuffer_ = skybox_cube_mesh->vertexBuffer_;
-        skybox_render_data->indexBuffer_ = skybox_cube_mesh->indexBuffer_;
+        skybox_render_data->box_ = skyLight.skylight->cube_mesh;
         skybox_render_data->Meshmvp_ = SkyboxMvp_;
         skybox_render_data->env_texture = skyLight.skylight->prefilteredIVs_;
 
