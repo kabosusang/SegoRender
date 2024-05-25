@@ -29,7 +29,6 @@ void Renderer::BeginScene(const EditorCamera &camera){
     m_Camenear = camera.GetCmaeraNearClip();
     m_Camefar = camera.GetCmaeraFarClip();
     m_CameraPos = camera.GetPosition();
-    m_CameraDir = camera.GetDirPoint();
     glm::mat4 view = camera.GetViewMatrix();
     glm::mat4 proj = camera.GetProjectionMatrix();
 
@@ -52,6 +51,7 @@ void Renderer::Init(){
         Vulkantool::createBuffer(bufferSize,vk::BufferUsageFlagBits::eUniformBuffer,
         VMA_MEMORY_USAGE_CPU_TO_GPU, m_Lightubs_[i]);
     }
+    defualt_cubemap = TextureCube::Create("resources/Settings/skybox/sky.ktx");
 
 }
 
@@ -156,15 +156,15 @@ void Renderer::Render(Scene* scene){
     std::shared_ptr<LightingRenderData> lighting_render_data = std::make_shared<LightingRenderData>();
     lighting_render_data->camera_view_proj = m_ViewProj;
     lighting_render_data->brdf_lut_texture = default_texture_2d;
-    lighting_render_data->irradiance_texture = default_texture_2d;
-    lighting_render_data->prefilter_texture =default_texture_2d;
+    lighting_render_data->irradiance_texture = defualt_cubemap->image_view_sampler_;
+    lighting_render_data->prefilter_texture = defualt_cubemap->image_view_sampler_;
     lighting_render_data->directional_light_shadow_texture = VCtx.getDirShadowMap();
     lighting_render_data->point_light_shadow_textures.resize(MAX_POINT_LIGHT_NUM);
     lighting_render_data->spot_light_shadow_textures.resize(MAX_SPOT_LIGHT_NUM);
 
     for (uint32_t i = 0; i < MAX_POINT_LIGHT_NUM; ++i)
     {
-        lighting_render_data->point_light_shadow_textures[i] = default_texture_2d;
+        lighting_render_data->point_light_shadow_textures[i] = defualt_cubemap->image_view_sampler_;
     }
     for (uint32_t i = 0; i < MAX_SPOT_LIGHT_NUM; ++i)
     {
@@ -185,7 +185,7 @@ void Renderer::Render(Scene* scene){
     // set lighting uniform buffer object
     LightingUBO lighting_ubo;
     lighting_ubo.camera_pos = m_CameraPos;
-    lighting_ubo.exposure = 4.5f; // TODO
+    lighting_ubo.exposure = 4.5f; // TODOVctx.m_ProjectionMatrix
     lighting_ubo.camera_view = VCtx.m_ViewMatrix;
     lighting_ubo.inv_camera_view_proj = glm::inverse(m_ViewProj);
     lighting_ubo.has_sky_light = lighting_ubo.has_directional_light = false;
@@ -298,6 +298,8 @@ void Renderer::Render(Scene* scene){
         MesData->MaterialBuffer = material.shaderMaterialBuffer;
         RenderDatas.push_back(MesData);
     }
+
+    
 
 
     // directional light shadow pass: n mesh datas

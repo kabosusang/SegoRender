@@ -34,7 +34,6 @@ private:
     void OpenScene(const std::filesystem::path& path);
     void SaveScene();
     void SaveSceneAs();
-    
     void SerializeScene(std::shared_ptr<Scene> scene,const std::filesystem::path& path);
 
     void OnScenePlay();

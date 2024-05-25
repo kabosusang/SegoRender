@@ -23,6 +23,7 @@ layout (set = 0, binding = 0) uniform samplerCube samplerEnv;
 
 void main() 
 {
-	vec3 color = SRGBtoLINEAR(tonemap(textureLod(samplerEnv, inUVW, 1.5))).rgb;	
+	const float lod = 1.0f;
+	vec3 color = SRGBtoLINEAR(tonemap(textureLod(samplerEnv, inUVW, lod))).rgb;	
 	outColor = vec4(color * 1.0, 1.0);
 }

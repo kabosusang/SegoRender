@@ -214,11 +214,25 @@ void Scene::OnUpdateRuntime(Timestep ts)
     Vctx.GetRenderer()->Render(); //UI Render (Must Call)
 }
 
+void Scene::OnAnimationRender(Timestep ts){
+    auto view = m_Registry.view<MeshComponent,AnimationComponent>();
+    for (auto entity : view){
+        auto [mesh,animation] = view.get<MeshComponent,AnimationComponent>(entity);
+        if (animation.animate && mesh.model->animations.size() > 0){
+            animation.animationTimer+= ts.GetSeconds();
+            if (animation.animationTimer > mesh.model->animations[animation.animationIndex].end) {
+                animation.animationTimer -= mesh.model->animations[animation.animationIndex].end;
+            }
+            mesh.model->updateAnimation(animation.animationIndex,animation.animationTimer);
+        }
+    }
+}
+
 void Scene::OnUpdateEditor(Timestep ts,EditorCamera& camera){
     auto &Vctx = VulkanContext::Instance();
     Vctx.GetRenderer()->BeginScene(camera);
-
     Vctx.GetRenderer()->Render(this); //ALL Entity Render
+    OnAnimationRender(ts);
     Vctx.GetRenderer()->Render(); //UI Render (Must Call)
     Vctx.GetRenderer()->EndScene();
 }

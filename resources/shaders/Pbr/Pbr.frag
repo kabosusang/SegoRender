@@ -332,7 +332,7 @@ void main()
 	vec3 specularEnvironmentR90 = vec3(1.0, 1.0, 1.0) * reflectance90;
 
 	vec3 n = (material.normalTextureSet > -1) ? getNormal(material) : normalize(inNormal);
-	n.y *= -1.0f;
+	
 	vec3 v = normalize(lighting_ubo.camera_pos - inWorldPos);    // Vector from surface point to camera
 	vec3 reflection = normalize(reflect(-v, n));
 	float NdotV = clamp(abs(dot(n, v)), 0.001, 1.0);
@@ -446,7 +446,7 @@ void main()
 	}
 
 	vec3 color = light_color;
-
+	
 	const float u_OcclusionStrength = 1.0f;
 	// Apply optional PBR terms for additional (optional) shading
 	if (material.occlusionTextureSet > -1) {

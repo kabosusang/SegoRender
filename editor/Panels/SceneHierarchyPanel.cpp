@@ -377,6 +377,16 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
                 ImGui::CloseCurrentPopup();
             }
         }
+
+         if (!m_SelectionContext.HasComponent<AnimationComponent>() && m_SelectionContext.HasComponent<MaterialComponent>()){
+            if (ImGui::MenuItem("Animation"))
+            {
+                m_SelectionContext.AddComponent<AnimationComponent>();
+                ImGui::CloseCurrentPopup();
+            }
+        }
+
+
         ImGui::EndPopup();
     }
 
@@ -593,7 +603,7 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
     DrawComponent<PointLightComponent>("PointLight", entity, [](auto& component){
         ImGui::ColorEdit3("Color", glm::value_ptr(component.Color));
         ImGui::DragFloat("Intensity", &component.Intensity,0.1f,0.0f, 10.0f);
-        ImGui::DragFloat("Radius", &component.m_radius,0.01f,0.0f, 10.0f);
+        ImGui::DragFloat("Radius", &component.m_radius,1.0f,0.0f, 300.0f);
         ImGui::DragFloat("Linear", &component.m_linear_attenuation,0.01f,0.0f, 1.0f);
         ImGui::DragFloat("Quadratic", &component.m_quadratic_attenuation,0.01f,0.0f, 1.0f);
         ImGui::Checkbox("Shadow",&component.castshadow);
@@ -603,13 +613,26 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
         DrawVec3Control("Direction", component.Direction);
         ImGui::ColorEdit3("Color", glm::value_ptr(component.Color));
         ImGui::DragFloat("Intensity", &component.Intensity,0.1f,0.0f, 10.0f);
-        ImGui::DragFloat("Radius", &component.m_radius,1.0f,0.0f, 1000.0f);
+        ImGui::DragFloat("Radius", &component.m_radius,1.0f,0.0f, 300.0f);
         ImGui::DragFloat("Linear", &component.m_linear_attenuation,0.01f,0.0f, 1.0f);
         ImGui::DragFloat("Quadratic", &component.m_quadratic_attenuation,0.01f,0.0f, 1.0f);
-        ImGui::SliderFloat("Inner Cone Angle", &component.m_inner_cone_angle, 0.0f, 90.0f);
-        ImGui::SliderFloat("Outer Cone Angle", &component.m_outer_cone_angle, 0.0f, 90.0f);
+        ImGui::SliderFloat("Inner Cone Angle", &component.m_inner_cone_angle, 0.0f, 360.0f);
+        ImGui::SliderFloat("Outer Cone Angle", &component.m_outer_cone_angle, 0.0f, 360.0f);
         ImGui::Checkbox("Shadow",&component.castshadow);
+    });
 
+    //Animation
+    DrawComponent<AnimationComponent>("Animation", entity, [](auto& component){
+        ImGui::Checkbox("Animations",&component.animate);
+        if (!component.animationNames.empty()){
+            std::vector<const char*> charitems;
+            charitems.reserve(component.animationNames.size());
+            for (size_t i = 0; i < component.animationNames.size(); i++) {
+			    charitems.push_back(component.animationNames[i].c_str());
+		    }
+            uint32_t itemCount = static_cast<uint32_t>(charitems.size());
+            ImGui::Combo("Animation",&component.animationIndex,&charitems[0],itemCount,itemCount);
+        }
     });
 
 

@@ -41,6 +41,9 @@ private:
     //Uniform
     std::vector<VmaBuffer> m_Lightubs_;
     glm::mat4 SkyboxMvp_;
+
+    //default cuebmap
+    std::shared_ptr<TextureCube> defualt_cubemap;
 };
 
 

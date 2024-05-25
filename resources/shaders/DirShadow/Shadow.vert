@@ -50,7 +50,6 @@ void main()
 		locPos = pc.model * node.matrix * vec4(inPos, 1.0);
 		outNormal = normalize(transpose(inverse(mat3(pc.model * node.matrix))) * inNormal);
 	}
-	locPos.y = -locPos.y;
 	outWorldPos = locPos.xyz / locPos.w;
 	outUV0 = inUV0;
 	gl_Position =  ubo.projection * ubo.view * vec4(outWorldPos, 1.0);

@@ -230,7 +230,8 @@ namespace Sego{
     struct AnimationComponent{
         int32_t animationIndex = 0;
         float animationTimer = 0.0f;
-	    bool animate = true;
+	    bool animate = false;
+        std::vector<std::string> animationNames;
     };
 
 };

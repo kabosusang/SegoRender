@@ -21,14 +21,9 @@ namespace Sego{
         std::vector<Layer*>::reverse_iterator rbegin() { return layers_.rbegin(); }
         std::vector<Layer*>::reverse_iterator rend() { return layers_.rend(); }
 
-        
-
-
-
     private:
         std::vector<Layer*> layers_;
         uint32_t LayerInsertIndex_ = 0;
-
     };
 
 

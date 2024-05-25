@@ -36,7 +36,6 @@ void SegEngine::Run(){
         Timestep timestep = time - LastFrameTime_;
         LastFrameTime_ = time;
 
-
         imguiLayer_->Begin();
         for (Layer* layer : layerStack_)
             layer->OnImGuiRender();
@@ -48,7 +47,7 @@ void SegEngine::Run(){
         window_->OnUpdate();
         
          if(is_Min){
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
             continue;
         }
    }
