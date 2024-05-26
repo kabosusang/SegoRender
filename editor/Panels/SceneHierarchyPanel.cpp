@@ -381,7 +381,8 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
          if (!m_SelectionContext.HasComponent<AnimationComponent>() && m_SelectionContext.HasComponent<MaterialComponent>()){
             if (ImGui::MenuItem("Animation"))
             {
-                m_SelectionContext.AddComponent<AnimationComponent>();
+                auto& mesh = entity.GetComponent<MeshComponent>();
+                m_SelectionContext.AddComponent<AnimationComponent>(mesh.model->animations);
                 ImGui::CloseCurrentPopup();
             }
         }

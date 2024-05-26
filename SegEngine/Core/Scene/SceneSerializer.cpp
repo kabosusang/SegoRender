@@ -211,11 +211,12 @@ static void SerializeEntity(YAML::Emitter& out,Entity entity){
         out << YAML::Key << "MeshComponent";
         out << YAML::BeginMap; //BoxCollider2Domponent
 
-        auto& bc2dComponent = entity.GetComponent<MeshComponent>();
-        out << YAML::Key << "Name" << YAML::Value << bc2dComponent.name;
-        out << YAML::Key << "Path" << YAML::Value << bc2dComponent.path;
+        auto& MeshC = entity.GetComponent<MeshComponent>();
+        out << YAML::Key << "Name" << YAML::Value << MeshC.name;
+        out << YAML::Key << "Path" << YAML::Value << MeshC.path;
         out << YAML::EndMap; //BoxCollider2Domponent
     }
+
 
     if (entity.HasComponent<DirLightComponent>()){
         out << YAML::Key << "DirLightComponent";
@@ -224,7 +225,56 @@ static void SerializeEntity(YAML::Emitter& out,Entity entity){
         auto& dirLiComponent = entity.GetComponent<DirLightComponent>();
         out << YAML::Key << "Direction" << YAML::Value << dirLiComponent.Direction;
         out << YAML::Key << "Intensity" << YAML::Value << dirLiComponent.Intensity;
-        out << YAML::EndMap; //BoxCollider2Domponent
+        out << YAML::Key << "Color" << YAML::Value << dirLiComponent.Color;
+        out << YAML::Key << "Cascade_frustum" << YAML::Value << dirLiComponent.m_cascade_frustum_near;
+        out << YAML::Key << "Shadow" << YAML::Value << dirLiComponent.castshadow;
+
+        out << YAML::EndMap; //DirLightComponent
+    }
+
+    if (entity.HasComponent<PointLightComponent>()){
+        out << YAML::Key << "PointLightComponent";
+        out << YAML::BeginMap; //PointLightComponent
+
+        auto& PointLiComponent = entity.GetComponent<PointLightComponent>();
+        out << YAML::Key << "Color" << YAML::Value << PointLiComponent.Color;
+        out << YAML::Key << "Intensity" << YAML::Value << PointLiComponent.Intensity;
+        out << YAML::Key << "Radius" << YAML::Value << PointLiComponent.m_radius;
+        out << YAML::Key << "linear_attenuation" << YAML::Value << PointLiComponent.m_linear_attenuation;
+        out << YAML::Key << "quadratic" << YAML::Value << PointLiComponent.m_quadratic_attenuation;
+        out << YAML::Key << "Shadow" << YAML::Value << PointLiComponent.castshadow;
+        out << YAML::EndMap; //PointLightComponent
+    }
+
+    if (entity.HasComponent<SpoitLightComponent>()){
+        out << YAML::Key << "SpoitLightComponent";
+        out << YAML::BeginMap; //SpoitLightComponent
+
+        auto& SPointLiComponent = entity.GetComponent<SpoitLightComponent>();
+        out << YAML::Key << "Color" << YAML::Value << SPointLiComponent.Color;
+        out << YAML::Key << "Direction" << YAML::Value << SPointLiComponent.Direction;
+
+        out << YAML::Key << "Intensity" << YAML::Value << SPointLiComponent.Intensity;
+        out << YAML::Key << "Radius" << YAML::Value << SPointLiComponent.m_radius;
+        out << YAML::Key << "linear_attenuation" << YAML::Value << SPointLiComponent.m_linear_attenuation;
+        out << YAML::Key << "quadratic" << YAML::Value << SPointLiComponent.m_quadratic_attenuation;
+        out << YAML::Key << "Shadow" << YAML::Value << SPointLiComponent.castshadow;
+        out << YAML::Key << "InnerAngle" << YAML::Value << SPointLiComponent.m_inner_cone_angle;
+        out << YAML::Key << "OuterAngle" << YAML::Value << SPointLiComponent.m_outer_cone_angle;
+        
+        out << YAML::EndMap; //SpoitLightComponent
+    }
+
+      if (entity.HasComponent<SkyLightComponent>()){
+        out << YAML::Key << "SkyLightComponent";
+        out << YAML::BeginMap; //SkyLightComponent
+
+        auto& SkyLiComponent = entity.GetComponent<SkyLightComponent>();
+        out << YAML::Key << "Color" << YAML::Value << SkyLiComponent.Color;
+        out << YAML::Key << "Intensity" << YAML::Value << SkyLiComponent.Intensity;
+        out << YAML::Key << "Name" << YAML::Value << SkyLiComponent.name;
+        out << YAML::Key << "Path" << YAML::Value << SkyLiComponent.path;
+        out << YAML::EndMap; //SkyLightComponent
     }
 
 
@@ -337,8 +387,11 @@ bool SceneSerializer::Deserialize(const std::string &filepath){
                 mc.name = meshComponent["Name"].as<std::string>();
                 mc.path = meshComponent["Path"].as<std::string>();
                 std::future<void> mesh_async = std::async(std::launch::async,[&](){
-                    mc.model  = std::make_shared<GltfModel::Model>();
+                    auto tStart = std::chrono::high_resolution_clock::now();
+                    mc.model = std::make_shared<GltfModel::Model>();
                     mc.model->loadFromFile(mc.path);
+                    auto tFileLoad = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - tStart).count();
+                    SG_CORE_INFO("Load Model Time:{} ms",tFileLoad);
                 });
                 mesh_async.get();
             }
@@ -349,10 +402,48 @@ bool SceneSerializer::Deserialize(const std::string &filepath){
                 auto& dc = deserializedEntity.AddComponent<DirLightComponent>();
                 dc.Direction = DirComponent["Direction"].as<glm::vec3>();
                 dc.Intensity = DirComponent["Intensity"].as<float>();
+                dc.Color = DirComponent["Color"].as<glm::vec3>();
+                dc.Intensity = DirComponent["Cascade_frustum"].as<float>();
+                dc.castshadow = DirComponent["Shadow"].as<bool>();
             }
 
+            //Point Component
+            auto PoitComponent = entity["PointLightComponent"];
+            if (PoitComponent){
+                auto& spc = deserializedEntity.AddComponent<PointLightComponent>();
+                spc.Color = PoitComponent["Color"].as<glm::vec3>();
+                spc.Intensity = PoitComponent["Intensity"].as<float>();
+                spc.m_radius = PoitComponent["Radius"].as<float>();
+                spc.m_linear_attenuation = PoitComponent["linear_attenuation"].as<float>();
+                spc.m_quadratic_attenuation = PoitComponent["quadratic"].as<float>();
+                spc.castshadow = PoitComponent["Shadow"].as<bool>();
+            }
 
-            
+            //Spoit Component
+            auto SPoitComponent = entity["SpoitLightComponent"];
+            if (SPoitComponent){
+                auto& spc = deserializedEntity.AddComponent<SpoitLightComponent>();
+                spc.Color = SPoitComponent["Color"].as<glm::vec3>();
+                spc.Direction = SPoitComponent["Direction"].as<glm::vec3>();
+                spc.Intensity = SPoitComponent["Intensity"].as<float>();
+                spc.m_radius = SPoitComponent["Radius"].as<float>();
+                spc.m_linear_attenuation = SPoitComponent["linear_attenuation"].as<float>();
+                spc.m_quadratic_attenuation = SPoitComponent["quadratic"].as<float>();
+                spc.m_inner_cone_angle = SPoitComponent["InnerAngle"].as<float>();
+                spc.m_outer_cone_angle = SPoitComponent["OuterAngle"].as<float>();
+                spc.castshadow = SPoitComponent["Shadow"].as<bool>();
+            }
+
+            //SkyLight Component
+            auto SkyComponent = entity["SkyLightComponent"];
+            if (SkyComponent){
+                auto& spc = deserializedEntity.AddComponent<SkyLightComponent>();
+                spc.Color = SkyComponent["Color"].as<glm::vec3>();
+                spc.Intensity = SkyComponent["Intensity"].as<float>();
+                spc.name = SkyComponent["Name"].as<std::string>();
+                spc.path = SkyComponent["Path"].as<std::string>();
+            }
+
 
 
         }

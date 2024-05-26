@@ -21,5 +21,4 @@ void main() {
     }else{
         outColor = texColor;
     }
-
 }

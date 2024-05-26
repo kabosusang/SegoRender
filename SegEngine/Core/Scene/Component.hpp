@@ -56,7 +56,6 @@ namespace Sego{
 
         SpriteRendererComponent() = default;
         SpriteRendererComponent(const SpriteRendererComponent&) = default;
-        
         SpriteRendererComponent(const glm::vec4& color)
          : Color(color) {}
 
@@ -232,6 +231,14 @@ namespace Sego{
         float animationTimer = 0.0f;
 	    bool animate = false;
         std::vector<std::string> animationNames;
+
+        AnimationComponent() = default;
+        AnimationComponent( std::vector<GltfModel::Animation>& animations){
+            for (auto& aname : animations){
+                animationNames.push_back(aname.name);
+            }
+        }
+        AnimationComponent(const AnimationComponent& other) = default;
     };
 
 };

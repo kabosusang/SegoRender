@@ -1,0 +1,78 @@
+Scene: Untitled
+Entities:
+  - Entity: 7102614874633610985
+    TagComponent:
+      Tag: Spot Light
+    TransformComponent:
+      Translation: [-0.210721165, 2.51585603, 2.83045602]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    SpoitLightComponent:
+      Color: [1, 1, 1]
+      Direction: [-1.5, -3.20000005, 3]
+      Intensity: 1.5
+      Radius: 64
+      linear_attenuation: 0.200000003
+      quadratic: 0.0700000003
+      Shadow: false
+      InnerAngle: 116.786003
+      OuterAngle: 192.856995
+  - Entity: 6619367506464292681
+    TagComponent:
+      Tag: Poit Light
+    TransformComponent:
+      Translation: [3.17084312, 1.8423214, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [1, 1, 1]
+      Intensity: 1
+      Radius: 64
+      linear_attenuation: 0.140000001
+      quadratic: 0.0700000003
+      Shadow: true
+  - Entity: 8131907825425518176
+    TagComponent:
+      Tag: Directional Light
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    DirLightComponent:
+      Direction: [-0.200000003, -1, -0.300000012]
+      Intensity: 1
+      Color: [1, 1, 1]
+      Cascade_frustum: 8.39999962
+      Shadow: true
+  - Entity: 8354068111598849699
+    TagComponent:
+      Tag: Plane
+    TransformComponent:
+      Translation: [0, -1.53067613, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      Name: Plane
+      Path: resources/Settings/SceneObject/Plane.glb
+  - Entity: 6375610257271937808
+    TagComponent:
+      Tag: Sky Light
+    TransformComponent:
+      Translation: [2.56032038, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    SkyLightComponent:
+      Color: [1, 1, 1]
+      Intensity: 0.5
+      Name: sky
+      Path: resources\Settings\skybox\sky.ktx
+  - Entity: 13377051649919652274
+    TagComponent:
+      Tag: Cube
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [55.0559921, 55.0559921, 55.0559921]
+    MeshComponent:
+      Name: Avocado
+      Path: resources\assets\gltf\Avocado\Avocado.gltf

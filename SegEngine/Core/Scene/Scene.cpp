@@ -82,6 +82,12 @@ std::shared_ptr<Scene> Scene::Copy(const std::shared_ptr<Scene> &other)
     CopyComponent<BoxCollider2Domponent>(dstSceneRegistry,srcSceneRegistry,enttMap);
     CopyComponent<MeshComponent>(dstSceneRegistry,srcSceneRegistry,enttMap);
     CopyComponent<DirLightComponent>(dstSceneRegistry,srcSceneRegistry,enttMap);
+    CopyComponent<PointLightComponent>(dstSceneRegistry,srcSceneRegistry,enttMap);
+    CopyComponent<SpoitLightComponent>(dstSceneRegistry,srcSceneRegistry,enttMap);
+    CopyComponent<SkyLightComponent>(dstSceneRegistry,srcSceneRegistry,enttMap);
+    CopyComponent<MaterialComponent>(dstSceneRegistry,srcSceneRegistry,enttMap);
+    CopyComponent<AnimationComponent>(dstSceneRegistry,srcSceneRegistry,enttMap);
+
     return newScene;
 }
 
@@ -264,7 +270,12 @@ void Scene::DuplicateEntity(Entity entity)
     CopyComponentIfExists<Rigidbody2DComponent>(newEntity,entity);
     CopyComponentIfExists<BoxCollider2Domponent>(newEntity,entity);
     CopyComponentIfExists<MeshComponent>(newEntity,entity);
+    CopyComponentIfExists<MaterialComponent>(newEntity,entity);
     CopyComponentIfExists<DirLightComponent>(newEntity,entity);
+    CopyComponentIfExists<PointLightComponent>(newEntity,entity);
+    CopyComponentIfExists<SpoitLightComponent>(newEntity,entity);
+    CopyComponentIfExists<SkyLightComponent>(newEntity,entity);
+    CopyComponentIfExists<AnimationComponent>(newEntity,entity);
 }
 
 Entity Scene::GetPrimaryCameraEntity(){
