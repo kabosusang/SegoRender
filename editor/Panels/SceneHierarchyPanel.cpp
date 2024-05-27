@@ -53,11 +53,13 @@ void SceneHierarchyPanel::OnImGuiRender(){
                     if (ImGui::MenuItem("Cube")){
                         Entity curent = m_Context->CreateEntity("Cube");
                         curent.AddComponent<MeshComponent>("Cube","resources/Settings/SceneObject/Cube.glb");
+                        AttachMaterial(curent);
                     }
 
                     if (ImGui::MenuItem("Plate")){
                         Entity curent = m_Context->CreateEntity("Plane");
                         curent.AddComponent<MeshComponent>("Plane","resources/Settings/SceneObject/Plane.glb");
+                        AttachMaterial(curent);
                     }
                     ImGui::EndMenu();
                 }
@@ -141,11 +143,9 @@ void SceneHierarchyPanel::AttachMaterial(Entity entity)
         }
         shaderMaterials.push_back(shaderMaterial);
     }
-    
     entity.AddComponent<MaterialComponent>(shaderMaterials);
     auto& matComt = entity.GetComponent<MaterialComponent>();
     if (!shaderMaterials.empty()){
-        auto maxFlightCount_ = VulkanRhi::Instance().getMaxFlightCount(); 
         vk::DeviceSize bufferSize = sizeof(ShaderMaterial) * shaderMaterials.size();
         Vulkantool::createMaterialBuffer(bufferSize,shaderMaterials.data(), matComt.shaderMaterialBuffer);
     }
@@ -171,10 +171,16 @@ void SceneHierarchyPanel::DrawEnityNode(Entity entity)
     }
 
     if(opened){
-        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow |ImGuiTreeNodeFlags_SpanAvailWidth ;
-        bool opened = ImGui::TreeNodeEx((void*)99891823,flags,tag.c_str());
-        if(opened){
-                ImGui::TreePop(); 
+        if (entity.HasComponent<MeshComponent>()){
+            static int selected = -1;
+            auto& mesh = entity.GetComponent<MeshComponent>();
+            
+            for (int n = 0; n < mesh.model->nodes.size(); n++)
+            {
+                if (ImGui::Selectable(mesh.model->nodes[n]->name.c_str(), selected == n)){
+                    selected = n;
+                }
+            }
         }
         ImGui::TreePop();
     }
@@ -561,11 +567,6 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
 
     });
 
-    //Material
-    DrawComponent<MaterialComponent>("Material", entity, [](auto& component){
-       
-    });
-
     //Light Component
     DrawComponent<SkyLightComponent>("SkyLightComponent", entity, [](auto& component){
         ImGui::ColorEdit3("Color", glm::value_ptr(component.Color));
@@ -635,6 +636,17 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
             ImGui::Combo("Animation",&component.animationIndex,&charitems[0],itemCount,itemCount);
         }
     });
+
+
+    //Material
+    DrawComponent<MaterialComponent>("Material", entity, [](auto& component){
+        ImGui::ColorEdit4("Color", glm::value_ptr(component.baseColor));
+        ImGui::DragFloat("Metallic", &component.metallic,0.01f,0.0f, 1.0f);
+        ImGui::DragFloat("Roughness", &component.roughness,0.01f,0.0f, 1.0f);
+        ImGui::ColorEdit4("Emissive Color", glm::value_ptr(component.emissive));
+        ImGui::DragFloat("Emissive Strength", &component.emissiveStrength,0.01f,0.0f, 1.0f);
+    });
+
 
 
 }

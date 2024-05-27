@@ -159,6 +159,13 @@ namespace Sego{
     struct MaterialComponent{
         std::vector<ShaderMaterial> shaderMaterials{};
         VmaBuffer shaderMaterialBuffer;
+        
+        glm::vec4 baseColor = glm::vec4(1.0f);//模型颜色
+        float metallic = 1.0f; //金属度
+        float roughness = 1.0f;//粗糙度
+        glm::vec4 emissive = glm::vec4(1.0f);//自发光颜色
+        float emissiveStrength = 1.0f;//自发光强度
+
 
         MaterialComponent() = default;
         MaterialComponent(std::vector<ShaderMaterial>& material){ shaderMaterials = material; }

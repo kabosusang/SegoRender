@@ -21,3 +21,12 @@ struct ShaderMaterial {
 	float alphaMaskCutoff;
 	float emissiveStrength;
 };
+
+struct MaterialInfo{
+	int MaterialIndex;
+    vec4 baseColor;//模型颜色
+    float metallic; //金属度
+    float roughness;//粗糙度
+    vec4 emissive;//自发光颜色
+    float emissiveStrength;//自发光强度
+};

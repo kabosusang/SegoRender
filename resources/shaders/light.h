@@ -11,8 +11,8 @@ using uint = unsigned int;
 
 #endif
 #define SHADOW_CASCADE_NUM 4
-#define MAX_POINT_LIGHT_NUM 8
-#define MAX_SPOT_LIGHT_NUM 8
+#define MAX_POINT_LIGHT_NUM 4
+#define MAX_SPOT_LIGHT_NUM 4
 #define PCF_DELTA_SCALE 0.75
 #define PCF_SAMPLE_RANGE 1
 #define SHADOW_FACE_NUM 6

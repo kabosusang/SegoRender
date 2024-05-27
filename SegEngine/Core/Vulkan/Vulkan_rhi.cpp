@@ -59,6 +59,11 @@ void VulkanRhi::destory() {
     for (auto& uniform : uniformBuffers_){
         uniform.destroy();
     }
+
+   for (auto& buffer : SceneSettings_){
+        buffer.destroy();
+    }
+
     for (auto& semaphore : imageAvailableSemaphores_) {
         Context::Instance().device.destroySemaphore(semaphore);
     }
@@ -134,6 +139,14 @@ void VulkanRhi::createUniformBuffers(){
         VMA_MEMORY_USAGE_CPU_TO_GPU, uniformBuffers_[i]);
     }
 
+     //SceneSetting
+    vk::DeviceSize bufferSize_Scene = sizeof(SceneRenderSettings);
+    SceneSettings_.resize(maxFlightCount_);
+    for(int i = 0; i < maxFlightCount_; ++i){
+        Vulkantool::createBuffer(bufferSize_Scene,vk::BufferUsageFlagBits::eUniformBuffer,
+        VMA_MEMORY_USAGE_CPU_TO_GPU, SceneSettings_[i]);
+    }
+
 }
 
 void VulkanRhi::loadExtensionFuncs(){
@@ -180,6 +193,9 @@ void VulkanRhi::updtaUniform(){
     viewProjs.view = m_ViewMatrix;
     viewProjs.proj = m_ProjectionMatrix;
     Vulkantool::updateBuffer(uniformBuffers_[currentFrame_], &viewProjs, sizeof(ViewProjs));
+
+    //Scene Data
+    Vulkantool::updateBuffer(SceneSettings_[currentFrame_], &SceneRenderData, sizeof(SceneRenderSettings));
 }
 
 

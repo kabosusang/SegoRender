@@ -5,19 +5,10 @@
 #include "resource/asset/base/Mesh.hpp"
 #include "resource/asset/Import/gltf_import.hpp"
 
-
-struct UboParams{
-    float exposure = 4.5f; //曝光
-    float gamma = 2.2f;//伽马
-    float debugViewInputs = 0;
-    int materiaIndex = 0;
-};
-
 struct SkyboxParams{
     float exposure = 4.5f; //曝光
     float gamma = 2.2f;//伽马
 };
-
 
 namespace Sego{
 
@@ -82,7 +73,9 @@ void MainPass::createDescriptorSetLayout(){
         vk::DescriptorSetLayoutBinding(11, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment), // aoMap
         vk::DescriptorSetLayoutBinding(12, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment), // emissiveMap
         vk::DescriptorSetLayoutBinding(13, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eFragment), // _ShaderMaterial SSBO
-        vk::DescriptorSetLayoutBinding(14, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eFragment)  // _LightingUBO
+        vk::DescriptorSetLayoutBinding(14, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eFragment),  // _LightingUBO
+        vk::DescriptorSetLayoutBinding(15, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eFragment)  // _SceneSetting
+    
     };
 
     vk::DescriptorSetLayoutCreateInfo desc_set_layout_ci_mesh{};
@@ -124,7 +117,7 @@ void MainPass::createPipelineLayouts(){
     //mesh renderer(PBR)
     mesh_push_constant_ranges_ = {
         {vk::ShaderStageFlagBits::eVertex,0,sizeof(glm::mat4)},
-        {vk::ShaderStageFlagBits::eFragment,sizeof(glm::mat4), sizeof(UboParams)},
+        {vk::ShaderStageFlagBits::eFragment,sizeof(glm::mat4), sizeof(MaterialInfo)},
     };
     pipeline_layout_ci.setSetLayoutCount(1)
                       .setPSetLayouts(&descriptorSetLayouts_[1])
@@ -593,20 +586,17 @@ void MainPass::renderNode(vk::CommandBuffer cmdBuffer,GltfModel::Node *node,std:
     // set render datas
     const VmaImageViewSampler& default_texture_2d = VulkanRhi.defaultTexture->image_view_sampler_;
     uint32_t flight_Index = VulkanRhi.getFlightCount();
-    UboParams params;
-    params.exposure = SceneRenderData.exposure;
-    params.gamma = SceneRenderData.gamma;
-    params.debugViewInputs = SceneRenderData.debugViewInputs;
+  
     if (node->mesh){
         // Render mesh primitives
         std::vector<vk::WriteDescriptorSet> desc_write;
-        std::array<vk::DescriptorBufferInfo, 4> desc_buffer_infos{};
+        std::array<vk::DescriptorBufferInfo, 5> desc_buffer_infos{};
         std::array<vk::DescriptorImageInfo,25>   desc_image_info{};
         addBufferDescriptorSet(desc_write,desc_buffer_infos[0],VulkanRhi.getCurrentUniformBuffer(),0);
         addBufferDescriptorSet(desc_write,desc_buffer_infos[1],node->mesh->uniformBuffer.buffer,1);
         addBufferDescriptorSet(desc_write,desc_buffer_infos[2],lightdata_->lighting_ubs[flight_Index],14);
         addSsboBufferDescriptorSet(desc_write,desc_buffer_infos[3],Renderdata->MaterialBuffer,13);
-        
+         addBufferDescriptorSet(desc_write,desc_buffer_infos[4],VulkanRhi.getCurrentSceneUniform(),15);
         //IBL Texture
         std::vector<VmaImageViewSampler> IBL_textures = {
             lightdata_->irradiance_texture,
@@ -626,9 +616,8 @@ void MainPass::renderNode(vk::CommandBuffer cmdBuffer,GltfModel::Node *node,std:
 
         for (GltfModel::Primitive* primitive : node->mesh->primitives)
         {
-            params.materiaIndex = primitive->material.index;
-            std::vector<const void*> pcos = {&Renderdata->model_,&params};
-            updatePushConstants(cmdBuffer,pipelineLayouts_[1],pcos,mesh_push_constant_ranges_);
+            Renderdata->materialinfo.MaterialIndex = primitive->material.index;
+            updatePushConstants(cmdBuffer,pipelineLayouts_[1],{&Renderdata->model_,&Renderdata->materialinfo},mesh_push_constant_ranges_);
 
             //PBR Texture;
             std::vector<VmaImageViewSampler> PBR_textures = {

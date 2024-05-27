@@ -329,9 +329,9 @@ void EditorLayer::FramBufferResize(float w,float h){
 	uint32_t new_width = static_cast<uint32_t>(w);
 	uint32_t new_height = static_cast<uint32_t>(h);
 
-	m_Renderer->resizeframbuffer(new_width,new_height);
-	m_ActiveScene->OnViewportResize(new_width,new_height);
 	m_EditorCamera.SetViewportSize(w,h);
+	m_ActiveScene->OnViewportResize(new_width,new_height);
+	m_Renderer->resizeframbuffer(new_width,new_height);
 
 	//Color
 	if (m_color_texture_set != VK_NULL_HANDLE)

@@ -28,6 +28,7 @@ namespace Sego{
         void setLightRenderData(std::shared_ptr<LightingRenderData>& light){
             lightdata_ = light;
         }
+        
 
     private:
         //Default Push Constant

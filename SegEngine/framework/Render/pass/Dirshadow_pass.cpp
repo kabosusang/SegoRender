@@ -142,10 +142,10 @@ void DirShadowPass::CreatePiepline(){
              .setLineWidth(1.0f)
              .setCullMode(vk::CullModeFlagBits::eBack)
              .setFrontFace(vk::FrontFace::eCounterClockwise)
-             .setDepthBiasEnable(false);
+             .setDepthBiasEnable(true);
     // dynamic states
     std::vector<vk::DynamicState> dynamic_states = {vk::DynamicState::eViewport,
-    vk::DynamicState::eScissor};
+    vk::DynamicState::eScissor,vk::DynamicState::eDepthBias};
     vk::PipelineDynamicStateCreateInfo dynamicState{};
     dynamicState.setDynamicStateCount(dynamic_states.size())
                 .setPDynamicStates(dynamic_states.data());
@@ -299,7 +299,11 @@ void DirShadowPass::Render(){
     scissor.setOffset({0, 0})
            .setExtent({depthSize_,depthSize_});
     cmdBuffer.setScissor(0, 1, &scissor);
-   
+    static float depthBiasConstant = 1.25f;
+    static float depthBiasSlope = 7.5f;
+    cmdBuffer.setDepthBias(depthBiasConstant,0.0f,depthBiasSlope);
+
+
     for(const auto& Rendata : renderDatas_){
         if (Rendata->type == RenderDataType::PbrAndSkeletomMesh){
             

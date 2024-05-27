@@ -103,6 +103,8 @@ namespace Sego{
 
         std::shared_ptr<GltfModel::Model> model = nullptr;
         VmaBuffer MaterialBuffer;
+        MaterialInfo materialinfo;
+
         void destory() {
            model->destory();
         }
@@ -152,7 +154,6 @@ namespace Sego{
     struct SceneRenderSettings{
         float exposure = 4.5f; //曝光
         float gamma = 2.2f;//伽马
-        float debugViewInputs = 0;
     };
 
     struct ShadowCascadeCreateInfo

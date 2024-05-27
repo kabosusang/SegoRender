@@ -43,5 +43,13 @@ struct alignas(16) ShaderMaterial {
 	float emissiveStrength;
 };
 
+struct MaterialInfo{
+    glm::vec4 baseColor;//模型颜色
+    glm::vec4 emissive;//自发光颜色
+    float metallic; //金属度
+    float roughness;//粗糙度
+    float emissiveStrength;//自发光强度
+	int MaterialIndex;
+};
 
 }

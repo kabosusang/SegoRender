@@ -46,6 +46,9 @@ namespace Sego{
         
         inline std::vector<VmaBuffer>& getUniformBuffer() { return uniformBuffers_;}
         inline VmaBuffer getCurrentUniformBuffer() { return uniformBuffers_[currentFrame_];}
+        inline VmaBuffer getCurrentSceneUniform() { return SceneSettings_[currentFrame_];}
+        
+        
         //Render Output Function
         void setClearColor(const glm::vec4& color);
 
@@ -61,7 +64,6 @@ namespace Sego{
         void SetLightRenderData(std::shared_ptr<LightingRenderData>& light){
             mainPass_->setLightRenderData(light);
         }
-
 
         //Shadow Cascades
         std::shared_ptr<class DirShadowPass> dirPass_;
@@ -107,6 +109,7 @@ namespace Sego{
 
         //All Render mvp UniformBuffer
         std::vector<VmaBuffer> uniformBuffers_; //uniform buffer view projection lightMatrix
+        std::vector<VmaBuffer> SceneSettings_; //Scene SettingData(exposure gamma ...)
         bool framebufferResized = false;
     };
 

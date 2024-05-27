@@ -53,12 +53,16 @@ void Renderer::Init(){
     }
     defualt_cubemap = TextureCube::Create("resources/Settings/skybox/sky.ktx");
 
+
+
 }
 
 void Renderer::destory(){
     for (auto& buffer : m_Lightubs_){
         buffer.destroy();
     }
+
+    
 }
 
 
@@ -294,8 +298,14 @@ void Renderer::Render(Scene* scene){
         MesData->model = meshRenderer.model;
 
         //Material
-        
         MesData->MaterialBuffer = material.shaderMaterialBuffer;
+        //MaterialComponent
+        MesData->materialinfo.baseColor = material.baseColor;
+        MesData->materialinfo.emissive = material.emissive;
+        MesData->materialinfo.emissiveStrength = material.emissiveStrength;
+        MesData->materialinfo.metallic = material.metallic;
+        MesData->materialinfo.roughness = material.roughness;
+
         RenderDatas.push_back(MesData);
     }
 
@@ -370,11 +380,13 @@ void Renderer::Render(Scene* scene){
             VCtx.spotPass_->setRenderDatas(RenderDatas);
         }
     }
-
+    uint32_t currentframe = VCtx.getFlightCount();
     // update lighting uniform buffers
-    VmaBuffer uniform_buffer = m_Lightubs_[VCtx.getFlightCount()];
+    VmaBuffer uniform_buffer = m_Lightubs_[currentframe];
     Vulkantool::updateBuffer(uniform_buffer, (void*)&lighting_ubo, sizeof(LightingUBO));
     lighting_render_data->lighting_ubs = m_Lightubs_;
+
+
 
     //Push Renderer
     VCtx.SetLightRenderData(lighting_render_data);

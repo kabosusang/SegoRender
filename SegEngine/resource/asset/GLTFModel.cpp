@@ -576,6 +576,7 @@ void Model::loadTextureSamplers(tinygltf::Model &gltfModel)
 
 void Model::loadMaterials(tinygltf::Model &gltfModel)
 {
+	SG_CORE_INFO("Material Count:{}",gltfModel.materials.size());
 	for (tinygltf::Material &mat : gltfModel.materials) {
 		PBRMaterial material{};
 		material.doubleSided = mat.doubleSided;
@@ -682,7 +683,7 @@ void Model::loadMaterials(tinygltf::Model &gltfModel)
 		materials.push_back(material);
 	}
 	// Push a default material at the end of the list for meshes with no material assigned
-	materials.push_back(PBRMaterial());
+	//materials.push_back(PBRMaterial());
 }
 
 void Model::loadAnimations(tinygltf::Model &gltfModel)

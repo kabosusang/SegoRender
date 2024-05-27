@@ -11,6 +11,7 @@
 #version 450
 #extension GL_GOOGLE_include_directive : require
 #include "../light.h"
+#include "../device.h"
 #include "includes/shadermaterial.glsl"
 
 layout (location = 0) in vec3 inWorldPos;
@@ -19,14 +20,15 @@ layout (location = 2) in vec2 inUV0;
 layout (location = 3) in vec2 inUV1;
 layout (location = 4) in vec4 inColor0;
 
-
 // Scene PushConstatns
 layout (push_constant) uniform UBOParams {
-	layout(offset = 64) float exposure;
-	float gamma;
-	float debugViewInputs;
+	layout(offset = 64) vec4 baseColor;//模型颜色
+    vec4 emissive;//自发光颜色
+    float metallic; //金属度
+    float roughness;//粗糙度
+    float emissiveStrength;//自发光强度
 	int MaterialIndex;
-} uboParams;
+} Materialinfo;
 
 // ibl textures
 layout (set = 0, binding = 2) uniform samplerCube samplerIrradiance;
@@ -53,6 +55,10 @@ layout(std430, set = 0, binding = 13) buffer SSBO
 //Light
 layout(set = 0,binding = 14) uniform _LightingUBO{
     LightingUBO lighting_ubo;
+};
+//Scene Setting
+layout(set = 0,binding = 15) uniform _SceneSetting{
+    SceneRenderSettings SceneSettings;
 };
 
 
@@ -242,32 +248,32 @@ vec3 getLightContribution(PBRInfo pbr_info, vec3 n, vec3 v, vec3 l, vec3 c)
 
 void main()
 {
-	ShaderMaterial material = materials[uboParams.MaterialIndex];
+	ShaderMaterial material = materials[Materialinfo.MaterialIndex];
 
 	float perceptualRoughness;
 	float metallic;
 	vec3 diffuseColor;
 	vec4 baseColor;
-
 	vec3 f0 = vec3(0.04);
 
-	if (material.alphaMask == 1.0f) {
-		if (material.baseColorTextureSet > -1) {
-			baseColor = SRGBtoLINEAR(texture(colorMap, material.baseColorTextureSet == 0 ? inUV0 : inUV1)) * material.baseColorFactor;
-		} else {
-			baseColor = material.baseColorFactor;
-		}
-		if (baseColor.a < material.alphaMaskCutoff) {
-			discard;
-		}
+	
+	if (material.baseColorTextureSet > -1) {
+		baseColor = SRGBtoLINEAR(texture(colorMap, material.baseColorTextureSet == 0 ? inUV0 : inUV1)) * material.baseColorFactor * Materialinfo.baseColor  ;
+	} else {
+		baseColor = material.baseColorFactor * Materialinfo.baseColor;
 	}
+
+	if (baseColor.a < material.alphaMaskCutoff) {
+		discard;
+	}
+
 
 	if (material.workflow == PBR_WORKFLOW_METALLIC_ROUGHNESS) {
 		// Metallic and Roughness material properties are packed together
 		// In glTF, these factors can be specified by fixed scalar values
 		// or from a metallic-roughness map
-		perceptualRoughness = material.roughnessFactor;
-		metallic = material.metallicFactor;
+		perceptualRoughness = material.roughnessFactor * Materialinfo.roughness;
+		metallic = material.metallicFactor * Materialinfo.metallic;
 		if (material.physicalDescriptorTextureSet > -1) {
 			// Roughness is stored in the 'g' channel, metallic is stored in the 'b' channel.
 			// This layout intentionally reserves the 'r' channel for (optional) occlusion map data
@@ -283,9 +289,9 @@ void main()
 
 		// The albedo may be defined from a base texture or a flat color
 		if (material.baseColorTextureSet > -1) {
-			baseColor = SRGBtoLINEAR(texture(colorMap, material.baseColorTextureSet == 0 ? inUV0 : inUV1)) * material.baseColorFactor;
+			baseColor = SRGBtoLINEAR(texture(colorMap, material.baseColorTextureSet == 0 ? inUV0 : inUV1)) * material.baseColorFactor * Materialinfo.baseColor;
 		} else {
-			baseColor = material.baseColorFactor;
+			baseColor = material.baseColorFactor * Materialinfo.baseColor;
 		}
 	}
 
@@ -319,9 +325,7 @@ void main()
 	diffuseColor *= 1.0 - metallic;
 	
 	float alphaRoughness = perceptualRoughness * perceptualRoughness;
-
 	vec3 specularColor = mix(f0, baseColor.rgb, metallic);
-
 	// Compute reflectance.
 	float reflectance = max(max(specularColor.r, specularColor.g), specularColor.b);
 
@@ -454,38 +458,11 @@ void main()
 		color = mix(color, color * ao, u_OcclusionStrength);
 	}
 
-	vec3 emissive = material.emissiveFactor.rgb * material.emissiveStrength;
+	vec3 emissive = material.emissiveFactor.rgb *  Materialinfo.emissive.rgb * material.emissiveStrength * Materialinfo.emissiveStrength;
 	if (material.emissiveTextureSet > -1) {
 		emissive *= SRGBtoLINEAR(texture(emissiveMap, material.emissiveTextureSet == 0 ? inUV0 : inUV1)).rgb;
 	};
 	color += emissive;
 	
 	outColor = vec4(color, baseColor.a);
-
-	// Shader inputs debug visualization
-	if (uboParams.debugViewInputs > 0.0) {
-		int index = int(uboParams.debugViewInputs);
-		switch (index) {
-			case 1:
-				outColor.rgba = material.baseColorTextureSet > -1 ? texture(colorMap, material.baseColorTextureSet == 0 ? inUV0 : inUV1) : vec4(1.0f);
-				break;
-			case 2:
-				outColor.rgb = (material.normalTextureSet > -1) ? texture(normalMap, material.normalTextureSet == 0 ? inUV0 : inUV1).rgb : normalize(inNormal);
-				break;
-			case 3:
-				outColor.rgb = (material.occlusionTextureSet > -1) ? texture(aoMap, material.occlusionTextureSet == 0 ? inUV0 : inUV1).rrr : vec3(0.0f);
-				break;
-			case 4:
-				outColor.rgb = (material.emissiveTextureSet > -1) ? texture(emissiveMap, material.emissiveTextureSet == 0 ? inUV0 : inUV1).rgb : vec3(0.0f);
-				break;
-			case 5:
-				outColor.rgb = texture(physicalDescriptorMap, inUV0).bbb;
-				break;
-			case 6:
-				outColor.rgb = texture(physicalDescriptorMap, inUV0).ggg;
-				break;
-		}
-		outColor = SRGBtoLINEAR(outColor);
-	}
-
 }
