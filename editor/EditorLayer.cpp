@@ -16,7 +16,8 @@
 namespace Sego{
 
 void EditorLayer::OnAttach(){
-	
+	m_Nodes.Init();
+
 	//Load Texture
 	m_IconPlay = EditorUI::LoadFormFile("resources/Settings/icons/PlayButton.png");
 	m_IconStop = EditorUI::LoadFormFile("resources/Settings/icons/StopButton.png");
@@ -199,7 +200,7 @@ void EditorLayer::OnImGuiRender(){
 				ImGui::EndMenu();
 			}
 
-			//Light Settings
+			//
 			if (ImGui::BeginMenu("Lighting")) {
 				if (ImGui::MenuItem("Skybox")) {
 					
@@ -221,7 +222,7 @@ void EditorLayer::OnImGuiRender(){
 	m_ContentBrowsPanel.OnImGuiRender();
 	m_Console.OnImGuiRender();
 	m_Setting.OnImGuiRender();
-
+	m_Nodes.OnImGuiRender();
 
 	ImGui::Begin("Stats");
 	std::string name = "None";

@@ -7,7 +7,7 @@
 #include "Panels/ContentBrowsPanel.hpp"
 #include "Panels/Console.hpp"
 #include "Panels/Setting.hpp"
-
+#include "Panels/MaterialNodes.hpp"
 #include "Renderer/EditorCamera.hpp"
 
 namespace Sego{
@@ -70,7 +70,7 @@ private:
     ContentBrowsPanel m_ContentBrowsPanel;
     Console m_Console;
     Setting m_Setting;
-    
+    MaterialNodes m_Nodes;
 
     enum class SceneState
     {

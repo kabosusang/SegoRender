@@ -25,3 +25,6 @@
 [submodule "3rdL/ktx"]
 	path = 3rdL/ktx
 	url = https://github.com/KhronosGroup/KTX-Software
+[submodule "3rdL/ImGuiNodes"]
+	path = 3rdL/ImGuiNodes
+	url = https://github.com/Nelarius/imnodes

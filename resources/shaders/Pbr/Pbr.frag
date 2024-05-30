@@ -272,8 +272,8 @@ void main()
 		// Metallic and Roughness material properties are packed together
 		// In glTF, these factors can be specified by fixed scalar values
 		// or from a metallic-roughness map
-		perceptualRoughness = material.roughnessFactor * Materialinfo.roughness;
 		metallic = material.metallicFactor * Materialinfo.metallic;
+		perceptualRoughness = material.roughnessFactor * Materialinfo.roughness;
 		if (material.physicalDescriptorTextureSet > -1) {
 			// Roughness is stored in the 'g' channel, metallic is stored in the 'b' channel.
 			// This layout intentionally reserves the 'r' channel for (optional) occlusion map data

@@ -7,6 +7,7 @@
 #include "Core/Scene/Component.hpp"
 #include "resource/asset/Import/gltf_import.hpp"
 #include "Core/Vulkan/Vulkan_rhi.hpp"
+#include "../editor/ComponentMaterial.hpp"
 
 #include <future>
 
@@ -131,7 +132,6 @@ void SceneHierarchyPanel::AttachMaterial(Entity entity)
             shaderMaterial.roughnessFactor = material.roughnessFactor;
             shaderMaterial.PhysicalDescriptorTextureSet = material.metallicRoughnessTexture != nullptr ? material.texCoordSets.metallicRoughness : -1;    
             shaderMaterial.colorTextureSet = material.baseColorTexture != nullptr ? material.texCoordSets.baseColor : -1;
-            
         }
         if (material.pbrWorkflows.specularGlossiness) {
             // Specular glossiness workflow
@@ -141,6 +141,12 @@ void SceneHierarchyPanel::AttachMaterial(Entity entity)
             shaderMaterial.diffuseFactor = material.extension.diffuseFactor;
             shaderMaterial.specularFactor = glm::vec4(material.extension.specularFactor, 1.0f);
         }
+        m_Material.Reset();
+        m_Material.colorTexture = EditorUI::LoadFormMemory(material.GetColorImageViewSampler());
+        m_Material.metallicRoughnessTexture = EditorUI::LoadFormMemory(material.GetMetallicRoughnessImageViewSampler());
+        m_Material.normalTexture = EditorUI::LoadFormMemory(material.GetNormalImageViewSampler());
+        m_Material.occlusionTexture = EditorUI::LoadFormMemory(material.GetOcclusionImageViewSampler());
+        m_Material.emissiveTexture = EditorUI::LoadFormMemory(material.GetEmissiveImageViewSampler());
         shaderMaterials.push_back(shaderMaterial);
     }
     entity.AddComponent<MaterialComponent>(shaderMaterials);
@@ -149,6 +155,7 @@ void SceneHierarchyPanel::AttachMaterial(Entity entity)
         vk::DeviceSize bufferSize = sizeof(ShaderMaterial) * shaderMaterials.size();
         Vulkantool::createMaterialBuffer(bufferSize,shaderMaterials.data(), matComt.shaderMaterialBuffer);
     }
+   
 }
 
 void SceneHierarchyPanel::DrawEnityNode(Entity entity)
@@ -380,6 +387,7 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
             if (ImGui::MenuItem("Material"))
             {
                 AttachMaterial(m_SelectionContext); //Material Attach
+                
                 ImGui::CloseCurrentPopup();
             }
         }
@@ -534,39 +542,6 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
         ImGui::DragFloat("Restitution Threshold", &component.RestitutionThreshold, 0.01f,0.0f);
     });
 
-    DrawComponent<MeshComponent>("MeshComponent", entity, [&](auto& component)
-    {
-        ImGui::Text("Mesh");
-        ImGui::SameLine();
-        ImGui::Button(component.name.c_str(),ImVec2(300.0f,0.0f));
-        if (ImGui::BeginDragDropTarget()){
-		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM")){
-			const wchar_t* path = (const wchar_t*)payload->Data;
-			std::filesystem::path modelPath = std::filesystem::path(s_AssetPath)/path;
-            if (modelPath.extension() == ".gltf" || modelPath.extension() == ".glb")
-            {
-                std::future<void> async_result = std::async(std::launch::async,[&](){
-                    component.name = modelPath.filename().replace_extension().string();
-                    component.path = modelPath.string();
-                    auto tStart = std::chrono::high_resolution_clock::now();
-                    component.model = std::make_shared<GltfModel::Model>();
-                    component.model->loadFromFile(component.path);
-                    auto tFileLoad = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - tStart).count();
-                    SG_CORE_INFO("Load Model Time:{} ms",tFileLoad);
-                    if (entity.HasComponent<MaterialComponent>()){
-                        entity.RemoveComponent<MaterialComponent>();
-                        AttachMaterial(entity);
-                    }
-                });
-            }else{
-                SG_CORE_ERROR("Model format not supported");
-            }
-        }
-		ImGui::EndDragDropTarget();
-    }
-
-    });
-
     //Light Component
     DrawComponent<SkyLightComponent>("SkyLightComponent", entity, [](auto& component){
         ImGui::ColorEdit3("Color", glm::value_ptr(component.Color));
@@ -623,6 +598,40 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
         ImGui::Checkbox("Shadow",&component.castshadow);
     });
 
+    
+    DrawComponent<MeshComponent>("MeshComponent", entity, [&](auto& component)
+    {
+        ImGui::Text("Mesh");
+        ImGui::SameLine();
+        ImGui::Button(component.name.c_str(),ImVec2(300.0f,0.0f));
+        if (ImGui::BeginDragDropTarget()){
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM")){
+			const wchar_t* path = (const wchar_t*)payload->Data;
+			std::filesystem::path modelPath = std::filesystem::path(s_AssetPath)/path;
+            if (modelPath.extension() == ".gltf" || modelPath.extension() == ".glb")
+            {
+                std::future<void> async_result = std::async(std::launch::async,[&](){
+                    component.name = modelPath.filename().replace_extension().string();
+                    component.path = modelPath.string();
+                    auto tStart = std::chrono::high_resolution_clock::now();
+                    component.model = std::make_shared<GltfModel::Model>();
+                    component.model->loadFromFile(component.path);
+                    auto tFileLoad = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - tStart).count();
+                    SG_CORE_INFO("Load Model Time:{} ms",tFileLoad);
+                    if (entity.HasComponent<MaterialComponent>()){
+                        entity.RemoveComponent<MaterialComponent>();
+                        AttachMaterial(entity);
+                    }
+                });
+            }else{
+                SG_CORE_ERROR("Model format not supported");
+            }
+        }
+		ImGui::EndDragDropTarget();
+    }
+    });
+
+    
     //Animation
     DrawComponent<AnimationComponent>("Animation", entity, [](auto& component){
         ImGui::Checkbox("Animations",&component.animate);
@@ -639,15 +648,47 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
 
 
     //Material
-    DrawComponent<MaterialComponent>("Material", entity, [](auto& component){
+    DrawComponent<MaterialComponent>("Material", entity, [&](auto& component){
         ImGui::ColorEdit4("Color", glm::value_ptr(component.baseColor));
         ImGui::DragFloat("Metallic", &component.metallic,0.01f,0.0f, 1.0f);
         ImGui::DragFloat("Roughness", &component.roughness,0.01f,0.0f, 1.0f);
         ImGui::ColorEdit4("Emissive Color", glm::value_ptr(component.emissive));
         ImGui::DragFloat("Emissive Strength", &component.emissiveStrength,0.01f,0.0f, 1.0f);
+        if (entity.HasComponent<MeshComponent>() && entity.HasComponent<MaterialComponent>()){
+            ImGui::SeparatorText("Material Texture");
+                if (m_Material.colorTexture){
+                    ImGui::ImageButton("baseColor",(ImTextureID)m_Material.colorTexture->tex_id,{100,100});
+                    ImGui::SameLine();
+                    ImGui::Text("Base Color");
+                }
+                if (m_Material.metallicRoughnessTexture){
+                    ImGui::ImageButton("metallicRoughness",(ImTextureID)m_Material.metallicRoughnessTexture->tex_id,{100,100});
+                    ImGui::SameLine();
+                    ImGui::Text("Metallic Roughness");
+                }
+                if (m_Material.normalTexture){
+                    ImGui::ImageButton("normal",(ImTextureID)m_Material.normalTexture->tex_id,{100,100});
+                    ImGui::SameLine();
+                    ImGui::Text("Normal");
+                }
+                if (m_Material.occlusionTexture){
+                    ImGui::ImageButton("occlusion",(ImTextureID)m_Material.occlusionTexture->tex_id,{100,100});
+                    ImGui::SameLine();
+                    ImGui::Text("Occlusion");
+                }
+                if (m_Material.emissiveTexture){
+                    ImGui::ImageButton("emissive",(ImTextureID)m_Material.emissiveTexture->tex_id,{100,100});
+                    ImGui::SameLine();
+                    ImGui::Text("Emissive");
+                }
+        }
+    
     });
 
-
+    //Material Texture
+    
+    
+    
 
 }
 

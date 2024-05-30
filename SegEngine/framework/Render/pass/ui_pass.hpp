@@ -1,6 +1,5 @@
 #pragma once
 #include "render_pass.hpp"
-
 namespace Sego{
 
     class UiPass : public RenderPass{

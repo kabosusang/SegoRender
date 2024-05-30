@@ -2,6 +2,7 @@
 
 #include "Core/Scene/Scene.hpp"
 #include "Core/Scene/Entity.hpp"
+#include "../editor/ComponentMaterial.hpp"
 
 namespace Sego{
 
@@ -25,6 +26,8 @@ class SceneHierarchyPanel{
     private:
         std::shared_ptr<Scene> m_Context;
         Entity m_SelectionContext;
+        MeshMaterial m_Material;
+        
 };
 
 

@@ -3,10 +3,12 @@
 
 #include "imgui_impl_vulkan.h"
 #include "imgui_impl_sdl2.h"
+#include "imnodes.h"
 #include "Core/Vulkan/Vulkan_rhi.hpp"
 #include "Core/Vulkan/VulkanContext.hpp"
 #include "framework/Render/Render_system.hpp"
 #include "Core/Log/Log.h"
+
 
 namespace Sego{
 
@@ -14,6 +16,14 @@ namespace Sego{
         //setup Dear ImGui context
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
+        //ImGUINodes
+        ImNodes::CreateContext();
+        ImNodesStyle& nodestyle = ImNodes::GetStyle();
+        nodestyle.Colors[ImNodesCol_TitleBar] = IM_COL32(232, 27, 86, 255);
+        nodestyle.Colors[ImNodesCol_TitleBarSelected] = IM_COL32(241, 108, 146, 255);
+        ImNodesIO& ionode = ImNodes::GetIO();
+        ionode.LinkDetachWithModifierClick.Modifier = &ImGui::GetIO().KeyCtrl;
+
 		ImGuiIO& io = ImGui::GetIO();
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
@@ -96,6 +106,7 @@ void UiPass::CreatePiepline(){
 void UiPass::destroy(){
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplSDL2_Shutdown();
+    ImNodes::DestroyContext();
     ImGui::DestroyContext();
     RenderPass::destroy();
     //Save imgui setting

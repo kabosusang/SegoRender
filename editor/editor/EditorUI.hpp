@@ -14,7 +14,7 @@ namespace Sego{
     class EditorUI{
     public:
         static std::shared_ptr<ImGuiImage> LoadFormFile(const std::string& path);
-
+        static std::shared_ptr<ImGuiImage> LoadFormMemory(VmaImageViewSampler image_view_sampler);
     };
 
 
