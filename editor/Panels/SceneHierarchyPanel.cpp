@@ -155,12 +155,11 @@ void SceneHierarchyPanel::AttachMaterial(Entity entity)
         vk::DeviceSize bufferSize = sizeof(ShaderMaterial) * shaderMaterials.size();
         Vulkantool::createMaterialBuffer(bufferSize,shaderMaterials.data(), matComt.shaderMaterialBuffer);
     }
-   
+    
 }
 
 void SceneHierarchyPanel::DrawEnityNode(Entity entity)
 {
-
     auto& tag = entity.GetComponent<TagComponent>().Tag;
     
     ImGuiTreeNodeFlags flags =((m_SelectionContext == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
@@ -387,7 +386,6 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
             if (ImGui::MenuItem("Material"))
             {
                 AttachMaterial(m_SelectionContext); //Material Attach
-                
                 ImGui::CloseCurrentPopup();
             }
         }
@@ -655,6 +653,11 @@ void SceneHierarchyPanel::DrawComponents(Entity entity)
         ImGui::ColorEdit4("Emissive Color", glm::value_ptr(component.emissive));
         ImGui::DragFloat("Emissive Strength", &component.emissiveStrength,0.01f,0.0f, 1.0f);
         if (entity.HasComponent<MeshComponent>() && entity.HasComponent<MaterialComponent>()){
+            if (component.Serializer){
+                entity.RemoveComponent<MaterialComponent>();
+                AttachMaterial(entity);
+                component.Serializer = false;
+            }
             ImGui::SeparatorText("Material Texture");
                 if (m_Material.colorTexture){
                     ImGui::ImageButton("baseColor",(ImTextureID)m_Material.colorTexture->tex_id,{100,100});

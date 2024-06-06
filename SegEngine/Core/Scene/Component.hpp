@@ -166,10 +166,18 @@ namespace Sego{
         glm::vec4 emissive = glm::vec4(1.0f);//自发光颜色
         float emissiveStrength = 1.0f;//自发光强度
 
-
+        bool Serializer = false;
         MaterialComponent() = default;
         MaterialComponent(std::vector<ShaderMaterial>& material){ shaderMaterials = material; }
-        MaterialComponent(const MaterialComponent&) = default;
+        MaterialComponent(const MaterialComponent& other){
+            this->baseColor = other.baseColor;
+            this->metallic = other.metallic;
+            this->roughness = other.roughness;
+            this->emissive = other.emissive;
+            this->emissiveStrength = other.emissiveStrength;
+            this->shaderMaterials = other.shaderMaterials;
+            this->shaderMaterialBuffer = other.shaderMaterialBuffer;
+        };
     };
 
     struct DirLightComponent{

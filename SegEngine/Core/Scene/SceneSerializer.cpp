@@ -209,12 +209,25 @@ static void SerializeEntity(YAML::Emitter& out,Entity entity){
 
     if(entity.HasComponent<MeshComponent>()){
         out << YAML::Key << "MeshComponent";
-        out << YAML::BeginMap; //BoxCollider2Domponent
+        out << YAML::BeginMap; //MeshComponent
 
         auto& MeshC = entity.GetComponent<MeshComponent>();
         out << YAML::Key << "Name" << YAML::Value << MeshC.name;
         out << YAML::Key << "Path" << YAML::Value << MeshC.path;
-        out << YAML::EndMap; //BoxCollider2Domponent
+        out << YAML::EndMap; //MeshComponent
+    }
+
+    if(entity.HasComponent<MaterialComponent>()){
+        out << YAML::Key << "MaterialComponent";
+        out << YAML::BeginMap; //MaterialComponent
+
+        auto& MatC = entity.GetComponent<MaterialComponent>();
+        out << YAML::Key << "baseColor" << YAML::Value << MatC.baseColor;
+        out << YAML::Key << "metallic" << YAML::Value << MatC.metallic;
+        out << YAML::Key << "roughness" << YAML::Value << MatC.roughness;
+        out << YAML::Key << "emissive" << YAML::Value << MatC.emissive;
+        out << YAML::Key << "emissiveStrength" << YAML::Value << MatC.emissiveStrength;
+        out << YAML::EndMap; //MaterialComponent
     }
 
 
@@ -396,6 +409,18 @@ bool SceneSerializer::Deserialize(const std::string &filepath){
                 mesh_async.get();
             }
 
+            //Material Component
+            auto MatComponent = entity["MaterialComponent"];
+            if (MatComponent){
+                auto& mc = deserializedEntity.AddComponent<MaterialComponent>();
+                mc.baseColor = MatComponent["baseColor"].as<glm::vec4>();
+                mc.metallic = MatComponent["metallic"].as<float>();
+                mc.roughness = MatComponent["roughness"].as<float>();
+                mc.emissive = MatComponent["emissive"].as<glm::vec4>();
+                mc.emissiveStrength = MatComponent["emissiveStrength"].as<float>();
+                mc.Serializer = true;
+            }
+
             //DirLight Component
             auto DirComponent = entity["DirLightComponent"];
             if (DirComponent){
@@ -437,14 +462,21 @@ bool SceneSerializer::Deserialize(const std::string &filepath){
             //SkyLight Component
             auto SkyComponent = entity["SkyLightComponent"];
             if (SkyComponent){
-                auto& spc = deserializedEntity.AddComponent<SkyLightComponent>();
-                spc.Color = SkyComponent["Color"].as<glm::vec3>();
-                spc.Intensity = SkyComponent["Intensity"].as<float>();
-                spc.name = SkyComponent["Name"].as<std::string>();
-                spc.path = SkyComponent["Path"].as<std::string>();
+                auto& skc = deserializedEntity.AddComponent<SkyLightComponent>();
+                skc.Color = SkyComponent["Color"].as<glm::vec3>();
+                skc.Intensity = SkyComponent["Intensity"].as<float>();
+                skc.name = SkyComponent["Name"].as<std::string>();
+                skc.path = SkyComponent["Path"].as<std::string>();
+                 std::future<void> mesh_async = std::async(std::launch::async,[&](){
+                    auto tStart = std::chrono::high_resolution_clock::now();
+                    skc.textureCube = TextureCube::Create(skc.path);
+                    skc.skylight = std::make_shared<SkyLightRenderData>();
+                    skc.Attach();
+                    auto tFileLoad = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - tStart).count();
+                    SG_CORE_INFO("Load SkyTexutre Time:{} ms",tFileLoad);
+                });
+                mesh_async.get();
             }
-
-
 
         }
    
@@ -461,8 +493,5 @@ void SceneSerializer::SerializeRuntime(const std::string &filepath){
 bool SceneSerializer::DeserializeRuntime(const std::string &filepath){
     return false;
 }
-
-
-
 
 }
